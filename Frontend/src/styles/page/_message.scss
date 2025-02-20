@@ -1,0 +1,48 @@
+@import "../abstracts/variable";
+
+/* Message */
+.message-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.search-bar {
+  flex: 1;
+  padding: 0.8rem 1.5rem;
+  border: 1px solid #eee;
+  border-radius: 30px;
+  background: white;
+}
+
+.message-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tab-item {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background: var(--primary);
+  color: white;
+}
+
+.message-details {
+  display: grid;
+  grid-template-columns: 40px 1fr 120px;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.message-attachment {
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  margin-top: 0.5rem;
+}

@@ -1,0 +1,16 @@
+body {
+  display: flex;
+  min-height: 100vh;
+  background: var(--light);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+}
+#root {
+  display: flex;
+  width: 100%;
+}
