@@ -7,10 +7,6 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   phone: { type: String },
   avatar: { type: String },
-  // favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
-//   isAdmin: { type: Boolean, default: false, required: true },
-  access_token: { type: String },
-  refresh_token: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   isVerified : {type: Boolean}
