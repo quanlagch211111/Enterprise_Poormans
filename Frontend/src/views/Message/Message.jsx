@@ -24,7 +24,6 @@ class Message extends React.Component {
             <div class="message-tabs">
               <div class="tab-item active">Tất cả (15)</div>
               <div class="tab-item">Chưa đọc (5)</div>
-              <div class="tab-item">Đã ghim (3)</div>
             </div>
           </div>
 

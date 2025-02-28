@@ -17,6 +17,9 @@
       height: 200px;
       background: #eee;
       position: relative;
+      img {
+        max-width: 100%;
+      }
     }
 
     .blog-content {
@@ -34,4 +37,12 @@
       }
     }
   }
+}
+.custom-dropdown-toggle {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

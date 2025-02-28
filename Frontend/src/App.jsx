@@ -3,7 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./views/Dashboard/Dashboard";
 import Message from "./views/Message/Message";
-import Blog from "./views/Blog/Blog";
+import {Blog} from "./views/Blog/Blog";
 import Nav from "./components/Nav";
 import Document from "./views/Document/Document";
 
