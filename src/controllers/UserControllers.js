@@ -78,9 +78,9 @@ exports.signinUser = async (req, res) => {
       });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Please verify your email first' });
-    }
+    // if (!user.isVerified) {
+    //   return res.status(403).json({ message: 'Please verify your email first' });
+    // }
 
     const response = await UserService.signinUser(req.body);
     const { refreshtoken, ...userData } = response;

@@ -16,6 +16,7 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(tokenWithoutBearer, process.env.ACCESS_TOKEN);
 
     req.user = decoded;
+    console.log("Decoded Token:", decoded);
 
     next();
   } catch (err) {
@@ -24,24 +25,20 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-const isAdmin = (req, res, next) => {
 
-  if (!req.user || !req.user.payload || !req.user.payload.isAdmin) {
-    return res.status(403).send('Access denied. Admins only');
+const isStaff = (req, res, next) => {
+  if (!req.user || req.user.payload.role !== "STAFF") {
+    return res.status(403).json({ message: "Access denied. Only STAFF can access this." });
   }
-
   next();
 };
 
-const checkUser = (req, res, next) => {
-  const userid = req.params.id;
 
-  if (userid !== req.user.payload.userid) {
-    return res.status(403).send('Access denied');
+const isTeacher = (req, res, next) => {
+  if (!req.user || req.user.payload.role !== "TEACHER") {
+    return res.status(403).json({ message: "Access denied. Only TEACHERS can access this." });
   }
-    next();
+  next();
 };
 
-
-
-module.exports = { authMiddleware, isAdmin, checkUser };
+module.exports = { authMiddleware, isStaff, isTeacher };

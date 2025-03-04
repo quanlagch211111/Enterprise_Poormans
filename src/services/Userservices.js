@@ -2,6 +2,11 @@ const User = require('../models/Users');
 const bcrypt = require('bcrypt');
 const  { generalAccessToken, generalRefreshToken } = require('../services/Jwtservices');
 
+
+const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
+const Staff = require('../models/Staff');
+
 const createUser = (userData) => {
   return new Promise(async (resolve, reject) => {
     const { username, email, password, address, phone } = userData;
@@ -63,14 +68,19 @@ const signinUser = (userData) => {
         })
       }
 
+      let role = null;
+      if (await Student.findOne({ user_id: user._id })) role = "STUDENT";
+      if (await Teacher.findOne({ user_id: user._id }))role = "TEACHER";
+      if (await Staff.findOne({ user_id: user._id })) role = "STAFF";
+
       const accesstoken = await generalAccessToken({
         id : user.id,
-        isAdmin : user.isAdmin
+        role: role
       }); 
 
       const refreshtoken = await generalRefreshToken({
         id : user.id,
-        isAdmin : user.isAdmin
+        role: role
       })
 
         resolve({
