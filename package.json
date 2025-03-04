@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "npm start": "nodemon index.js"
+    "start": "nodemon index.js"
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.8",

@@ -13,10 +13,7 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-mongoose.connect(process.env.MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         console.log('Connected to DB successfully');
     })
@@ -27,12 +24,16 @@ mongoose.connect(process.env.MONGO_URL, {
 const UserRouter = require('./src/routes/Userroutes');
 const MessageRouter = require('./src/routes/messageRoute');
 
+const SubmissionFolderRouter = require('./src/routes/submissionfolderRoute');
+
+
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
 app.use('/api/users', UserRouter);
 app.use('/api/messages', MessageRouter);
+app.use('/api/submissionFolders', SubmissionFolderRouter);
 
 app.listen(port, () => {
     console.log("Server is running on port: " + port);
