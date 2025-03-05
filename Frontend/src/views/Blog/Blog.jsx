@@ -39,7 +39,62 @@ export const Blog = () => {
 
           <div className="blog-grid">
             <article className="blog-card" onClick={toggleOpen}>
-              <div className="blog-image"></div>
+              <div className="blog-image">
+                <img
+                  src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/bb/a3/97/predator-ride-in-the.jpg?w=900&h=500&s=1"
+                  alt=""
+                />
+              </div>
+              <div className="blog-content">
+                <div className="blog-tags">
+                  <span className="blog-tag">Toán học</span>
+                  <span className="blog-tag">Lớp 10</span>
+                </div>
+                <h4 className="blog-title">
+                  Phương pháp giải phương trình lượng giác
+                </h4>
+                <p className="blog-excerpt">
+                  Khám phá các kỹ thuật giải nhanh phương trình lượng giác cơ
+                  bản...
+                </p>
+                <div className="blog-meta">
+                  <span className="blog-author">Nguyễn Văn C</span>
+                  <span className="blog-date">2 ngày trước</span>
+                </div>
+              </div>
+            </article>
+            <article className="blog-card" onClick={toggleOpen}>
+              <div className="blog-image">
+                <img
+                  src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/bb/a3/97/predator-ride-in-the.jpg?w=900&h=500&s=1"
+                  alt=""
+                />
+              </div>
+              <div className="blog-content">
+                <div className="blog-tags">
+                  <span className="blog-tag">Toán học</span>
+                  <span className="blog-tag">Lớp 10</span>
+                </div>
+                <h4 className="blog-title">
+                  Phương pháp giải phương trình lượng giác
+                </h4>
+                <p className="blog-excerpt">
+                  Khám phá các kỹ thuật giải nhanh phương trình lượng giác cơ
+                  bản...
+                </p>
+                <div className="blog-meta">
+                  <span className="blog-author">Nguyễn Văn C</span>
+                  <span className="blog-date">2 ngày trước</span>
+                </div>
+              </div>
+            </article>
+            <article className="blog-card" onClick={toggleOpen}>
+              <div className="blog-image">
+                <img
+                  src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/bb/a3/97/predator-ride-in-the.jpg?w=900&h=500&s=1"
+                  alt=""
+                />
+              </div>
               <div className="blog-content">
                 <div className="blog-tags">
                   <span className="blog-tag">Toán học</span>
@@ -83,7 +138,7 @@ export const Blog = () => {
             </MDBModalHeader>
             <MDBModalBody>
               <div className="mb-2 d-flex justify-content-end">
-                <MDBDropdown dropleft group>
+                {/* <MDBDropdown dropleft group>
                   <MDBDropdownToggle>
                     <i className="fas fa-bars"></i>
                   </MDBDropdownToggle>
@@ -91,7 +146,21 @@ export const Blog = () => {
                     <MDBDropdownItem link>Edit</MDBDropdownItem>
                     <MDBDropdownItem link>Update</MDBDropdownItem>
                   </MDBDropdownMenu>
-                </MDBDropdown>
+                </MDBDropdown> */}
+                <div className="dropdown ">
+                  <div className="container-select d-flex justify-content-end">
+                    <div className="dropdown-select  d-flex align-items-center justify-content-center">
+                      <img
+                        src={require("../../assets/images/more.png")}
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                  <ul className="dropdown-list d-flex gap-2 flex-column">
+                    <li className="dropdown-item">Delete</li>
+                    <li className="dropdown-item">Update</li>
+                  </ul>
+                </div>
               </div>
               <div className="blog-grid">
                 <article className="blog-card" onClick={toggleOpen}>

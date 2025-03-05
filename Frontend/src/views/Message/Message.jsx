@@ -1,51 +1,175 @@
-import React from "react";
-class Message extends React.Component {
-  render() {
-    return (
-      <div class="main-content">
-        <div class="welcome-section">
-          <h1 class="welcome">Tin nhắn</h1>
-        </div>
+import {
+  MDBBtn,
+  MDBInput,
+  MDBModal,
+  MDBModalBody,
+  MDBModalContent,
+  MDBModalDialog,
+  MDBModalFooter,
+  MDBModalHeader,
+  MDBModalTitle,
+  MDBTextArea,
+} from "mdb-react-ui-kit";
+import React, { useState } from "react";
+export const Message = () => {
+  const [centredModal, setCentredModal] = useState(false);
 
-        <div class="dashboard-section">
-          <div class="section-header">
-            <h3 class="section-title">Hộp thư đến</h3>
-            <button type="button" class="btn btn-primary">
-              Viết tin mới
-            </button>
-          </div>
-
-          <div class="message-actions">
-            <input
-              type="text"
-              class="search-bar"
-              placeholder="Tìm kiếm tin nhắn..."
-            />
-            <div class="message-tabs">
-              <div class="tab-item active">Tất cả (15)</div>
-              <div class="tab-item">Chưa đọc (5)</div>
+  const toggleOpen = () => setCentredModal(!centredModal);
+  return (
+    <>
+      <div className="main-content">
+        <div className="chat-container">
+          <div className="sidebar-chart">
+            <div className="search-bar d-flex gap-2">
+              <input type="text" placeholder="Search here..." />
+              <MDBBtn onClick={toggleOpen}>+</MDBBtn>
+            </div>
+            <div className="contacts">
+              <h3>Contacts</h3>
+              <ul>
+                <li>
+                  <img
+                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
+                    alt="Contact 1"
+                  />{" "}
+                  Contact 1
+                </li>
+                <li>
+                  <img
+                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
+                    alt="Contact 2"
+                  />{" "}
+                  Contact 2
+                </li>
+                <li>
+                  <img
+                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
+                    alt="Contact 3"
+                  />{" "}
+                  Contact 3
+                </li>
+              </ul>
+            </div>
+            <div className="chats">
+              <h3>Chats</h3>
+              <ul>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+                <li>
+                  <img src="chat1.jpg" alt="Design Team" /> Design Team (32)
+                </li>
+              </ul>
             </div>
           </div>
-
-          <div class="message-item unread">
-            <div class="message-icon">
-              <i class="fas fa-user-graduate"></i>
-            </div>
-            <div class="message-details">
-              <div class="message-sender">Nguyễn Thị B</div>
-              <div class="message-text">
-                [Toán 10] Thắc mắc bài tập chương 2...
+          <div className="chat-window">
+            <div className="chat-header">
+              <img
+                src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
+                alt="Jordan"
+              />
+              <div className="header-info">
+                <h2>Jordan</h2>
+                <p>Online</p>
               </div>
-              <div class="message-time">10 phút trước</div>
             </div>
-            <div class="message-attachment">
-              <i class="fas fa-paperclip"></i>
-              <span>Bài tập.pdf</span>
+            <div className="chat-messages">
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+              <div className="message sent">
+                <p>Can you arrange schedule for next meeting?</p>
+              </div>
+              <div className="message received">
+                <p>Hello Nella!</p>
+              </div>
+            </div>
+
+            <div className="chat-input">
+              <input type="text" placeholder="message..." />
+              <button className="send-btn">Send</button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-}
-export default Message;
+
+      {/* modal create */}
+      <MDBModal
+        tabIndex="-1"
+        open={centredModal}
+        onClose={() => setCentredModal(false)}
+      >
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Create New Message</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={toggleOpen}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <div className="d-flex flex-column gap-2">
+                <MDBInput label="Username" id="typeText" type="text"></MDBInput>
+                <MDBTextArea
+                  label="Message"
+                  id="textAreaExample"
+                  rows="{4}"
+                ></MDBTextArea>
+              </div>
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={toggleOpen}>
+                Close
+              </MDBBtn>
+              <MDBBtn>Send</MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};

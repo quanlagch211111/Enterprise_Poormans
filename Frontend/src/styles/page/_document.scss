@@ -5,6 +5,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .document-grid {
@@ -27,9 +28,49 @@
   margin-bottom: 1rem;
 }
 
-.document-actions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
+.doc-tabs {
+  padding: 0.5rem 1rem;
+  color: #c7c7c7;
+  border-bottom: 4px solid #c7c7c7;
+
+  // border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.doc-tabs.active {
+  color: #615b97;
+  border-bottom: 4px solid #615b97;
+}
+
+.left-side {
+  width: 20%;
+}
+
+.right-side {
+  width: 80%;
+  margin-left: 20px;
+}
+.class-name {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  &:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+}
+.class-name.active {
+  background-color: var(--primary);
+  color: white;
+}
+.search-bar-docs {
+  outline: none;
+  border-radius: 5px;
+  border: 1px solid #c7c7c7;
+  padding: 0.5rem 1rem;
+  width: 100%;
 }

@@ -19,9 +19,9 @@ class Nav extends React.Component {
           <i className="fas fa-file-alt"></i>
           Documents
         </NavLink>
-        <NavLink to="/meeting" className="nav-item">
+        <NavLink to="/schedule" className="nav-item">
           <i className="fas fa-video"></i>
-          Meetings
+          Schedule
         </NavLink>
         <NavLink to="/blog" className="nav-item">
           <i className="fas fa-blog"></i>

@@ -26,6 +26,7 @@
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease;
+    cursor: pointer;
     &::before {
       content: "";
       position: absolute;
@@ -81,6 +82,7 @@
     background: var(--light);
     border-radius: var(--border-radius);
     transition: all 0.3s ease;
+    cursor: pointer;
     &:hover {
       background: #f1f3ff;
       transform: translateX(10px);
