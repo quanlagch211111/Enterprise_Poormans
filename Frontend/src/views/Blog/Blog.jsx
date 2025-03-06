@@ -19,6 +19,8 @@ import {
 export const Blog = () => {
   const [scrollableModal, setScrollableModal] = useState(false);
   const [centredModal, setCentredModal] = useState(false);
+  const [isVisibility, setVisibility] = useState(false);
+  const toggleVisibility = () => setVisibility(!isVisibility);
   const toggleOpen = () => setCentredModal(!centredModal);
   return (
     <>
@@ -149,14 +151,22 @@ export const Blog = () => {
                 </MDBDropdown> */}
                 <div className="dropdown ">
                   <div className="container-select d-flex justify-content-end">
-                    <div className="dropdown-select  d-flex align-items-center justify-content-center">
+                    <div
+                      className="dropdown-select  d-flex align-items-center justify-content-center"
+                      onClick={toggleVisibility}
+                    >
                       <img
                         src={require("../../assets/images/more.png")}
                         alt=""
                       />
                     </div>
                   </div>
-                  <ul className="dropdown-list d-flex gap-2 flex-column">
+                  <ul
+                    className={
+                      "dropdown-list d-flex gap-2 flex-column " +
+                      (isVisibility ? "active" : "")
+                    }
+                  >
                     <li className="dropdown-item">Delete</li>
                     <li className="dropdown-item">Update</li>
                   </ul>

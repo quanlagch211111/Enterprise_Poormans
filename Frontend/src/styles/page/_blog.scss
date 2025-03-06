@@ -89,10 +89,8 @@
       cursor: pointer;
     }
   }
-  &:hover {
-    .dropdown-list {
-      opacity: 1;
-      visibility: visible;
-    }
+  .dropdown-list.active {
+    opacity: 1;
+    visibility: visible;
   }
 }
