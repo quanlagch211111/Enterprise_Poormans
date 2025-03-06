@@ -12,6 +12,37 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.assignment-grid {
+  height: 350px;
+  overflow-y: auto;
+}
+.assignment-container {
+  width: 100%;
+}
+.assignment-delete {
+  color: #fa5454;
+  cursor: pointer;
+  &:hover {
+    color: #fe6c6a;
+  }
+}
+
+.assignment-card {
+  cursor: pointer;
+}
+
+.assignment-icon {
+  color: var(--primary);
+}
+.input-file-container {
+  width: 100%;
+}
+.input-file {
+  width: 80%;
 }
 
 .document-card {
@@ -20,6 +51,7 @@
   border-radius: var(--border-radius);
   text-align: center;
   transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
 .document-icon {
