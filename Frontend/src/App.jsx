@@ -8,6 +8,7 @@ import Nav from "./components/Nav";
 import { Document } from "./views/Document/Document";
 import Calender from "./views/Calender/Calender";
 import Assignment from "./views/Assignment/Assignment";
+import { Login } from "./views/Login/Login";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/assignment" element={<Assignment />} />
         <Route path="/schedule" element={<Calender />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );

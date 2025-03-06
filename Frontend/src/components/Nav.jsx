@@ -30,6 +30,7 @@ class Nav extends React.Component {
             Messages
           </NavLink>
           <NavLink to="/document" className="nav-item">
+            <i className="fas fa-file-alt"></i>
             Documents
           </NavLink>
           {role === "ADMIN" && (
