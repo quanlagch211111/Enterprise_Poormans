@@ -20,6 +20,9 @@ export const Blog = () => {
   const [scrollableModal, setScrollableModal] = useState(false);
   const [centredModal, setCentredModal] = useState(false);
   const [isVisibility, setVisibility] = useState(false);
+  const [isAllBlogs, setAllBlogs] = useState(false);
+
+  const toggleAllBlogs = () => setAllBlogs(!isAllBlogs);
   const toggleVisibility = () => setVisibility(!isVisibility);
   const toggleOpen = () => setCentredModal(!centredModal);
   return (
@@ -30,13 +33,40 @@ export const Blog = () => {
         </div>
         <div className="dashboard-section">
           <div className="section-header">
-            <h3 className="section-title">Bài viết mới nhất</h3>
-            <button
+            <h3 className="section-title">
+              {isAllBlogs ? "All Blogs" : "My Blog"}
+            </h3>
+
+            <div className="action d-flex">
+              <span
+                className={"doc-tabs " + (!isAllBlogs ? "active" : "")}
+                onClick={isAllBlogs ? toggleAllBlogs : undefined}
+              >
+                My Blog
+              </span>
+              <span
+                className={"doc-tabs " + (isAllBlogs ? "active" : "")}
+                onClick={!isAllBlogs ? toggleAllBlogs : undefined}
+              >
+                All Blogs
+              </span>
+            </div>
+            {/* <button
               className="btn btn-primary"
               onClick={() => setScrollableModal(!scrollableModal)}
             >
               Viết bài mới
-            </button>
+            </button> */}
+          </div>
+          <div className="action mb-3 d-flex justify-content-end">
+            {!isAllBlogs && (
+              <button
+                className="btn btn-primary"
+                onClick={() => setScrollableModal(!scrollableModal)}
+              >
+                Viết bài mới
+              </button>
+            )}
           </div>
 
           <div className="blog-grid">
