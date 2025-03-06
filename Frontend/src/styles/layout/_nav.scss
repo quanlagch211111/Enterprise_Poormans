@@ -63,3 +63,19 @@
   background: var(--light);
   overflow-y: auto;
 }
+.profile-image {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.profile-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--dark);
+}
