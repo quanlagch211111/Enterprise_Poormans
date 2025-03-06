@@ -9,7 +9,7 @@ import {
 import React, { useState } from "react";
 export const Document = () => {
   const [isAssignment, setAssignment] = useState(false);
-  const role = "TEACHER";
+  const role = "ADMIN";
   const toggleAssignment = () => {
     setAssignment(!isAssignment);
   };
