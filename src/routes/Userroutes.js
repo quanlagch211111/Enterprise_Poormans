@@ -1,7 +1,7 @@
 const express = require('express'); 
 const { createUser, signinUser, updateUser, deleteUser, getallUser, detailUser, reprovideToken, verifyOtp } = require('../controllers/UserControllers');    
 const router = express.Router();
-const { authMiddleware, isAdmin } = require('../middlewares/Authmiddlewares');
+const { authMiddleware, isStaff} = require('../middlewares/Authmiddlewares');
 
 
 router.get('/', (req, res) => {
@@ -14,9 +14,9 @@ router.post('/signin', signinUser);
 
 router.put('/update/:id', authMiddleware, updateUser);
 
-router.delete('/delete/:id', authMiddleware, isAdmin, deleteUser);
+router.delete('/delete/:id', authMiddleware,isStaff, deleteUser);
 
-router.get('/getallusers', authMiddleware, isAdmin, getallUser);
+router.get('/getallusers', authMiddleware,isStaff,  getallUser);
 
 router.get('/detailuser/:id', detailUser);
 

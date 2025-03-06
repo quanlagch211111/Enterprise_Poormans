@@ -2,6 +2,11 @@ const User = require('../models/Users');
 const bcrypt = require('bcrypt');
 const  { generalAccessToken, generalRefreshToken } = require('../services/Jwtservices');
 
+
+const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
+const Staff = require('../models/Staff');
+
 const createUser = (userData) => {
   return new Promise(async (resolve, reject) => {
     const { username, email, password, address, phone } = userData;
@@ -48,33 +53,46 @@ const signinUser = (userData) => {
     const { email, password} = userData;
     try {
       const user = await User.findOne({ email: email})
-      if(user == null) {
-        resolve({
-          status: 'OK',
-          message: 'There was not a user with that email'
-        })
+      if (user == null) {
+        return resolve({
+          status: 'ERROR',
+          message: 'There was no user with that email'
+        });
       }
+
+      if (user.isVerified == false) {
+        return resolve({
+          status: 'NEED_VERIFICATION',
+          message: 'This account has not been verified'
+        });
+      }
+
       const comparePassword = bcrypt.compareSync(password, user.password);
 
       if (!comparePassword){
         resolve({
-          status: 'OK',
+          status: 'ERROR',
           message: 'this is wrong password'
         })
       }
 
+      let role = null;
+      if (await Student.findOne({ user_id: user._id })) role = "STUDENT";
+      if (await Teacher.findOne({ user_id: user._id }))role = "TEACHER";
+      if (await Staff.findOne({ user_id: user._id })) role = "STAFF";
+
       const accesstoken = await generalAccessToken({
         id : user.id,
-        isAdmin : user.isAdmin
+        role: role
       }); 
 
       const refreshtoken = await generalRefreshToken({
         id : user.id,
-        isAdmin : user.isAdmin
+        role: role
       })
 
         resolve({
-          status: 'success',
+          status: 'SUCCESS',
           message: 'Login successful',
           accesstoken,
           refreshtoken
