@@ -25,6 +25,8 @@ const UserRouter = require('./src/routes/Userroutes');
 const MessageRouter = require('./src/routes/messageRoute');
 
 const SubmissionFolderRouter = require('./src/routes/submissionfolderRoute');
+const documentRouter = require('./src/routes/documentRoute');
+const otpRouter = require('./src/routes/otpRoute');
 
 
 app.use(cors());
@@ -34,6 +36,8 @@ app.use(cookieParser());
 app.use('/api/users', UserRouter);
 app.use('/api/messages', MessageRouter);
 app.use('/api/submissionFolders', SubmissionFolderRouter);
+app.use('/api/documents', documentRouter);
+app.use('/api/otp', otpRouter);
 
 app.listen(port, () => {
     console.log("Server is running on port: " + port);

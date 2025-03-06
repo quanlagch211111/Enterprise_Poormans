@@ -53,17 +53,25 @@ const signinUser = (userData) => {
     const { email, password} = userData;
     try {
       const user = await User.findOne({ email: email})
-      if(user == null) {
-        resolve({
-          status: 'OK',
-          message: 'There was not a user with that email'
-        })
+      if (user == null) {
+        return resolve({
+          status: 'ERROR',
+          message: 'There was no user with that email'
+        });
       }
+
+      if (user.isVerified == false) {
+        return resolve({
+          status: 'NEED_VERIFICATION',
+          message: 'This account has not been verified'
+        });
+      }
+
       const comparePassword = bcrypt.compareSync(password, user.password);
 
       if (!comparePassword){
         resolve({
-          status: 'OK',
+          status: 'ERROR',
           message: 'this is wrong password'
         })
       }
@@ -84,7 +92,7 @@ const signinUser = (userData) => {
       })
 
         resolve({
-          status: 'success',
+          status: 'SUCCESS',
           message: 'Login successful',
           accesstoken,
           refreshtoken

@@ -1,20 +1,21 @@
 // const UserOTPVerification = require('../models/UserOTPVerification');
-
+const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator');
-const dotenv = require('dotenv');
+
 
 dotenv.config();
 
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD
     }
 });
-
 
 const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Sinh OTP 6 số

@@ -25,27 +25,27 @@ exports.createUser = async (req, res) => {
       const response = await UserService.createUser({ username, email, password, address, phone, isVerified: false });
       console.log(response);
 
-      const otp = generateOtp();
-      const otpExpiration = Date.now() + 5 * 60 * 1000;
+    //   const otp = generateOtp();
+    //   const otpExpiration = Date.now() + 5 * 60 * 1000;
 
-      await UserOTPVerification.findOneAndUpdate(
-        { userId: response.data.id }, 
-        {
-            email : email,
-            otp,
-            expiresAt: otpExpiration,
-            createAt: Date.now()
-        },
-        { upsert: true, new: true }
-    );
+    //   await UserOTPVerification.findOneAndUpdate(
+    //     { userId: response.data.id }, 
+    //     {
+    //         email : email,
+    //         otp,
+    //         expiresAt: otpExpiration,
+    //         createAt: Date.now()
+    //     },
+    //     { upsert: true, new: true }
+    // );
     
 
-          try {
-            await sendOtpEmail(email, otp);
-        } catch (err) {
-            console.error("Error sending OTP email:", err.message);
-            return res.status(500).json({ message: "Failed to send OTP. Please try again." });
-        }
+    //       try {
+    //         await sendOtpEmail(email, otp);
+    //     } catch (err) {
+    //         console.error("Error sending OTP email:", err.message);
+    //         return res.status(500).json({ message: "Failed to send OTP. Please try again." });
+    //     }
 
       return res.status(200).json({ message: 'User created. Please verify your email with OTP.' });
   
@@ -77,10 +77,6 @@ exports.signinUser = async (req, res) => {
         message: 'Invalid email format',
       });
     }
-
-    // if (!user.isVerified) {
-    //   return res.status(403).json({ message: 'Please verify your email first' });
-    // }
 
     const response = await UserService.signinUser(req.body);
     const { refreshtoken, ...userData } = response;
