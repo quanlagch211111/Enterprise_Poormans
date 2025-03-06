@@ -1,5 +1,4 @@
 const Messages = require('../models/Message');
-<<<<<<< HEAD
 const Groups = require('../models/Group');
 
 module.exports.getMessages = async (req, res, next) => {
@@ -17,19 +16,6 @@ module.exports.getMessages = async (req, res, next) => {
         ]
       }).sort({ created_at: 1 });
     }
-=======
-
-module.exports.getMessages = async (req, res, next) => {
-  try {
-    const { from, to } = req.body;
-
-    const messages = await Messages.find({
-      $or: [
-        { sender_id: from, receiver_id: to },
-        { sender_id: to, receiver_id: from }
-      ]
-    }).sort({ created_at: 1 });
->>>>>>> origin/main
 
     const projectedMessages = messages.map((msg) => {
       return {
@@ -45,7 +31,6 @@ module.exports.getMessages = async (req, res, next) => {
 
 module.exports.addMessage = async (req, res, next) => {
   try {
-<<<<<<< HEAD
     const { to, group_id, message } = req.body;
     const from = req.user.payload.id; 
 
@@ -53,12 +38,6 @@ module.exports.addMessage = async (req, res, next) => {
       sender_id: from,
       receiver_id: to,
       group_id,
-=======
-    const { from, to, message } = req.body;
-    const data = await Messages.create({
-      sender_id: from,
-      receiver_id: to,
->>>>>>> origin/main
       content: message,
     });
 
@@ -67,7 +46,6 @@ module.exports.addMessage = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-<<<<<<< HEAD
 };
 
 module.exports.createGroup = async (req, res, next) => {
@@ -110,6 +88,4 @@ module.exports.addMemberToGroup = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-=======
->>>>>>> origin/main
 };

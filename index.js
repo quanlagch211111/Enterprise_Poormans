@@ -13,16 +13,18 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-mongoose.connect(process.env.MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         console.log('Connected to DB successfully');
     })
     .catch((err) => {
         console.log('Failed to connect to DB: ' + err.message);
     });
+
+
+const SubmissionFolderRouter = require('./src/routes/submissionfolderRoute');
+const documentRouter = require('./src/routes/documentRoute');
+const otpRouter = require('./src/routes/otpRoute');
 
 const UserRouter = require('./src/routes/Userroutes');
 const MessageRouter = require('./src/routes/messageRoute');
@@ -34,7 +36,9 @@ app.use(cookieParser());
 
 app.use('/api/users', UserRouter);
 app.use('/api/messages', MessageRouter);
-app.use('/api/assignments', AssignmentRouter);
+app.use('/api/submissionFolders', SubmissionFolderRouter);
+app.use('/api/documents', documentRouter);
+app.use('/api/otp', otpRouter);
 
 app.listen(port, () => {
     console.log("Server is running on port: " + port);
