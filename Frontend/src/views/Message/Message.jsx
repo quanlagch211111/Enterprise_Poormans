@@ -24,32 +24,6 @@ export const Message = () => {
               <input type="text" placeholder="Search here..." />
               <MDBBtn onClick={toggleOpen}>+</MDBBtn>
             </div>
-            <div className="contacts">
-              <h3>Contacts</h3>
-              <ul>
-                <li>
-                  <img
-                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
-                    alt="Contact 1"
-                  />{" "}
-                  Contact 1
-                </li>
-                <li>
-                  <img
-                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
-                    alt="Contact 2"
-                  />{" "}
-                  Contact 2
-                </li>
-                <li>
-                  <img
-                    src="https://gamek.mediacdn.vn/133514250583805952/2024/4/8/visual-avata-1712548856362-1712548857464569977792.jpg"
-                    alt="Contact 3"
-                  />{" "}
-                  Contact 3
-                </li>
-              </ul>
-            </div>
             <div className="chats">
               <h3>Chats</h3>
               <ul>

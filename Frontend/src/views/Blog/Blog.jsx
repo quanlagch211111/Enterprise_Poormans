@@ -28,9 +28,6 @@ export const Blog = () => {
   return (
     <>
       <div className="main-content">
-        <div className="welcome-section">
-          <h1 className="welcome">Blog học tập</h1>
-        </div>
         <div className="dashboard-section">
           <div className="section-header">
             <h3 className="section-title">
@@ -38,6 +35,15 @@ export const Blog = () => {
             </h3>
 
             <div className="action d-flex">
+              {!isAllBlogs && (
+                <button
+                  className="btn btn-primary"
+                  style={{ marginRight: "10px" }}
+                  onClick={() => setScrollableModal(!scrollableModal)}
+                >
+                  Viết bài mới
+                </button>
+              )}
               <span
                 className={"doc-tabs " + (!isAllBlogs ? "active" : "")}
                 onClick={isAllBlogs ? toggleAllBlogs : undefined}
@@ -58,18 +64,33 @@ export const Blog = () => {
               Viết bài mới
             </button> */}
           </div>
-          <div className="action mb-3 d-flex justify-content-end">
-            {!isAllBlogs && (
-              <button
-                className="btn btn-primary"
-                onClick={() => setScrollableModal(!scrollableModal)}
-              >
-                Viết bài mới
-              </button>
-            )}
-          </div>
 
           <div className="blog-grid">
+            <article className="blog-card" onClick={toggleOpen}>
+              <div className="blog-image">
+                <img
+                  src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/bb/a3/97/predator-ride-in-the.jpg?w=900&h=500&s=1"
+                  alt=""
+                />
+              </div>
+              <div className="blog-content">
+                <div className="blog-tags">
+                  <span className="blog-tag">Toán học</span>
+                  <span className="blog-tag">Lớp 10</span>
+                </div>
+                <h4 className="blog-title">
+                  Phương pháp giải phương trình lượng giác
+                </h4>
+                <p className="blog-excerpt">
+                  Khám phá các kỹ thuật giải nhanh phương trình lượng giác cơ
+                  bản...
+                </p>
+                <div className="blog-meta">
+                  <span className="blog-author">Nguyễn Văn C</span>
+                  <span className="blog-date">2 ngày trước</span>
+                </div>
+              </div>
+            </article>
             <article className="blog-card" onClick={toggleOpen}>
               <div className="blog-image">
                 <img
