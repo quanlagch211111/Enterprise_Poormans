@@ -10,6 +10,8 @@ import Assignment from "./views/Assignment/Assignment";
 import { Login } from "./views/Login/Login";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Nav";
+import { OtpConfirm } from "./views/Confirm/OtpConfirm";
+import MeetingForm from "./views/Meetin/Meeting";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           <Route path="/schedule" element={<Calender />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/otp-confirm" element={<OtpConfirm />} />
+          <Route path="/meeting" element={<MeetingForm />} />
         </Routes>
       </div>
     </BrowserRouter>

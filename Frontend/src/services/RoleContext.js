@@ -4,7 +4,7 @@ import React, { createContext, useState } from "react";
 export const RoleContext = createContext();
 
 export const RoleProvider = ({ children }) => {
-  const [role, setRole] = useState("TUTOR"); // Default role
+  const [role, setRole] = useState("ADMIN"); // Default role
 
   return (
     <RoleContext.Provider value={{ role, setRole }}>

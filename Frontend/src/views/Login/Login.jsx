@@ -21,12 +21,11 @@ export const Login = () => {
   };
 
   return (
-    
     <MDBContainer
       fluid
       className="d-flex align-items-center justify-content-center vh-100"
     >
-      <MDBRow>
+      <MDBRow className="w-100 d-flex justify-content-center">
         <MDBCol md="6">
           <MDBCard>
             <MDBCardHeader className="text-center">
