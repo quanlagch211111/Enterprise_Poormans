@@ -1,15 +1,14 @@
 import {
-  Button,
   Eventcalendar,
   formatDate,
   Popup,
   setOptions,
-  Toast /* localeImport */,
+  Toast,
 } from "@mobiscroll/react";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import "@mobiscroll/react/dist/css/mobiscroll.min.css";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
-import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 import {
   MDBBtn,
   MDBModal,
@@ -30,7 +29,7 @@ setOptions({
   theme: "ios",
   themeVariant: "light",
 });
-const Calendar = () => {
+export const Schedule = () => {
   const timer = useRef(null);
   const navigate = useNavigate();
   const [events, setEvents] = useState([
@@ -319,5 +318,3 @@ const Calendar = () => {
     </div>
   );
 };
-
-export default Calendar;
