@@ -1,5 +1,12 @@
-import { Eventcalendar, getJson, setOptions, Toast } from "@mobiscroll/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Eventcalendar,
+  formatDate,
+  Popup,
+  setOptions,
+  Toast /* localeImport */,
+} from "@mobiscroll/react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
 import "@mobiscroll/react/dist/css/mobiscroll.min.css";
@@ -14,64 +21,82 @@ import {
   MDBModalFooter,
   MDBInput,
 } from "mdb-react-ui-kit";
-
-import dayjs from "dayjs";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { useNavigate } from "react-router";
+import dayjs from "dayjs";
 
 setOptions({
   theme: "ios",
   themeVariant: "light",
 });
-
 const Calendar = () => {
+  const timer = useRef(null);
+  const navigate = useNavigate();
   const [events, setEvents] = useState([
     {
-      id: uuidv4,
+      id: uuidv4(),
       start: "2025-03-03",
       end: "2025-03-09",
       title: "Short trip!",
     },
-    { id: uuidv4, start: "2025-03-04", end: "2025-03-10", title: "Birthday" },
-    { id: uuidv4, start: "2025-03-05", end: "2025-03-20", title: "X-mas" },
+    {
+      id: uuidv4(),
+      start: "2025-03-04",
+      end: "2025-03-10",
+      title: "Birthday",
+    },
+    {
+      id: uuidv4(),
+      start: "2025-03-05",
+      end: "2025-03-20",
+      title: "X-mas",
+    },
   ]);
-  const [modalEvents, setModalEvents] = useState([null]);
-  const [centredModal, setCentredModal] = useState(false);
+
   const [startAt, setStartAt] = useState(null);
   const [endAt, setEndAt] = useState(null);
+  const [meetingTime, setMeetingTime] = useState("");
   const [title, setTitle] = useState("");
+  const [isTooltipOpen, setTooltipOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [tooltipAnchor, setTooltipAnchor] = useState(null);
+  const [tooltipColor, setTooltipColor] = useState("4895ef");
+
+  const myView = useMemo(
+    () => ({ calendar: { labels: true, count: true } }),
+    []
+  );
+  const openTooltip = useCallback((args) => {
+    const event = args.event;
+    const time =
+      formatDate("hh:mm A", new Date(event.start)) +
+      " - " +
+      formatDate("hh:mm A", new Date(event.end));
+
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    // setAppointment(event);
+    setTitle(event.title);
+    setMeetingTime(time);
+    setTooltipAnchor(args.domEvent.target);
+    setTooltipOpen(true);
+  }, []);
+  const [centredModal, setCentredModal] = useState(false);
 
   const toggleOpen = () => setCentredModal(!centredModal);
 
   const [isToastOpen, setToastOpen] = useState(false);
   const [toastText, setToastText] = useState("");
-  const [selectedDate, setSelectedDate] = useState(null);
   const [isCreate, setIsCreate] = useState(false);
 
-  // State cho form thêm/sửa sự kiện
-  const [newEvent, setNewEvent] = useState({
-    id: "",
-    title: "",
-    start: "",
-    end: "",
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Cấu hình view cho lịch
-  const myView = useMemo(
-    () => ({ calendar: { labels: true, count: true } }),
-    []
-  );
-
-  // Đóng Toast
   const handleToastClose = useCallback(() => {
     setToastOpen(false);
   }, []);
 
-  // Tạo sự kiện mới
   const createEvent = () => {
-    console.log(">>> Check: ", title + startAt + endAt);
     if (!title || !startAt || !endAt) {
       setToastText("Vui lòng điền đầy đủ thông tin!");
       setToastOpen(true);
@@ -79,37 +104,22 @@ const Calendar = () => {
     }
 
     const event = {
-      id: uuidv4(), // Gọi hàm uuidv4() để tạo id
+      id: uuidv4(),
       title: title,
-      start: dayjs(startAt).toDate(), // Bạn có thể format theo định dạng mong muốn
+      start: dayjs(startAt).toDate(),
       end: dayjs(endAt).toDate(),
+      color: "#ccc", // Mặc định màu
     };
-    console.log(">>> Types: ", {
-      title: typeof title,
-      startAt: typeof startAt,
-      endAt: typeof endAt,
-    });
-    console.log(">>> Event wwith id", event);
 
     setEvents([...events, event]);
-    setToastText("Đã thêm sự kiện: " + newEvent.title);
+    setToastText("Đã thêm sự kiện: " + title);
     setToastOpen(true);
+    setTitle("");
+    setStartAt(null);
+    setEndAt(null);
+    toggleOpen();
   };
 
-  // Cập nhật sự kiện
-  const updateEvent = () => {
-    if (!newEvent.id) return;
-
-    const updatedEvents = events.map((event) =>
-      event.id === newEvent.id ? { ...newEvent } : event
-    );
-    setEvents(updatedEvents);
-    setToastText("Đã cập nhật sự kiện: " + newEvent.title);
-    setToastOpen(true);
-    setIsEditing(false);
-  };
-
-  // Xóa sự kiện
   const deleteEvent = useCallback(
     (args) => {
       const eventToDelete = args.event;
@@ -123,40 +133,53 @@ const Calendar = () => {
     [events]
   );
 
-  // Chọn sự kiện để chỉnh sửa
-  const handleEventClick = useCallback((args) => {
-    const event = args.event;
-    if (event) {
-      setModalEvents({
-        id: event.id,
-        title: event.title,
-        start: event.start.split("T")[0],
-        end: event.end.split("T")[0],
-      });
-      setIsCreate(!isCreate);
-      toggleOpen();
+  const handleEventClick = useCallback(
+    (args) => {
+      openTooltip(args);
+    },
+    [openTooltip]
+  );
+
+  const handleCellDoubleClick = useCallback((args) => {
+    setStartAt(dayjs(args.date));
+    setEndAt(dayjs(args.date));
+    setIsCreate(true);
+    toggleOpen();
+  }, []);
+
+  const handleTooltipClose = useCallback(() => {
+    setTooltipOpen(false);
+  }, []);
+
+  const renderLabel = useCallback((event) => {
+    return (
+      <div
+        style={{
+          background: event.color || "#ccc",
+          color: "#fff",
+          padding: "2px 5px",
+          borderRadius: "3px",
+        }}
+      >
+        {event.title}
+      </div>
+    );
+  }, []);
+  const handleMouseEnter = useCallback(() => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
     }
   }, []);
 
-  const handleCellDoubleClick = useCallback(
-    (args) => {
-      console.log(">>> ARGS: ", args.date);
-      setStartAt(dayjs(args.date));
-      setEndAt(dayjs(args.date));
-      setIsCreate(!isCreate);
-      toggleOpen();
-    },
-    [toggleOpen]
-  );
-
-  // Xử lý thay đổi input trong form
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewEvent((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleMouseLeave = useCallback(() => {
+    timer.current = setTimeout(() => {
+      setTooltipOpen(false);
+    }, 200);
+  }, []);
 
   return (
-    <div className="main-content">
+    <div className="main-content" style={{ position: "relative" }}>
       <Eventcalendar
         clickToCreate={false}
         onCellDoubleClick={handleCellDoubleClick}
@@ -165,20 +188,22 @@ const Calendar = () => {
         dragToResize={false}
         eventDelete={true}
         data={events}
+        showEventTooltip={false}
         view={myView}
-        eventPopover={false}
+        // renderLabel={renderLabel}
         onEventClick={handleEventClick}
-        onEventDeleted={deleteEvent} // Xóa khi kéo thả (nếu có)
+        onEventDeleted={deleteEvent}
         displayTimezone="none"
       />
 
-      {/* Thông báo Toast */}
+      {/* Toast */}
       <Toast
         message={toastText}
         isOpen={isToastOpen}
         onClose={handleToastClose}
       />
 
+      {/* Modal */}
       <MDBModal
         tabIndex="-1"
         open={centredModal}
@@ -187,77 +212,110 @@ const Calendar = () => {
         <MDBModalDialog centered>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Create New Event</MDBModalTitle>
-              {isCreate ? (
-                <MDBBtn
-                  className="btn-close"
-                  color="none"
-                  onClick={() => {
-                    toggleOpen();
-                    setIsCreate(!isCreate);
-                  }}
-                ></MDBBtn>
-              ) : (
-                <div className="dropdown ">
-                  <div className="container-select d-flex justify-content-end">
-                    <div className="dropdown-select  d-flex align-items-center justify-content-center">
-                      <img
-                        src={require("../../assets/images/more.png")}
-                        alt=""
-                      />
-                    </div>
-                  </div>
-                  <ul className="dropdown-list d-flex gap-2 flex-column">
-                    <li className="dropdown-item">Delete</li>
-                    <li className="dropdown-item">Update</li>
-                  </ul>
-                </div>
-              )}
+              <MDBModalTitle>
+                {isCreate ? "Tạo sự kiện mới" : "Tham gia cuộc họp"}
+              </MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => {
+                  toggleOpen();
+                  setIsCreate(false);
+                }}
+              ></MDBBtn>
             </MDBModalHeader>
             <MDBModalBody>
-              <MDBInput
-                label="Example label"
-                id="form1"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <div className="start-end-date d-flex gap-3 mt-3">
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DateTimePicker
-                    label="Start"
-                    value={startAt}
-                    onChange={(newValue) => setStartAt(newValue)}
+              {isCreate ? (
+                <>
+                  <MDBInput
+                    label="Tiêu đề sự kiện"
+                    id="form1"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                   />
-                  <DateTimePicker
-                    label="End"
-                    value={endAt}
-                    onChange={(newValue) => setEndAt(newValue)}
-                  />
-                </LocalizationProvider>
-              </div>
+                  <div className="start-end-date d-flex gap-3 mt-3">
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DateTimePicker
+                        label="Bắt đầu"
+                        value={startAt}
+                        onChange={(newValue) => setStartAt(newValue)}
+                      />
+                      <DateTimePicker
+                        label="Kết thúc"
+                        value={endAt}
+                        onChange={(newValue) => setEndAt(newValue)}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </>
+              ) : (
+                <p>Bạn có muốn tham gia cuộc họp không?</p>
+              )}
             </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn
                 color="secondary"
                 onClick={() => {
                   toggleOpen();
-                  if (isCreate) {
-                    setIsCreate(!isCreate);
-                  }
+                  setIsCreate(false);
                 }}
               >
-                Close
+                Đóng
               </MDBBtn>
               {isCreate ? (
-                <MDBBtn onClick={createEvent}>Save changes</MDBBtn>
+                <MDBBtn onClick={createEvent}>Lưu</MDBBtn>
               ) : (
-                <div className="null"></div>
+                <MDBBtn onClick={() => navigate("/meeting")}>Có</MDBBtn>
               )}
             </MDBModalFooter>
           </MDBModalContent>
         </MDBModalDialog>
       </MDBModal>
+
+      <Popup
+        anchor={tooltipAnchor}
+        contentPadding={false}
+        display="anchored"
+        isOpen={isTooltipOpen}
+        scrollLock={false}
+        showOverlay={false}
+        touchUi={false}
+        width={350}
+        onClose={handleTooltipClose}
+      >
+        <div
+          className="mds-tooltip"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="mds-tooltip-header text-center danger-bg">
+            <span>{title}</span>
+          </div>
+          <div className="mbsc-padding">
+            <div className="mds-tooltip-label mbsc-margin">
+              Teacher: <span className="mbsc-light">Dao Van Hieu</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              Time: <span className="mbsc-light">{meetingTime}</span>
+            </div>
+            <div className="action d-flex justify-content-center">
+              <MDBBtn
+                className="me-1"
+                color="danger"
+                onClick={() => navigate("/meeting")}
+              >
+                Join Meeting
+              </MDBBtn>
+            </div>
+          </div>
+        </div>
+      </Popup>
+      <Toast
+        isOpen={isToastOpen}
+        message={toastMessage}
+        onClose={handleToastClose}
+      />
     </div>
   );
 };

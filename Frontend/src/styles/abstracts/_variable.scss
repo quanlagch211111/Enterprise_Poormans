@@ -3,9 +3,20 @@
   --primary-opacity: #4362ee7d;
   --secondary: #3f37c9;
   --accent: #4895ef;
-  --danger: #f72585;
+  --danger: #e05170;
   --light: #e6ebee;
   --dark: #2b2d42;
+  --light-green: #45bf38;
   --border-radius: 15px;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.accent-bg {
+  background-color: var(--accent);
+}
+.danger-bg {
+  background-color: var(--danger);
+}
+.light-green-color {
+  color: var(--light-green);
 }

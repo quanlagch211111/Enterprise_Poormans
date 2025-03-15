@@ -1,6 +1,6 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Dashboard } from "./views/Dashboard/Dashboard";
 import { Message } from "./views/Message/Message";
 import { Blog } from "./views/Blog/Blog";
@@ -10,13 +10,18 @@ import Assignment from "./views/Assignment/Assignment";
 import { Login } from "./views/Login/Login";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Nav";
+import { MeetingCall } from "./views/Meeting/Meeting_Call";
 
 function App() {
+  const location = useLocation();
+  const hideNavRoutes = ["/meeting", "/login", "/verify-email"];
+  const shouldShowNav = !hideNavRoutes.includes(location.pathname);
+
   return (
-    <BrowserRouter>
-      <Sidebar />
+    <>
+      {shouldShowNav && <Sidebar />}
       <div className="right-bar">
-        <Header />
+        {shouldShowNav && <Header />}
         <Routes>
           <Route path="/" element={<Dashboard />} exact></Route>
           <Route path="/message" element={<Message />}></Route>
@@ -25,9 +30,10 @@ function App() {
           <Route path="/schedule" element={<Calender />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/meeting" element={<MeetingCall />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 
