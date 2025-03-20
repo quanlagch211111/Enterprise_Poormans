@@ -1,5 +1,5 @@
 const express = require('express'); 
-const { createUser, signinUser, updateUser, deleteUser, getallUser, detailUser, reprovideToken, verifyOtp } = require('../controllers/UserControllers');    
+const { createUser, signinUser, updateUser, deleteUser, getallUser, detailUser, reprovideToken, verifyOtp, logoutUser } = require('../controllers/UserControllers');    
 const router = express.Router();
 const { authMiddleware, isStaff} = require('../middlewares/Authmiddlewares');
 
@@ -25,6 +25,8 @@ router.post('/token', reprovideToken)
 
 
 router.post('/verify-otp', verifyOtp);
+
+router.post("/logout", logoutUser);
 
 
 module.exports = router;

@@ -1,6 +1,5 @@
 const otpService = require('../services/Otpservices');
 
-// Gửi OTP lần đầu
 const sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -25,7 +24,6 @@ const resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
         
-        // Tìm OTP gần nhất của email trong DB
         const existingOtp = await UserOTP.findOne({ email }).sort({ createdAt: -1 });
 
         if (existingOtp) {

@@ -1,6 +1,7 @@
 const UserService = require('../services/Userservices')
 const {provideToken} = require('../services/Jwtservices')
 const UserOTPVerification = require('../models/UserOTPVerification')
+const TokenService = require('../services/Blacklisttokenservice')
 const {generateOtp, sendOtpEmail} = require('../services/Otpservices')
 
 
@@ -169,6 +170,16 @@ exports.reprovideToken = async (req, res) => {
       return res.status(401).send('Refresh Token is required');
     }
 
+    // Kiểm tra xem refresh token có bị blacklist không
+    const isBlacklisted = await TokenService.isTokenBlacklisted(
+          refreshToken
+    );
+    if (isBlacklisted) {
+           return res.status(403).send("Refresh Token is blacklisted");
+    }
+    
+
+
     const response = await provideToken(token);
     if (response.status === 'ERROR') {
       return res.status(403).send(response.message);
@@ -217,3 +228,25 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
+exports.logoutUser = async(req, res, next) => {
+  try {
+      const refreshToken = req.cookies.refreshtoken;
+
+      if (!refreshToken) {
+          return res
+              .status(400)
+              .json({ message: "No refresh token provided" });
+      }
+      await TokenService.addToBlacklist(refreshToken);
+
+      res.clearCookie("refreshtoken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+      });
+
+      return res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+      console.error("Error logging out user");
+      next(err);
+  }
+};
