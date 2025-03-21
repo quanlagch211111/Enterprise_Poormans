@@ -3,27 +3,46 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const authMiddleware = (req, res, next) => {
-  const token = req.headers['authorization'];
+const authMiddleware = (tokenType = "access") => (req, res, next) => {
+  const token = req.headers["authorization"];
 
-  if (!token) {
-    return res.status(403).send('A token is required for authentication');
+  if (!token || !token.startsWith("Bearer ")) {
+    return res.status(403).send("A token is required for authentication");
   }
 
-  const tokenWithoutBearer = token.split(' ')[1];
+  const tokenWithoutBearer = token.split(" ")[1];
 
+  if (!tokenWithoutBearer) {
+    return res.status(403).send("A token is required for authentication");
+  }
+
+  let secret;
+  switch (tokenType) {
+    case "access":
+      secret = process.env.ACCESS_TOKEN;
+      break;
+    case "reset-password":
+      secret = process.env.PASSWORD_RESET_TOKEN;
+      break;
+    case "refresh":
+      secret = process.env.REFRESH_TOKEN;
+      break;
+    default:
+      throw new Error("Invalid token type");
+  }
+
+  let decoded;
   try {
-    const decoded = jwt.verify(tokenWithoutBearer, process.env.ACCESS_TOKEN);
-
+    decoded = jwt.verify(tokenWithoutBearer, secret);
     req.user = decoded;
     console.log("Decoded Token:", decoded);
-
     next();
   } catch (err) {
-    console.error('Token verification error:', err);
-    return res.status(401).send('Invalid Token');
+    console.error("Token verification error:", err);
+    return res.status(401).send("Invalid Token");
   }
 };
+
 
 
 const isStaff = (req, res, next) => {

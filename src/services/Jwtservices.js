@@ -12,6 +12,13 @@ const generalAccessToken = async (payload) => {
   return accessToken;
 }
 
+const generalResetPasswordToken = async (payload) => {
+  const accessToken = jwt.sign({
+    payload 
+  }, process.env.PASSWORD_RESET_TOKEN , { expiresIn: '10m' });
+
+  return accessToken;
+}
 
 
 
@@ -61,6 +68,6 @@ const generalRefreshToken = async (payload) => {
 
 
 module.exports = {
-  generalAccessToken , generalRefreshToken, provideToken
+  generalAccessToken , generalRefreshToken, provideToken, generalResetPasswordToken
 };
 

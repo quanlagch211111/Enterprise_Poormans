@@ -1,8 +1,9 @@
 const UserService = require('../services/Userservices')
-const {provideToken} = require('../services/Jwtservices')
+const {provideToken, generalResetPasswordToken} = require('../services/Jwtservices')
 const UserOTPVerification = require('../models/UserOTPVerification')
 const TokenService = require('../services/Blacklisttokenservice')
-const {generateOtp, sendOtpEmail} = require('../services/Otpservices')
+const {sendOtp} = require('../services/Otpservices')
+const OtpUser = require('../models/UserOTPVerification');
 
 
 
@@ -26,27 +27,6 @@ exports.createUser = async (req, res) => {
       const response = await UserService.createUser({ username, email, password, address, phone, isVerified: false });
       console.log(response);
 
-    //   const otp = generateOtp();
-    //   const otpExpiration = Date.now() + 5 * 60 * 1000;
-
-    //   await UserOTPVerification.findOneAndUpdate(
-    //     { userId: response.data.id }, 
-    //     {
-    //         email : email,
-    //         otp,
-    //         expiresAt: otpExpiration,
-    //         createAt: Date.now()
-    //     },
-    //     { upsert: true, new: true }
-    // );
-    
-
-    //       try {
-    //         await sendOtpEmail(email, otp);
-    //     } catch (err) {
-    //         console.error("Error sending OTP email:", err.message);
-    //         return res.status(500).json({ message: "Failed to send OTP. Please try again." });
-    //     }
 
       return res.status(200).json({ message: 'User created. Please verify your email with OTP.' });
   
@@ -247,6 +227,95 @@ exports.logoutUser = async(req, res, next) => {
       return res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
       console.error("Error logging out user");
+      next(err);
+  }
+};
+
+
+exports.requestPasswordReset = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    await sendOtp(email);
+
+    res.status(200).json({
+        status: "Success",
+        message:
+            "OTP sent to your email. Please verify to reset your password.",
+    });
+} catch (err) {
+    console.error("Error requesting password reset");
+    next(err);
+}
+};
+
+exports.verifyPasswordResetOtp = async (req, res, next) => {
+  try {
+      const { email, otp } = req.body;
+
+      console.log("Received OTP:", otp);
+
+      const otpRecord = await OtpUserawait.findOne({ email });
+      if (!otpRecord) {
+          return res
+              .status(400)
+              .json({ message: "OTP record not found" });
+      }
+
+      console.log("Stored OTP:", otpRecord.otp);
+
+      if (otpRecord.otp !== otp) {
+          return res.status(400).json({ message: "Invalid OTP" });
+      }
+
+      if (otpRecord.expiresAt < new Date()) {
+          return res.status(400).json({ message: "OTP has expired" });
+      }
+
+      await OtpUser.deleteMany({ email });
+
+      const resettoken = await generalResetPasswordToken({
+          email: email,
+      });
+      console.log("Reset token: ", resettoken);
+
+      return res.status(200).json({
+          message: "Email verified successfully",
+          resettoken: resettoken,
+      });
+  } catch (err) {
+      console.error("Error verifying password reset OTP");
+      next(err);
+  }
+};
+
+exports.resetPassword = async(req, res, next) => {
+  try {
+      const { newPassword } = req.body;
+      const payload = req.user.payload;
+
+      if (!newPassword) {
+          throw new BadRequestError("New password is required");
+      }
+
+      // // Verify payload before allowing password reset
+      if (!payload) {
+        console.log("ERRORERROR ");
+      } else {
+          console.log("new Password: ", newPassword);
+      }
+
+      const result = await UserService.resetPassword(
+          payload.email,
+          newPassword
+      );
+
+      res.status(200).json({
+          status: "Success",
+          message: result.message,
+      });
+  } catch (err) {
+      console.error("Error verifying OTP and resetting password");
       next(err);
   }
 };

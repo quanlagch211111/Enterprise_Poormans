@@ -1,6 +1,7 @@
 const User = require('../models/Users');
 const bcrypt = require('bcrypt');
 const  { generalAccessToken, generalRefreshToken } = require('../services/Jwtservices');
+const {sendOtp} = require('../services/Otpservices');
 
 
 const Student = require('../models/Student');
@@ -31,6 +32,8 @@ const createUser = (userData) => {
         phone,
         isVerified : false 
       });
+      await sendOtp(email);
+
 
       if (newUser) {
         resolve({
@@ -267,11 +270,45 @@ const updateUserByEmail  = (email, datauser) => {
    });
 };
 
+const resetPassword = async (email, newPassword) => {
+  try {
+      if (!email || !newPassword) {
+          throw new BadRequestError(
+              "Email and new password are required"
+          );
+      }
+
+      const user = await User.findOne({ email });
+      if (!user) {
+          throw new NotFoundError("User not found");
+      }
+
+      if (bcrypt.compareSync(newPassword, user.password)) {
+          throw new BadRequestError(
+              "New password cannot be the same as the old password"
+          );
+      }
+
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      user.password = hashedNewPassword;
+      await user.save();
+
+      return {
+          status: "Success",
+          message: "Password reset successfully",
+      };
+  } catch (err) {
+      console.error("Error resetting password");
+      throw err;
+  }
+};
+
 
 
 
 
 
 module.exports = {
-  createUser, signinUser, updateUser, deleteUser, getallUser,detailUser
+  createUser, signinUser, updateUser, deleteUser, getallUser,detailUser, resetPassword
 };
