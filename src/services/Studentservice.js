@@ -40,7 +40,7 @@ const StudentService = {
   },
 
   async isStudent (userId) {
-    return await Student.exists({ userId });
+    return Boolean(await Student.exists({user_id: userId }));
   }
 
 };

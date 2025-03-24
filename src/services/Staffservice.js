@@ -40,7 +40,7 @@ const StaffService = {
   },
   
   async isStaff (userId) {
-    return await Staff.exists({ userId });
+    return Boolean(await Staff.exists({ user_id: userId  }));
   }
 };
 

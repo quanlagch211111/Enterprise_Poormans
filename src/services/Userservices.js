@@ -40,7 +40,6 @@ const createUser = (userData) => {
           data: newUser
         });
 
-        console.log('User created successfully' + resolve);
       }
     } catch (err) {
       reject({

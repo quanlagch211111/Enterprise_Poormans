@@ -40,7 +40,7 @@ const TutorService = {
   },
 
     async isTutor (userId) {
-      return await Tutor.exists({ userId });
+      return Boolean(await Tutor.exists({user_id: userId }));
     }
   
 
