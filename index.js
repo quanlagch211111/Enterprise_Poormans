@@ -38,6 +38,7 @@ app.use('/api/users', UserRouter);
 app.use('/api/messages', MessageRouter);
 app.use('/api/submissionFolders', SubmissionFolderRouter);
 app.use('/api/documents', documentRouter);
+app.use('/api/assignments', AssignmentRouter);
 app.use('/api/otp', otpRouter);
 
 app.listen(port, () => {

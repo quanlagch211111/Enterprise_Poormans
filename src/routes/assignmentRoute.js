@@ -1,20 +1,21 @@
-// const router = require("express").Router();
-// const assignmentController = require('../controllers/assignmentController');
-// const { authMiddleware, isAdmin } = require('../middlewares/Authmiddlewares');
+const express = require('express');
+const router = express.Router();
+const assignmentController = require('../controllers/assignmentController');
+const { authMiddleware, isStaff } = require('../middlewares/Authmiddlewares');
 
-// // Create a new assignment (Admin only)
-// router.post('/', authMiddleware, isAdmin, assignmentController.createAssignment);
+// Create a new assignment (Staff only)
+router.post('/', authMiddleware, isStaff, assignmentController.createAssignment);
 
-// // Get all assignments (Authenticated users)
-// router.get('/', authMiddleware, assignmentController.getAssignments);
+// Get all assignments (Authenticated users)
+router.get('/', authMiddleware, assignmentController.getAllAssignments);
 
-// // Get a specific assignment by ID (Authenticated users)
-// router.get('/:id', authMiddleware, assignmentController.getAssignmentById);
+// Get a specific assignment by ID (Authenticated users)
+router.get('/:id', authMiddleware, assignmentController.getAssignmentById);
 
-// // Update an assignment by ID (Admin only)
-// router.put('/:id', authMiddleware, isAdmin, assignmentController.updateAssignment);
+// Update an assignment by ID (Staff only)
+router.put('/:id', authMiddleware, isStaff, assignmentController.updateAssignmentById);
 
-// // Delete an assignment by ID (Admin only)
-// router.delete('/:id', authMiddleware, isAdmin, assignmentController.deleteAssignment);
+// Delete an assignment by ID (Staff only)
+router.delete('/:id', authMiddleware, isStaff, assignmentController.deleteAssignmentById);
 
-// module.exports = router;
+module.exports = router;	
