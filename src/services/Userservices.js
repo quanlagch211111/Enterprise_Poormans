@@ -2,11 +2,9 @@ const User = require('../models/Users');
 const bcrypt = require('bcrypt');
 const  { generalAccessToken, generalRefreshToken } = require('../services/Jwtservices');
 const {sendOtp} = require('../services/Otpservices');
-
-
-const Student = require('../models/Student');
-const Teacher = require('../models/Teacher');
-const Staff = require('../models/Staff');
+const StudentService = require('../services/studentService');
+const TutorService = require('../services/tutorService');
+const StaffService = require('../services/staffService');
 
 const createUser = (userData) => {
   return new Promise(async (resolve, reject) => {
@@ -41,6 +39,8 @@ const createUser = (userData) => {
           message: 'User created successfully',
           data: newUser
         });
+
+        console.log('User created successfully' + resolve);
       }
     } catch (err) {
       reject({
@@ -80,9 +80,21 @@ const signinUser = (userData) => {
       }
 
       let role = null;
-      if (await Student.findOne({ user_id: user._id })) role = "STUDENT";
-      if (await Teacher.findOne({ user_id: user._id }))role = "TEACHER";
-      if (await Staff.findOne({ user_id: user._id })) role = "STAFF";
+
+    switch (true) {
+      case await StudentService.isStudent(user._id):
+        role = "STUDENT";
+        break;
+      case await TutorService.isTutor(user._id):
+        role = "TUTOR";
+        break;
+      case await StaffService.isStaff(user._id):
+        role = "STAFF";
+        break;
+      default:
+        role = "UNKNOWN";
+        break;
+    }
 
       const accesstoken = await generalAccessToken({
         id : user.id,

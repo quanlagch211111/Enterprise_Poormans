@@ -1,39 +1,62 @@
-const UserService = require('../services/Userservices')
-const {provideToken, generalResetPasswordToken} = require('../services/Jwtservices')
-const UserOTPVerification = require('../models/UserOTPVerification')
-const TokenService = require('../services/Blacklisttokenservice')
-const {sendOtp} = require('../services/Otpservices')
+const UserService = require('../services/Userservices');
+const StudentService = require('../services/studentService');
+const TutorService = require('../services/tutorService');
+const StaffService = require('../services/staffService');
+const {provideToken, generalResetPasswordToken} = require('../services/Jwtservices');
+const UserOTPVerification = require('../models/UserOTPVerification');
+const TokenService = require('../services/Blacklisttokenservice');
+const {sendOtp} = require('../services/Otpservices');
 const OtpUser = require('../models/UserOTPVerification');
-
 
 
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, email, password, address, phone } = req.body;
-    const reg = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
-    const Ischeckemail = reg.test(email);
+    const { username, email, password, address, phone, role, additionalInfo } = req.body;
 
-    if (!username || !email || !password || !address || !phone ) {
-      return res.status(404).json({
-        status: 'Error',
-        message: 'The input is required'
-      })}
-      else if (!Ischeckemail){
-        return res.status(404).json({
-          status: 'Error',
-          message: 'The input is email'
-      })}
-      const response = await UserService.createUser({ username, email, password, address, phone, isVerified: false });
-      console.log(response);
+    // Kiểm tra input
+    if (!username || !email || !password || !address || !phone || !role) {
+      return res.status(400).json({ status: 'Error', message: 'All fields are required' });
+    }
 
+    // Regex kiểm tra email hợp lệ
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ status: 'Error', message: 'Invalid email format' });
+    }
 
-      return res.status(200).json({ message: 'User created. Please verify your email with OTP.' });
-  
-} catch(err) {
-  return res.status(400).json({message: err.message});
-}
-}
+    // Gọi `UserService.createUser` và chờ kết quả
+    const userResponse = await UserService.createUser({ username, email, password, address, phone });
+
+    // Nếu UserService trả về thất bại, trả luôn response
+    if (userResponse.status !== 'Success') {
+      return res.status(400).json(userResponse);
+    }
+
+    // Lấy user từ kết quả
+    const newUser = userResponse.data;
+
+    // Xử lý role bằng switch-case
+    switch (role.toLowerCase()) {
+      case 'student':
+        await StudentService.createStudent({ user_id: newUser._id, ...additionalInfo });
+        break;
+      case 'tutor':
+        await TutorService.createTutor({ user_id: newUser._id, ...additionalInfo });
+        break;
+      case 'staff':
+        await StaffService.createStaff({ user_id: newUser._id, ...additionalInfo });
+        break;
+      default:
+        return res.status(400).json({ status: 'Error', message: 'Invalid role. Allowed roles: student, tutor, staff' });
+    }
+
+    return res.status(201).json({ message: 'User created. Please verify your email with OTP.' });
+
+  } catch (err) {
+    return res.status(500).json({ status: 'Error', message: err.message });
+  }
+};
 
 
 

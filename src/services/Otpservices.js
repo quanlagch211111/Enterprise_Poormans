@@ -11,7 +11,7 @@ dotenv.config();
 
 const sendOtp = async (email, otp = null) => {
     try {
-        const user = await User.findOne({ email }); // ✅ Sửa thành Mongoose query
+        const user = await User.findOne({ email }); 
         if (!user) {
             throw new NotFoundError("User not found");
         }
@@ -26,7 +26,7 @@ const sendOtp = async (email, otp = null) => {
             email,
             otp,
             user_id: user._id, // ✅ Đảm bảo đúng kiểu ObjectId của MongoDB
-            expires_at: new Date(Date.now() + 5 * 60 * 1000),
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         });
 
         await newOtp.save(); // ✅ Lưu vào MongoDB
