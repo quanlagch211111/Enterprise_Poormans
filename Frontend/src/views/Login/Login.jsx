@@ -1,7 +1,7 @@
-import React, { useState , useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from "react-router-dom";
 import {
   MDBContainer,
   MDBCol,
@@ -14,68 +14,67 @@ import {
   MDBCardHeader,
   MDBCardFooter,
 } from "mdb-react-ui-kit";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
+import ClipLoader from "react-spinners/ClipLoader";
 
 export const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const toastOptions = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      navigate("/"); 
+      navigate("/");
     }
   }, []);
 
   const handleLogin = async () => {
     if (email === "" && password === "") {
-      toast.error("Please fill in all fields", toastOptions);
+      toast.error("Please fill in all fields");
       return false;
     } else if (email === "") {
-      toast.error("Please fill in email field", toastOptions);
+      toast.error("Please fill in email field");
       return false;
     } else if (password === "") {
-      toast.error("Please fill in password field", toastOptions);
+      toast.error("Please fill in password field");
       return false;
     }
 
     try {
-      const response = await axios.post("http://localhost:3001/api/users/signin", {
-        email,
-        password,
-      },{
-        withCredentials: true,
-      });
+      setLoading(true);
+      const response = await axios.post(
+        "http://localhost:3001/api/users/signin",
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.status === 200) {
         const { accesstoken, refreshToken, ...userData } = response.data;
 
-      
         const decoded = jwtDecode(accesstoken);
-        console.log("Decoded JWT:", decoded); 
-        console.log("refreshToken:", refreshToken)
+        console.log("Decoded JWT:", decoded);
+        console.log("refreshToken:", refreshToken);
         localStorage.setItem("accessToken", accesstoken);
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
         localStorage.setItem("userData", JSON.stringify(userData));
 
-        toast.success("Login successful!", toastOptions);
+        toast.success("Login successful!");
+        setLoading(false);
         navigate("/");
       }
     } catch (error) {
       if (error.response && error.response.data.message) {
-        toast.error(error.response.data.message, toastOptions);
+        toast.error(error.response.data.message);
       } else {
-        toast.error("An error occurred. Please try again.", toastOptions);
+        toast.error("An error occurred. Please try again.");
       }
     }
   };
@@ -108,8 +107,12 @@ export const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="mb-4"
               />
-              <MDBBtn onClick={handleLogin} className="w-100 mb-4">
-                Login
+              <MDBBtn
+                onClick={handleLogin}
+                className="w-100 mb-4"
+                disable={isLoading}
+              >
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Login"}
               </MDBBtn>
               <div className="text-center">
                 <p>or login with:</p>

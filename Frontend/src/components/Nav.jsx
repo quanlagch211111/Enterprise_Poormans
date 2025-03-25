@@ -1,34 +1,12 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { RoleContext } from "../services/RoleContext";
 import axios from "axios";
+import { ConfirmLogout } from "./Modal";
 
 export const Sidebar = () => {
   const { role } = useContext(RoleContext);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    const confirmLogout = window.confirm("Are you sure you want to log out?");
-    if (!confirmLogout) return; 
-  
-    try {
-      const response = await axios.post('http://localhost:3001/api/users/logout', {}, {
-        withCredentials: true,
-      });
-  
-      if (response.status === 200) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userId');
-        navigate("/login");
-      } else {
-        console.error('Failed to log out:', response.data.message);
-      }
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-  
-
+  const [showModalLogout, setShowModalLogout] = useState(false);
   return (
     <>
       <div className="sidebar">
@@ -57,11 +35,19 @@ export const Sidebar = () => {
           <i className="fas fa-blog"></i>
           Blog
         </NavLink>
-        <a href="#" className="nav-item logout" onClick={handleLogout}>
+        <a
+          href="#"
+          className="nav-item logout"
+          onClick={() => setShowModalLogout(true)}
+        >
           <i className="fas fa-sign-out-alt"></i>
           Logout
         </a>
       </div>
+      <ConfirmLogout
+        show={showModalLogout}
+        onClose={() => setShowModalLogout(false)}
+      ></ConfirmLogout>
     </>
   );
 };
