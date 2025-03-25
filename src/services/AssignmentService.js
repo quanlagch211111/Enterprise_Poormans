@@ -1,6 +1,13 @@
 const Assignment = require('../models/Assignment');
 
 exports.createAssignment = async (data) => {
+    const { title, student_id, tutor_id, assigned_by } = data;
+
+    // Validate required fields
+    if (!title || !student_id || !tutor_id || !assigned_by) {
+        throw new Error('All fields are required');
+    }
+
     const assignment = new Assignment(data);
     return await assignment.save();
 };
@@ -9,8 +16,8 @@ exports.getAllAssignments = async () => {
     return await Assignment.find()
         .populate({
             path: 'student_id',
-            model: 'Users', // chính xác model tên là 'Users'
-            select: 'username email' // chỉ lấy username, email
+            model: 'Users',
+            select: 'username email'
         })
         .populate({
             path: 'tutor_id',
@@ -23,7 +30,6 @@ exports.getAllAssignments = async () => {
             select: 'username email'
         });
 };
-
 
 exports.getAssignmentById = async (id) => {
     return await Assignment.findById(id)

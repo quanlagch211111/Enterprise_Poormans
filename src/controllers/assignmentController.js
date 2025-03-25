@@ -2,6 +2,13 @@ const assignmentService = require('../services/AssignmentService');
 
 exports.createAssignment = async (req, res) => {
     try {
+        const { title, student_id, tutor_id, assigned_by } = req.body;
+
+        // Validate required fields
+        if (!title || !student_id || !tutor_id || !assigned_by) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
         const assignment = await assignmentService.createAssignment(req.body);
         res.status(201).json({ message: 'Assignment created successfully', assignment });
     } catch (error) {

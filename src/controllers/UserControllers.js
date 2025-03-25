@@ -1,4 +1,8 @@
 const UserService = require('../services/Userservices');
+const User = require('../models/Users');
+const Student = require('../models/Student');
+const Tutor = require('../models/Tutor');
+const Staff = require('../models/Staff');
 const StudentService = require('../services/studentService');
 const TutorService = require('../services/tutorService');
 const StaffService = require('../services/staffService');
@@ -340,5 +344,43 @@ exports.resetPassword = async(req, res, next) => {
   } catch (err) {
       console.error("Error verifying OTP and resetting password");
       next(err);
+  }
+};
+
+exports.getUsersWithRoles = async (req, res) => {
+  try {
+    // Fetch all users
+    const users = await User.find({}, { username: 1, email: 1 }); // Fetch only username and email
+
+    // Determine roles for each user
+    const usersWithRoles = await Promise.all(
+      users.map(async (user) => {
+        let role = null;
+
+        // Check if the user is a student
+        const isStudent = await Student.findOne({ user_id: user._id });
+        if (isStudent) role = "Student";
+
+        // Check if the user is a tutor
+        const isTutor = await Tutor.findOne({ user_id: user._id });
+        if (isTutor) role = "Tutor";
+
+        // Check if the user is a staff
+        const isStaff = await Staff.findOne({ user_id: user._id });
+        if (isStaff) role = "Staff";
+
+        return {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          role: role || "Unknown", // Default to "Unknown" if no role is found
+        };
+      })
+    );
+
+    res.status(200).json(usersWithRoles);
+  } catch (error) {
+    console.error("Error fetching users with roles:", error);
+    res.status(500).json({ message: "Failed to fetch users with roles" });
   }
 };
