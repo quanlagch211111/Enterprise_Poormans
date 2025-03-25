@@ -6,10 +6,22 @@ import {
   MDBDropdownMenu,
   MDBFile,
 } from "mdb-react-ui-kit";
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
+import { useNavigate } from "react-router";
 export const Document = () => {
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const [userInfo, setUserInfo] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
+  }, []);
   const [isAssignment, setAssignment] = useState(false);
-  const role = "ADMIN";
   const toggleAssignment = () => {
     setAssignment(!isAssignment);
   };
@@ -44,7 +56,7 @@ export const Document = () => {
           {!isAssignment ? (
             <div className="right-side ">
               <div className="document-actions ">
-                {role === "ADMIN" && (
+                {role === "STAFF" && (
                   <>
                     <div className="text-center w-100">
                       <p className="text-center">Student Name && Tutor Name</p>

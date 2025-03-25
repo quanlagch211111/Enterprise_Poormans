@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   Col,
   Container,
@@ -10,6 +11,18 @@ import {
 } from "react-bootstrap";
 
 export const MeetingCall = () => {
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const [userInfo, setUserInfo] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
+  }, []);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);

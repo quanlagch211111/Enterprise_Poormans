@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   MDBBtn,
   MDBModal,
@@ -17,6 +18,19 @@ import {
   MDBIcon,
 } from "mdb-react-ui-kit";
 export const Blog = () => {
+
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const [userInfo, setUserInfo] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
+  }, []);
   const [scrollableModal, setScrollableModal] = useState(false);
   const [centredModal, setCentredModal] = useState(false);
   const [isVisibility, setVisibility] = useState(false);

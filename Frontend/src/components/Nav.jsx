@@ -1,34 +1,44 @@
 import React, { useContext } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { RoleContext } from "../services/RoleContext";
+import axios from "axios";
 
 export const Sidebar = () => {
   const { role } = useContext(RoleContext);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const confirmLogout = window.confirm("Are you sure you want to log out?");
+    if (!confirmLogout) return; 
+  
+    try {
+      const response = await axios.post('http://localhost:3001/api/users/logout', {}, {
+        withCredentials: true,
+      });
+  
+      if (response.status === 200) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userId');
+        navigate("/login");
+      } else {
+        console.error('Failed to log out:', response.data.message);
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+  
+
   return (
     <>
       <div className="sidebar">
         <div className="sidebar-header">
           <h2>eTutoring</h2>
         </div>
-        {/* <div className="profile d-flex align-items-center flex-column gap-2">
-            <div className="profile-image ">
-              <img
-                src="https://images.ctfassets.net/h6goo9gw1hh6/2sNZtFAWOdP1lmQ33VwRN3/24e953b920a9cd0ff2e1d587742a2472/1-intro-photo-final.jpg?w=1200&h=992&fl=progressive&q=70&fm=jpg"
-                alt=""
-              />
-            </div>
-            <div className="profile-name">
-              <p>Hieu Dao</p>
-            </div>
-          </div> */}
-        <NavLink to="/" end href="#" className="nav-item">
+        <NavLink to="/" end className="nav-item">
           <i className="fas fa-home"></i>
           Dashboard
         </NavLink>
-        {/* <NavLink to="/message" className="nav-item">
-            <i className="fas fa-comment-alt"></i>
-            Messages
-          </NavLink> */}
         <NavLink to="/document" className="nav-item">
           <i className="fas fa-file-alt"></i>
           Documents
@@ -47,7 +57,7 @@ export const Sidebar = () => {
           <i className="fas fa-blog"></i>
           Blog
         </NavLink>
-        <a href="#" className="nav-item logout">
+        <a href="#" className="nav-item logout" onClick={handleLogout}>
           <i className="fas fa-sign-out-alt"></i>
           Logout
         </a>

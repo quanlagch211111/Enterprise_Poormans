@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate, Link } from 'react-router-dom';
 import {
   MDBContainer,
   MDBCol,
@@ -11,13 +14,70 @@ import {
   MDBCardHeader,
   MDBCardFooter,
 } from "mdb-react-ui-kit";
+import { ToastContainer, toast } from "react-toastify";
 
 export const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // Logic for handling login
+  const toastOptions = {
+    position: "bottom-right",
+    autoClose: 8000,
+    pauseOnHover: true,
+    draggable: true,
+    theme: "dark",
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/"); 
+    }
+  }, []);
+
+  const handleLogin = async () => {
+    if (email === "" && password === "") {
+      toast.error("Please fill in all fields", toastOptions);
+      return false;
+    } else if (email === "") {
+      toast.error("Please fill in email field", toastOptions);
+      return false;
+    } else if (password === "") {
+      toast.error("Please fill in password field", toastOptions);
+      return false;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:3001/api/users/signin", {
+        email,
+        password,
+      },{
+        withCredentials: true,
+      });
+
+      if (response.status === 200) {
+        const { accesstoken, refreshToken, ...userData } = response.data;
+
+      
+        const decoded = jwtDecode(accesstoken);
+        console.log("Decoded JWT:", decoded); 
+        console.log("refreshToken:", refreshToken)
+        localStorage.setItem("accessToken", accesstoken);
+        localStorage.setItem("userId", decoded.payload.id);
+        localStorage.setItem("role", decoded.payload.role);
+        localStorage.setItem("userData", JSON.stringify(userData));
+
+        toast.success("Login successful!", toastOptions);
+        navigate("/");
+      }
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        toast.error(error.response.data.message, toastOptions);
+      } else {
+        toast.error("An error occurred. Please try again.", toastOptions);
+      }
+    }
   };
 
   return (

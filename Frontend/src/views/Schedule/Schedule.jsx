@@ -6,7 +6,7 @@ import {
   Toast,
 } from "@mobiscroll/react";
 import "@mobiscroll/react/dist/css/mobiscroll.min.css";
-import { useCallback, useMemo, useState, useRef } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
 import {
@@ -30,6 +30,17 @@ setOptions({
   themeVariant: "light",
 });
 export const Schedule = () => {
+  const role = localStorage.getItem("role");
+  const [userInfo, setUserInfo] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
+  }, []);
   const timer = useRef(null);
   const navigate = useNavigate();
   const [events, setEvents] = useState([

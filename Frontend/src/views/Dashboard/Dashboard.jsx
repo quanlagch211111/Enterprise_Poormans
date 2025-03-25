@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Container,
@@ -29,13 +29,82 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { RoleContext } from "../../services/RoleContext";
+import axios from "axios";
 const localizer = momentLocalizer(moment);
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { role } = useContext(RoleContext);
+  const role = localStorage.getItem("role");
+  const [userInfo, setUserInfo] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
 
-  // Dummy data
+    const [userLists, setUserLists] = useState([]);
+  
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
+
+    const fetchUserInfo = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3001/api/users/detailuser/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.status === 200) {
+          setUserInfo(response.data.data); // Set userInfo after fetching
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
+        navigate("/login"); // Redirect to login on error
+      }
+    };
+
+    // const fetchUserLists = async () => {
+    //   try {
+    //     const response = await axios.get("http://localhost:3001/api/users/getallusers", {
+    //       headers: { Authorization: `Bearer ${accessToken}` },
+    //     });
+    
+    //     if (response.status === 200) {
+    //       // Assuming the API returns an array of users with `isVerify` field
+    //       const usersWithStatus = response.data.map((user) => ({
+    //         id: user.id,
+    //         username: user.username,
+    //         email: user.email,
+    //         isVerify: user.isVerify, // Extract the `isVerify` field
+    //       }));
+    
+    //       console.log("Users with status:", usersWithStatus);
+    //       setUserLists(usersWithStatus); // Save the processed data to state
+    //     }
+    //   } catch (error) {
+    //     console.error("Error fetching users:", error);
+    //   }
+    // };
+    
+
+    if (userId) {
+      fetchUserInfo();
+    }
+  }, [userId, accessToken, navigate]);
+
+  // Show a loading spinner or message until userInfo is fetched
+  if (!userInfo) {
+    return (
+      <div className="loading-container">
+        <p>Loading user information...</p>
+      </div>
+    );
+  }
+
+
+
   const studentData = [
     {
       id: 1,
@@ -132,13 +201,13 @@ export const Dashboard = () => {
 
   return (
     <>
-      {role === "TUTOR" && (
+      {role === "TEACHER" && (
         <div className="main-content">
           <Container fluid>
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng Giảng viên!</h2>
+                  <h2>Chào mừng {userInfo.username}!</h2>
                   <p className="text-muted">Có 3 thông báo mới</p>
                 </Col>
               </Row>
@@ -337,7 +406,7 @@ export const Dashboard = () => {
               {/* Phần tổng quan */}
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng Nguyễn Văn A!</h2>
+                  <h2>Chào mừng {userInfo.username} </h2>
                   <p className="text-muted">
                     Giảng viên hướng dẫn: {dashboardData.advisor}
                   </p>
@@ -500,13 +569,13 @@ export const Dashboard = () => {
           </Container>
         </div>
       )}
-      {role === "ADMIN" && (
+      {role === "STAFF" && (
         <div className="main-content">
           <Container fluid>
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng Admin!</h2>
+                  <h2>Chào mừng {userInfo.username} !</h2>
                   <p className="text-muted">Có 3 thông báo mới</p>
                 </Col>
               </Row>
