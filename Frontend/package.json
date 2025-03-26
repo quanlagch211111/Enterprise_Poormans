@@ -11,6 +11,7 @@
         "@mobiscroll/react": "npm:@mobiscroll/react-next-trial@^5.33.1",
         "@mui/material": "^6.4.6",
         "@mui/x-date-pickers": "^7.27.1",
+        "antd": "^5.24.5",
         "axios": "^1.8.4",
         "cra-template": "1.2.0",
         "date-fns": "^4.1.0",

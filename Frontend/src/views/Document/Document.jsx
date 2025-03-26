@@ -1,19 +1,25 @@
-import {
-  MDBBtn,
-  MDBDropdown,
-  MDBDropdownItem,
-  MDBDropdownToggle,
-  MDBDropdownMenu,
-  MDBFile,
-} from "mdb-react-ui-kit";
-import React, { useState , useEffect} from "react";
+import { MDBBtn, MDBFile } from "mdb-react-ui-kit";
+import { Select, Space } from "antd";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { SearchComponant } from "../../components/SearchComponent";
 export const Document = () => {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  // const role = localStorage.getItem("role");
+  const role = "STUDENT";
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
+  const [search, setSearch] = useState("");
+  const handleChange = (value) => {
+    console.log(`selected ${value}`);
+  };
+  const onChange = (value) => {
+    console.log(`selected ${value}`);
+  };
+  const onSearch = (value) => {
+    console.log("search:", value);
+  };
 
   useEffect(() => {
     if (!accessToken) {
@@ -72,19 +78,24 @@ export const Document = () => {
                 )}
                 {role === "STUDENT" && (
                   <>
-                    <input
-                      type="text"
-                      className="search-bar-docs"
-                      placeholder="Tìm tài liệu..."
-                    />
-                    <MDBDropdown group>
-                      <MDBDropdownToggle color="info">Action</MDBDropdownToggle>
-                      <MDBDropdownMenu>
-                        <MDBDropdownItem link>Action</MDBDropdownItem>
-                        <MDBDropdownItem link>PDF</MDBDropdownItem>
-                        <MDBDropdownItem link>Word</MDBDropdownItem>
-                      </MDBDropdownMenu>
-                    </MDBDropdown>
+                    <div className="action d-flex gap-2 align-items-center justify-content-between w-100">
+                      <SearchComponant onSearch={() => setSearch} />
+                      <Select
+                        size="large"
+                        defaultValue="ALL"
+                        style={{ width: 120 }}
+                        onChange={handleChange}
+                        options={[
+                          { value: "PDF", label: "PDF" },
+                          { value: "DOCS", label: "DOCS" },
+                          {
+                            value: "disabled",
+                            label: "Disabled",
+                            disabled: true,
+                          },
+                        ]}
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -181,6 +192,31 @@ export const Document = () => {
             </div>
           ) : (
             <div className="right-side">
+              <div className="d-flex justify-content-end mb-2">
+                <Select
+                  size="large"
+                  showSearch
+                  style={{ width: 120 }}
+                  placeholder="Select a person"
+                  optionFilterProp="label"
+                  onChange={onChange}
+                  onSearch={onSearch}
+                  options={[
+                    {
+                      value: "jack",
+                      label: "Jack",
+                    },
+                    {
+                      value: "lucy",
+                      label: "Lucy",
+                    },
+                    {
+                      value: "tom",
+                      label: "Tom",
+                    },
+                  ]}
+                />
+              </div>
               <div className="assignment-grid d-flex align-items-start flex-column mb-3">
                 {/* PDF file  */}
                 <div className="assignment-container d-flex flex-row align-items-center justify-content-between">

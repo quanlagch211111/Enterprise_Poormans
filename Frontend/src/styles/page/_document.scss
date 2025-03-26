@@ -12,12 +12,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
-  max-height: 350px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
 .assignment-grid {
-  height: 350px;
+  height: 280px;
   overflow-y: auto;
 }
 .assignment-container {
