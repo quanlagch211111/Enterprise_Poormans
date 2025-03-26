@@ -9,21 +9,10 @@ import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
-import {
-  MDBBtn,
-  MDBModal,
-  MDBModalBody,
-  MDBModalContent,
-  MDBModalDialog,
-  MDBModalHeader,
-  MDBModalTitle,
-  MDBModalFooter,
-  MDBInput,
-} from "mdb-react-ui-kit";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { MDBBtn } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
+import { DeleteEvent, NewEvent, UpdateEvent } from "../../components/Modal";
 
 setOptions({
   theme: "ios",
@@ -34,7 +23,11 @@ export const Schedule = () => {
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
-
+  const [modelShowNewEvent, setModelShowNewEvent] = useState(false);
+  const [modalDeleteEvent, setModalDeleteEvent] = useState(false);
+  const [modalUpdateEvent, setModalUpdateEvent] = useState(false);
+  const [isVisibility, setVisibility] = useState(false);
+  const toggleVisibility = () => setVisibility(!isVisibility);
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
@@ -47,31 +40,26 @@ export const Schedule = () => {
     {
       id: uuidv4(),
       start: "2025-03-03",
-      end: "2025-03-09",
+      end: "2025-03-04",
       title: "Short trip!",
-    },
-    {
-      id: uuidv4(),
-      start: "2025-03-04",
-      end: "2025-03-10",
-      title: "Birthday",
-    },
-    {
-      id: uuidv4(),
-      start: "2025-03-05",
-      end: "2025-03-20",
-      title: "X-mas",
+      teacher: "Thầy Hiếu",
+      student: "Trò Quân, Đức, Kiên",
     },
   ]);
 
-  const [startAt, setStartAt] = useState(null);
-  const [endAt, setEndAt] = useState(null);
-  const [meetingTime, setMeetingTime] = useState("");
-  const [title, setTitle] = useState("");
+  const [argDoubleClick, setArgDoubleClick] = useState(null);
   const [isTooltipOpen, setTooltipOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [tooltipColor, setTooltipColor] = useState("4895ef");
+  const [detailTooltip, setDetailToolTip] = useState({
+    id: "",
+    title: "",
+    time: "",
+    date: "",
+    teacher: "",
+    student: "",
+  });
 
   const myView = useMemo(
     () => ({ calendar: { labels: true, count: true } }),
@@ -79,6 +67,7 @@ export const Schedule = () => {
   );
   const openTooltip = useCallback((args) => {
     const event = args.event;
+    console.log("Event: ", args.event);
     const time =
       formatDate("hh:mm A", new Date(event.start)) +
       " - " +
@@ -88,9 +77,19 @@ export const Schedule = () => {
       clearTimeout(timer.current);
       timer.current = null;
     }
+    const date =
+      dayjs(event.start).format("DD/MM/YYYY") +
+      " - " +
+      dayjs(event.end).format("DD/MM/YYYY");
     // setAppointment(event);
-    setTitle(event.title);
-    setMeetingTime(time);
+    setDetailToolTip({
+      id: event.id,
+      title: event.title,
+      time: time,
+      date: date,
+      teacher: event.teacher,
+      student: event.student,
+    });
     setTooltipAnchor(args.domEvent.target);
     setTooltipOpen(true);
   }, []);
@@ -106,43 +105,6 @@ export const Schedule = () => {
     setToastOpen(false);
   }, []);
 
-  const createEvent = () => {
-    if (!title || !startAt || !endAt) {
-      setToastText("Vui lòng điền đầy đủ thông tin!");
-      setToastOpen(true);
-      return;
-    }
-
-    const event = {
-      id: uuidv4(),
-      title: title,
-      start: dayjs(startAt).toDate(),
-      end: dayjs(endAt).toDate(),
-      color: "#ccc", // Mặc định màu
-    };
-
-    setEvents([...events, event]);
-    setToastText("Đã thêm sự kiện: " + title);
-    setToastOpen(true);
-    setTitle("");
-    setStartAt(null);
-    setEndAt(null);
-    toggleOpen();
-  };
-
-  const deleteEvent = useCallback(
-    (args) => {
-      const eventToDelete = args.event;
-      const updatedEvents = events.filter(
-        (event) => event.id !== eventToDelete.id
-      );
-      setEvents(updatedEvents);
-      setToastText("Đã xóa sự kiện: " + eventToDelete.title);
-      setToastOpen(true);
-    },
-    [events]
-  );
-
   const handleEventClick = useCallback(
     (args) => {
       openTooltip(args);
@@ -151,10 +113,8 @@ export const Schedule = () => {
   );
 
   const handleCellDoubleClick = useCallback((args) => {
-    setStartAt(dayjs(args.date));
-    setEndAt(dayjs(args.date));
-    setIsCreate(true);
-    toggleOpen();
+    setArgDoubleClick(args);
+    setModelShowNewEvent(true);
   }, []);
 
   const handleTooltipClose = useCallback(() => {
@@ -175,6 +135,7 @@ export const Schedule = () => {
       </div>
     );
   }, []);
+
   const handleMouseEnter = useCallback(() => {
     if (timer.current) {
       clearTimeout(timer.current);
@@ -202,7 +163,6 @@ export const Schedule = () => {
         view={myView}
         // renderLabel={renderLabel}
         onEventClick={handleEventClick}
-        onEventDeleted={deleteEvent}
         displayTimezone="none"
       />
 
@@ -214,7 +174,7 @@ export const Schedule = () => {
       />
 
       {/* Modal */}
-      <MDBModal
+      {/* <MDBModal
         tabIndex="-1"
         open={centredModal}
         onClose={() => setCentredModal(false)}
@@ -281,7 +241,7 @@ export const Schedule = () => {
             </MDBModalFooter>
           </MDBModalContent>
         </MDBModalDialog>
-      </MDBModal>
+      </MDBModal> */}
 
       <Popup
         anchor={tooltipAnchor}
@@ -299,15 +259,58 @@ export const Schedule = () => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="mds-tooltip-header text-center danger-bg">
-            <span>{title}</span>
+          <div className="mds-tooltip-header  danger-bg d-flex align-items-center justify-content-between">
+            <span>{detailTooltip.title}</span>
+            <div className="d-flex justify-content-end">
+              <div className="dropdown-custom">
+                <div className="container-select d-flex justify-content-end">
+                  <div
+                    className="dropdown-select  d-flex align-items-center justify-content-center"
+                    onClick={toggleVisibility}
+                  >
+                    <i class="fa-solid fa-ellipsis fs-4"></i>
+                  </div>
+                </div>
+                <ul
+                  className={
+                    "dropdown-list d-flex gap-2 flex-column " +
+                    (isVisibility ? "active" : "")
+                  }
+                >
+                  <li
+                    className="dropdown-item"
+                    onClick={() => {
+                      setModalDeleteEvent(true);
+                    }}
+                  >
+                    Delete
+                  </li>
+                  <li
+                    className="dropdown-item"
+                    onClick={() => {
+                      setModalUpdateEvent(true);
+                    }}
+                  >
+                    Update
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div className="mbsc-padding">
             <div className="mds-tooltip-label mbsc-margin">
-              Teacher: <span className="mbsc-light">Dao Van Hieu</span>
+              Teacher:{" "}
+              <span className="mbsc-light">{detailTooltip.teacher}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Time: <span className="mbsc-light">{meetingTime}</span>
+              Student:{" "}
+              <span className="mbsc-light">{detailTooltip.student}</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              Date: <span className="mbsc-light">{detailTooltip.date}</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              Time: <span className="mbsc-light">{detailTooltip.time}</span>
             </div>
             <div className="action d-flex justify-content-center">
               <MDBBtn
@@ -321,6 +324,30 @@ export const Schedule = () => {
           </div>
         </div>
       </Popup>
+      <NewEvent
+        show={modelShowNewEvent}
+        onClose={() => setModelShowNewEvent(false)}
+        events={events}
+        accessToken={accessToken}
+        setEvents={setEvents}
+        argDoubleClick={argDoubleClick}
+      />
+      <UpdateEvent
+        show={modalUpdateEvent}
+        onClose={() => setModalUpdateEvent(false)}
+        events={events}
+        eventUpdate={detailTooltip}
+        accessToken={accessToken}
+        setEvents={setEvents}
+        argDoubleClick={argDoubleClick}
+      />
+      <DeleteEvent
+        show={modalDeleteEvent}
+        onClose={() => setModalDeleteEvent(false)}
+        events={events}
+        setEvents={setEvents}
+        id={detailTooltip.id}
+      />
       <Toast
         isOpen={isToastOpen}
         message={toastMessage}

@@ -1,3 +1,5 @@
+import { Toast } from "@mobiscroll/react";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { faIR } from "@mui/x-date-pickers/locales";
 import axios from "axios";
 import {
@@ -12,11 +14,13 @@ import {
   MDBModalTitle,
   MDBTextArea,
 } from "mdb-react-ui-kit";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import ClipLoader from "react-spinners/ClipLoader";
 import { toast } from "react-toastify";
-
+import { v4 as uuidv4 } from "uuid";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 export const ConfirmLogout = (props) => {
   const handleClose = () => {
     if (props.onClose) props.onClose();
@@ -699,6 +703,386 @@ export const EditBlog = (props) => {
                 ) : (
                   "Create"
                 )}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+
+// Event meeting
+export const NewEvent = (props) => {
+  const { accessToken, events, setEvents, argDoubleClick } = props;
+  console.log(">>> argDoubleClick", argDoubleClick);
+
+  const [newEvent, setNewEvent] = useState({
+    id: "",
+    start: "",
+    end: "",
+    title: "",
+    teacher: "",
+    student: "",
+  });
+
+  useEffect(() => {
+    if (argDoubleClick?.date) {
+      setNewEvent({
+        ...newEvent,
+        start: dayjs(argDoubleClick.date),
+        end: dayjs(argDoubleClick.date).add(1, "day"),
+      });
+    }
+  }, [argDoubleClick]);
+
+  const resetField = () => {
+    setNewEvent({
+      id: "",
+      start: "",
+      end: "",
+      title: "",
+      teacher: "",
+      student: "",
+    });
+  };
+  const [isLoading, setLoading] = useState(false);
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+
+  const createEvent = () => {
+    setLoading(true);
+    if (
+      !newEvent.title ||
+      !newEvent.start ||
+      !newEvent.end ||
+      !newEvent.teacher ||
+      !newEvent.student
+    ) {
+      toast.warn("Please enter enough fields!");
+      return;
+    }
+
+    const eventToAdd = {
+      ...newEvent,
+      id: uuidv4(),
+      start: dayjs(newEvent.start).toDate(),
+      end: dayjs(newEvent.end).toDate(),
+    };
+    console.log("eventToAdd: ", eventToAdd);
+
+    setEvents([...events, eventToAdd]);
+    toast.success(eventToAdd.title + " event has been created succeedfully.");
+    setLoading(false);
+    handleClose();
+    resetField();
+  };
+
+  const handleAddEventAPI = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been created successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been created failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Create a new meeting event</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => {
+                  handleClose();
+                }}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <>
+                <MDBInput
+                  label="Title"
+                  id="form1"
+                  type="text"
+                  value={newEvent.title}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, title: e.target.value })
+                  }
+                />
+                <div className="start-end-date d-flex gap-3 my-3">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateTimePicker
+                      label="Start Date"
+                      value={newEvent.start ? dayjs(newEvent.start) : null}
+                      onChange={(value) =>
+                        setNewEvent({ ...newEvent, start: value })
+                      }
+                    />
+                    <DateTimePicker
+                      label="End Date"
+                      value={newEvent.end ? dayjs(newEvent.end) : null}
+                      onChange={(value) =>
+                        setNewEvent({ ...newEvent, end: value })
+                      }
+                    />
+                  </LocalizationProvider>
+                </div>
+                <MDBInput
+                  className="mb-3"
+                  label="Teacher"
+                  id="form1"
+                  type="text"
+                  value={newEvent.teacher}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, teacher: e.target.value })
+                  }
+                />
+                <MDBInput
+                  label="Student"
+                  id="form1"
+                  type="text"
+                  value={newEvent.student}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, student: e.target.value })
+                  }
+                />
+              </>
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn
+                color="secondary"
+                onClick={() => {
+                  handleClose();
+                }}
+              >
+                Đóng
+              </MDBBtn>
+              <MDBBtn onClick={createEvent} disabled={isLoading}>
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Lưu"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+export const DeleteEvent = (props) => {
+  const [isLoading, setLoading] = useState(false);
+  const { accessToken, id, events, setEvents } = props;
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+  const deleteEvent = () => {
+    const updatedEvents = events.filter((event) => event.id !== id);
+    setEvents(updatedEvents);
+    toast.success("The event has been deleted successfully.");
+    handleClose();
+  };
+
+  const handleDeleteEvent = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been deleted successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been deleted failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Are you sure to delete this event?</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={handleClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={handleClose}>
+                Close
+              </MDBBtn>
+              <MDBBtn onClick={deleteEvent} disabled={isLoading}>
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+
+export const UpdateEvent = (props) => {
+  const { accessToken, events, setEvents, argDoubleClick, eventUpdate } = props;
+  console.log(">>> eventUpdate", eventUpdate);
+
+  const [event, setEvent] = useState({
+    id: "",
+    start: "",
+    end: "",
+    title: "",
+    teacher: "",
+    student: "",
+  });
+
+  useEffect(() => {
+    setEvent({
+      id: eventUpdate.id,
+      title: eventUpdate.title,
+      teacher: eventUpdate.teacher,
+      student: eventUpdate.student,
+      start: eventUpdate.start,
+      end: eventUpdate.end,
+    });
+  }, [eventUpdate]);
+
+  const resetField = () => {
+    setEvent({
+      id: "",
+      start: "",
+      end: "",
+      title: "",
+      teacher: "",
+      student: "",
+    });
+  };
+  const [isLoading, setLoading] = useState(false);
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+
+  const handUpdate = () => {
+    setLoading(true);
+    if (
+      !event.title ||
+      !event.start ||
+      !event.end ||
+      !event.teacher ||
+      !event.student
+    ) {
+      toast.warn("Please enter enough fields!");
+      return;
+    }
+
+    const eventToUpdate = {
+      ...event,
+      start: dayjs(event.start).toDate(),
+      end: dayjs(event.end).toDate(),
+    };
+    console.log("eventToUpdate: ", eventToUpdate);
+
+    setEvents([...events, eventToUpdate]);
+    toast.success(
+      eventToUpdate.title + " event has been updated succeedfully."
+    );
+    setLoading(false);
+    handleClose();
+    resetField();
+  };
+
+  const handleAddEventAPI = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been created successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been created failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Update Event</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => {
+                  handleClose();
+                }}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <>
+                <MDBInput
+                  label="Title"
+                  id="form1"
+                  type="text"
+                  value={event.title}
+                  onChange={(e) =>
+                    setEvent({ ...event, title: e.target.value })
+                  }
+                />
+                <div className="start-end-date d-flex gap-3 my-3">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateTimePicker
+                      label="Start Date"
+                      value={event.start ? dayjs(event.start) : null}
+                      onChange={(value) => setEvent({ ...event, start: value })}
+                    />
+                    <DateTimePicker
+                      label="End Date"
+                      value={event.end ? dayjs(event.end) : null}
+                      onChange={(value) => setEvent({ ...event, end: value })}
+                    />
+                  </LocalizationProvider>
+                </div>
+                <MDBInput
+                  className="mb-3"
+                  label="Teacher"
+                  id="form1"
+                  type="text"
+                  value={event.teacher}
+                  onChange={(e) =>
+                    setEvent({ ...event, teacher: e.target.value })
+                  }
+                />
+                <MDBInput
+                  label="Student"
+                  id="form1"
+                  type="text"
+                  value={event.student}
+                  onChange={(e) =>
+                    setEvent({ ...event, student: e.target.value })
+                  }
+                />
+              </>
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn
+                color="secondary"
+                onClick={() => {
+                  handleClose();
+                }}
+              >
+                Đóng
+              </MDBBtn>
+              <MDBBtn onClick={handUpdate} disabled={isLoading}>
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Lưu"}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
