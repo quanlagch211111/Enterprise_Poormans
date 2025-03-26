@@ -17,7 +17,7 @@ import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { IoMdSend } from "react-icons/io";
 import Picker from "emoji-picker-react";
 import styled from "styled-components";
-import axios from "axios";
+import axios from "../../services/AxiosCustom";
 
 export const Message = () => {
   const navigate = useNavigate();
@@ -33,10 +33,10 @@ export const Message = () => {
 
   const getContacts = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/users/getuserforchat', {
+      const response = await axios.get("/users/getuserforchat", {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
       setContacts(response.data.data);
       console.log(response.data);
@@ -64,7 +64,10 @@ export const Message = () => {
   const sendChat = (e) => {
     e.preventDefault();
     if (msg.length > 0) {
-      console.log(`Message sent to ${selectedUser?.username || "unknown"}:`, msg); // Replace with actual send logic
+      console.log(
+        `Message sent to ${selectedUser?.username || "unknown"}:`,
+        msg
+      ); // Replace with actual send logic
       setMsg("");
     }
   };
@@ -89,13 +92,20 @@ export const Message = () => {
                       onClick={() => setSelectedUser(contact)} // Set the selected user on click
                       style={{
                         cursor: "pointer",
-                        backgroundColor: selectedUser?._id === contact._id ? "#f0f0f0" : "transparent",
+                        backgroundColor:
+                          selectedUser?._id === contact._id
+                            ? "#f0f0f0"
+                            : "transparent",
                       }}
                     >
                       <img
                         src={contact.avatar || "https://via.placeholder.com/40"}
                         alt={contact.username}
-                        style={{ width: "40px", height: "40px", borderRadius: "50%" }}
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                        }}
                       />
                       {contact.username || contact.name}
                     </li>
@@ -111,7 +121,9 @@ export const Message = () => {
               {selectedUser ? (
                 <>
                   <img
-                    src={selectedUser.avatar || "https://via.placeholder.com/40"}
+                    src={
+                      selectedUser.avatar || "https://via.placeholder.com/40"
+                    }
                     alt={selectedUser.username}
                   />
                   <div className="header-info">

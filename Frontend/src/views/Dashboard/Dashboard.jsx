@@ -29,7 +29,7 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { RoleContext } from "../../services/RoleContext";
-import axios from "axios";
+import axios from "../../services/AxiosCustom";
 const localizer = momentLocalizer(moment);
 
 export const Dashboard = () => {
@@ -39,8 +39,7 @@ export const Dashboard = () => {
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
 
-    const [userLists, setUserLists] = useState([]);
-  
+  const [userLists, setUserLists] = useState([]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -50,7 +49,7 @@ export const Dashboard = () => {
 
     const fetchUserInfo = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/users/detailuser/${userId}`, {
+        const response = await axios.get(`/users/detailuser/${userId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -67,10 +66,10 @@ export const Dashboard = () => {
 
     // const fetchUserLists = async () => {
     //   try {
-    //     const response = await axios.get("http://localhost:3001/api/users/getallusers", {
+    //     const response = await axios.get("/users/getallusers", {
     //       headers: { Authorization: `Bearer ${accessToken}` },
     //     });
-    
+
     //     if (response.status === 200) {
     //       // Assuming the API returns an array of users with `isVerify` field
     //       const usersWithStatus = response.data.map((user) => ({
@@ -79,7 +78,7 @@ export const Dashboard = () => {
     //         email: user.email,
     //         isVerify: user.isVerify, // Extract the `isVerify` field
     //       }));
-    
+
     //       console.log("Users with status:", usersWithStatus);
     //       setUserLists(usersWithStatus); // Save the processed data to state
     //     }
@@ -87,7 +86,6 @@ export const Dashboard = () => {
     //     console.error("Error fetching users:", error);
     //   }
     // };
-    
 
     if (userId) {
       fetchUserInfo();
@@ -102,8 +100,6 @@ export const Dashboard = () => {
       </div>
     );
   }
-
-
 
   const studentData = [
     {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../../services/AxiosCustom";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -45,7 +45,7 @@ export const Login = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:3001/api/users/signin",
+        "users/signin",
         {
           email,
           password,

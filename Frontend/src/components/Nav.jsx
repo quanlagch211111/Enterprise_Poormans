@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { RoleContext } from "../services/RoleContext";
-import axios from "axios";
+import axios from "../services/AxiosCustom";
 import { ConfirmLogout } from "./Modal";
 
 export const Sidebar = () => {

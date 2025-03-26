@@ -1,7 +1,7 @@
 import { Toast } from "@mobiscroll/react";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { faIR } from "@mui/x-date-pickers/locales";
-import axios from "axios";
+import axios from "../services/AxiosCustom";
 import {
   MDBBtn,
   MDBInput,
@@ -30,7 +30,7 @@ export const ConfirmLogout = (props) => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:3001/api/users/logout",
+        "/users/logout",
         {},
         {
           withCredentials: true,
@@ -93,13 +93,9 @@ export const NewAssignment = (props) => {
       setLoading(true);
       console.log("Data being sent:", newAssignment); // Log data trước khi gửi
 
-      const response = await axios.post(
-        "http://localhost:3001/api/assignments",
-        newAssignment,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.post("/assignments", newAssignment, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
       console.log("Response from server:", response.data); // Log response từ server
 
@@ -228,13 +224,9 @@ export const EditAssignment = (props) => {
   const handleEditAssignment = async (id, updatedData) => {
     try {
       setLoading(true);
-      const response = await axios.put(
-        `http://localhost:3001/api/assignments/${id}`,
-        updatedData,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.put(`/assignments/${id}`, updatedData, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       setAssignments(
         assignments.map((assignment) =>
           assignment._id === id ? response.data.assignment : assignment
@@ -355,7 +347,7 @@ export const ConfirmDeleteAsm = (props) => {
   const handleDeleteAssignment = async () => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:3001/api/assignments/${id}`, {
+      await axios.delete(`/assignments/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setAssignments(assignments.filter((assignment) => assignment._id !== id));

@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import axios from "axios";
+import axios from "../../services/AxiosCustom";
 import {
   MDBBtn,
   MDBInput,
-  MDBModal,
-  MDBModalBody,
-  MDBModalContent,
-  MDBModalDialog,
-  MDBModalFooter,
-  MDBModalHeader,
-  MDBModalTitle,
   MDBTable,
   MDBTableBody,
   MDBTableHead,
@@ -52,12 +45,9 @@ const Assignment = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3001/api/assignments",
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.get("/assignments", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       console.log("Assignments:", response.data);
       setAssignments(response.data);
     } catch (error) {
@@ -67,12 +57,9 @@ const Assignment = () => {
 
   const fetchUsersWithRoles = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3001/api/users/getuserwithroles",
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.get("/users/getuserwithroles", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       setUsers(response.data);
       console.log("Users with roles:", response.data);
     } catch (error) {
