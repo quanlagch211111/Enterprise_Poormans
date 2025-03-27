@@ -1,12 +1,13 @@
 import { MDBBtn, MDBFile } from "mdb-react-ui-kit";
 import { Select, Space } from "antd";
+import axios from "../../services/AxiosCustom";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { SearchComponant } from "../../components/SearchComponent";
 export const Document = () => {
   const navigate = useNavigate();
-  // const role = localStorage.getItem("role");
-  const role = "STUDENT";
+  const [assignments, setAssignments] = useState([]);
+  const role = localStorage.getItem("role");
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
@@ -26,11 +27,25 @@ export const Document = () => {
       navigate("/login"); // Redirect to login if no accessToken
       return;
     }
+    fetchAssignments();
   }, []);
   const [isAssignment, setAssignment] = useState(false);
   const toggleAssignment = () => {
     setAssignment(!isAssignment);
   };
+
+  const fetchAssignments = async () => {
+    try {
+      const response = await axios.get("/assignments", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      console.log("Assignments:", response.data);
+      setAssignments(response.data);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+    }
+  };
+
   return (
     <div className="main-content">
       <div className="dashboard-section">
@@ -56,8 +71,18 @@ export const Document = () => {
 
         <div className="docs-sidebar d-flex flex-row ">
           <div className="left-side d-flex flex-column gap-2">
-            <span className="class-name active">Assignment 1</span>
-            <span className="class-name">Assignment 2</span>
+            {assignments.length > 0 ? (
+              assignments.map((assignment) => (
+                <span
+                  key={assignment._id} // Sử dụng _id làm key
+                  className="class-name"
+                >
+                  {assignment.title} {/* Hiển thị tên assignment */}
+                </span>
+              ))
+            ) : (
+              <span className="text-muted">No assignments available</span> // Hiển thị thông báo nếu không có assignment
+            )}
           </div>
           {!isAssignment ? (
             <div className="right-side ">

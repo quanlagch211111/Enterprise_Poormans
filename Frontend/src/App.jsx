@@ -15,7 +15,7 @@ import { Schedule } from "./views/Schedule/Schedule";
 
 function App() {
   const location = useLocation();
-  const hideNavRoutes = ["/meeting", "/login", "/verify-email"];
+  const hideNavRoutes = ["/meeting", "/login", "/otp-confirm"];
   const shouldShowNav = !hideNavRoutes.includes(location.pathname);
 
   return (

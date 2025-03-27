@@ -41,7 +41,7 @@ export const Login = () => {
       toast.error("Please fill in password field");
       return false;
     }
-
+  
     try {
       setLoading(true);
       const response = await axios.post(
@@ -54,10 +54,32 @@ export const Login = () => {
           withCredentials: true,
         }
       );
-
+  
       if (response.status === 200) {
-        const { accesstoken, refreshToken, ...userData } = response.data;
-
+        const { accesstoken, refreshToken, isVerifiedToken, ...userData } = response.data;
+  
+        // Kiểm tra trạng thái trả về từ backend
+        if (response.data.status === "NEED_VERIFICATION") {
+          toast.warning("Your account is not verified. Redirecting to OTP confirmation...");
+          localStorage.setItem("isVerifiedToken", isVerifiedToken); 
+          const isverifyDecoded = jwtDecode(isVerifiedToken);
+          console.log("isVerifiedToken:", isverifyDecoded);
+          localStorage.setItem("emailtoverify", isverifyDecoded.payload.email);
+          setLoading(false);
+          try {
+            const response = await axios.post("otp/resend-email-otp", {
+              email: isverifyDecoded.payload.email,
+            });
+            if (response.status === 200) {
+              console.log(response.data);
+            }
+          } catch (error) {
+            
+          }
+          navigate("/otp-confirm"); // Chuyển hướng đến trang OTP
+          return;
+        }
+  
         const decoded = jwtDecode(accesstoken);
         console.log("Decoded JWT:", decoded);
         console.log("refreshToken:", refreshToken);
@@ -65,12 +87,13 @@ export const Login = () => {
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
         localStorage.setItem("userData", JSON.stringify(userData));
-
+  
         toast.success("Login successful!");
         setLoading(false);
         navigate("/");
       }
     } catch (error) {
+      setLoading(false);
       if (error.response && error.response.data.message) {
         toast.error(error.response.data.message);
       } else {
