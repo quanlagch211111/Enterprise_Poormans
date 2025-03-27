@@ -32,6 +32,16 @@ const generalRefreshToken = async (payload) => {
     return refreshToken;
   }
 
+  const generalIsNotVerifyToken = async (payload) => {
+    console.log(payload);
+  
+    const isNotVerifyToken = jwt.sign({
+      payload 
+    }, process.env.REFRESH_TOKEN , { expiresIn: '10m' });
+  
+    return isNotVerifyToken;
+  }
+
   const provideToken = (token) => {
     return new Promise( async (resolve, reject) => {
       try {
@@ -68,6 +78,6 @@ const generalRefreshToken = async (payload) => {
 
 
 module.exports = {
-  generalAccessToken , generalRefreshToken, provideToken, generalResetPasswordToken
+  generalAccessToken , generalRefreshToken, provideToken, generalResetPasswordToken, generalIsNotVerifyToken
 };
 

@@ -1,10 +1,11 @@
 const User = require('../models/Users');
 const bcrypt = require('bcrypt');
-const  { generalAccessToken, generalRefreshToken } = require('../services/Jwtservices');
+const  { generalAccessToken, generalRefreshToken, generalIsNotVerifyToken } = require('../services/Jwtservices');
 const {sendOtp} = require('../services/Otpservices');
 const StudentService = require('../services/studentService');
 const TutorService = require('../services/tutorService');
 const StaffService = require('../services/staffService');
+const { verify } = require('jsonwebtoken');
 
 const createUser = (userData) => {
   return new Promise(async (resolve, reject) => {
@@ -63,9 +64,15 @@ const signinUser = (userData) => {
       }
 
       if (user.isVerified == false) {
+        const isVerifiedToken = await generalIsNotVerifyToken({
+          id : user.id,
+          email: user.email,
+          verify: user.isVerified
+        }); 
         return resolve({
           status: 'NEED_VERIFICATION',
-          message: 'This account has not been verified'
+          message: 'This account has not been verified',
+          isVerifiedToken
         });
       }
 

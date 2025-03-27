@@ -213,7 +213,6 @@ exports.verifyOtp = async (req, res) => {
     if (!otpRecord) {
       return res.status(400).json({ message: "OTP record not found" });
     }
-
     console.log("Stored OTP:", otpRecord.otp);
 
     if (otpRecord.otp !== otp) {
