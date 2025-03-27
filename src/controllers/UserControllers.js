@@ -224,8 +224,9 @@ exports.verifyOtp = async (req, res) => {
     }
 
 
-   const userId = otpRecord.userId;
-   await UserService.updateUser(userId, { isVerified: true });
+   const user = await User.findOne({email});
+   const userId = user.id;
+   const result = await UserService.updateUser(userId, { isVerified: true });
    await UserOTPVerification.deleteOne({ email });
 
     return res.status(200).json({ message: "Email verified successfully" });

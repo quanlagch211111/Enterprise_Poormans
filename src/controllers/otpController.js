@@ -1,4 +1,5 @@
 const otpService = require('../services/Otpservices');
+const UserOTP = require("../models/UserOTPVerification")
 
 const sendOtp = async (req, res) => {
     try {
