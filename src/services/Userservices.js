@@ -116,7 +116,8 @@ const signinUser = (userData) => {
           status: 'SUCCESS',
           message: 'Login successful',
           accesstoken,
-          refreshtoken
+          refreshtoken,
+          user
         })
 
     }catch (err) {
@@ -127,41 +128,42 @@ const signinUser = (userData) => {
 
 
 const updateUser = (id, datauser) => {
-  return new Promise( async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
+      const checkUser = await User.findById(id);
+      if (!checkUser) {
+        return resolve({
+          status: "Failure",
+          message: "There was no user with that id",
+        });
+      }
 
-       const checkUser = await User.findById(id);
-       if (!checkUser) {
-         resolve({
-           status: 'Failure',
-           message: 'There was no user with that id'
-         });
-       }
+      if (datauser.password) {
+        const salt = await bcrypt.genSalt(10);
+        datauser.password = await bcrypt.hash(datauser.password, salt);
+      }
 
-       if (datauser.password) {
-         const salt = await bcrypt.genSalt(10);
-         datauser.password = await bcrypt.hash(datauser.password, salt);
-       }
- 
-       datauser.updated_at = new Date();
+      datauser.updated_at = new Date();
 
-       const updatedUser = await User.findByIdAndUpdate(id, datauser, {new : true});
-       console.log('Updated user' + updatedUser);
- 
-       resolve({
-         status: 'Success',
-         message: 'User updated successfully',
-         data: updatedUser
-       });
- 
-     } catch (err) {
-       reject({
-         status: 'Error',
-         message: err.message
-       });
-     }
-   });
+      const updatedUser = await User.findByIdAndUpdate(id, datauser, { new: true });
+      console.log("Updated user:", updatedUser);
+
+      resolve({
+        status: "Success",
+        message: "User updated successfully",
+        data: updatedUser,
+      });
+
+    } catch (err) {
+      reject({
+        status: "Error",
+        message: err.message,
+      });
+    }
+  });
 };
+
+
 
 
 const deleteUser = (id) => {

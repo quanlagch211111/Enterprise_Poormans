@@ -6,10 +6,10 @@ const Staff = require('../models/Staff');
 const StudentService = require('../services/studentService');
 const TutorService = require('../services/tutorService');
 const StaffService = require('../services/staffService');
-const {provideToken, generalResetPasswordToken} = require('../services/Jwtservices');
+const { provideToken, generalResetPasswordToken } = require('../services/Jwtservices');
 const UserOTPVerification = require('../models/UserOTPVerification');
 const TokenService = require('../services/Blacklisttokenservice');
-const {sendOtp} = require('../services/Otpservices');
+const { sendOtp } = require('../services/Otpservices');
 const OtpUser = require('../models/UserOTPVerification');
 
 
@@ -67,7 +67,7 @@ exports.createUser = async (req, res) => {
 exports.signinUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     // Kiểm tra email hợp lệ bằng regex
     const reg = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     const isEmailValid = reg.test(email);
@@ -77,8 +77,8 @@ exports.signinUser = async (req, res) => {
         status: 'Error',
         message: 'All input fields are required',
       });
-    } 
-    
+    }
+
     if (!isEmailValid) {
       return res.status(400).json({
         status: 'Error',
@@ -91,7 +91,7 @@ exports.signinUser = async (req, res) => {
 
 
     res.cookie('refreshtoken', refreshtoken, {
-      httpOnly: true,  
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
     });
 
@@ -107,18 +107,18 @@ exports.signinUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-      const userid = req.params.id;
-      const datauser = req.body;
+    const userid = req.params.id;
+    const datauser = req.body;
 
-      if (!userid ){
-        return res.status(400).json({message: 'this Id is required'});
-      }
+    if (!userid) {
+      return res.status(400).json({ message: 'this Id is required' });
+    }
 
-      const response = await UserService.updateUser(userid, datauser);
+    const response = await UserService.updateUser(userid, datauser);
     return res.status(200).json(response)
-} catch(err) {
-  return res.status(400).json({message: err.message});
-}
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
 
 }
 
@@ -130,40 +130,53 @@ exports.deleteUser = async (req, res) => {
     const userid = req.params.id;
     console.log(userid);
 
-    if (!userid ){
-      return res.status(400).json({message: 'this Id is required'});
+    if (!userid) {
+      return res.status(400).json({ message: 'this Id is required' });
     }
 
     const response = await UserService.deleteUser(userid);
-  return res.status(200).json(response)
-} catch(err) {
-return res.status(400).json({message: err.message});
-}
+    return res.status(200).json(response)
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
 };
 
 
 exports.getallUser = async (req, res) => {
   try {
     const response = await UserService.getallUser();
-  return res.status(200).json(response)
-} catch(err) {
-return res.status(400).json({message: err.message});
-}
+    return res.status(200).json(response)
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+};
+
+exports.getAllUserForChat = async (req, res, next) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.params.id } }).select([
+      "email", "username", "_id",
+    ]);
+    return res.json(users);
+  } catch (error) {
+    console.error("Error in getAllUserForChat:", error.message); // Log error message
+    console.error("Stack trace:", error.stack); // Log stack trace for debugging
+    next(error); // Pass the error to the next middleware
+  }
 };
 
 exports.detailUser = async (req, res) => {
   try {
     const userid = req.params.id;
-    if (!userid){
+    if (!userid) {
       return res.status(400).json({
         message: 'this Id is required'
       })
     }
     const response = await UserService.detailUser(userid);
-  return res.status(200).json(response)
-} catch(err) {
-return res.status(400).json({message: err.message});
-}
+    return res.status(200).json(response)
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
 };
 
 
@@ -179,12 +192,12 @@ exports.reprovideToken = async (req, res) => {
 
     // Kiểm tra xem refresh token có bị blacklist không
     const isBlacklisted = await TokenService.isTokenBlacklisted(
-          refreshToken
+      refreshToken
     );
     if (isBlacklisted) {
-           return res.status(403).send("Refresh Token is blacklisted");
+      return res.status(403).send("Refresh Token is blacklisted");
     }
-    
+
 
 
     const response = await provideToken(token);
@@ -224,9 +237,10 @@ exports.verifyOtp = async (req, res) => {
     }
 
 
-   const userId = otpRecord.userId;
-   await UserService.updateUser(userId, { isVerified: true });
-   await UserOTPVerification.deleteOne({ email });
+    const user = await User.findOne({ email });
+    const userId = user.id;
+    const result = await UserService.updateUser(userId, { isVerified: true });
+    await UserOTPVerification.deleteOne({ email });
 
     return res.status(200).json({ message: "Email verified successfully" });
   } catch (err) {
@@ -234,26 +248,26 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
-exports.logoutUser = async(req, res, next) => {
+exports.logoutUser = async (req, res, next) => {
   try {
-      const refreshToken = req.cookies.refreshtoken;
+    const refreshToken = req.cookies.refreshtoken;
 
-      if (!refreshToken) {
-          return res
-              .status(400)
-              .json({ message: "No refresh token provided" });
-      }
-      await TokenService.addToBlacklist(refreshToken);
+    if (!refreshToken) {
+      return res
+        .status(400)
+        .json({ message: "No refresh token provided" });
+    }
+    await TokenService.addToBlacklist(refreshToken);
 
-      res.clearCookie("refreshtoken", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-      });
+    res.clearCookie("refreshtoken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
 
-      return res.status(200).json({ message: "Logged out successfully" });
+    return res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
-      console.error("Error logging out user");
-      next(err);
+    console.error("Error logging out user");
+    next(err);
   }
 };
 
@@ -265,84 +279,84 @@ exports.requestPasswordReset = async (req, res, next) => {
     await sendOtp(email);
 
     res.status(200).json({
-        status: "Success",
-        message:
-            "OTP sent to your email. Please verify to reset your password.",
+      status: "Success",
+      message:
+        "OTP sent to your email. Please verify to reset your password.",
     });
-} catch (err) {
+  } catch (err) {
     console.error("Error requesting password reset");
     next(err);
-}
+  }
 };
 
 exports.verifyPasswordResetOtp = async (req, res, next) => {
   try {
-      const { email, otp } = req.body;
+    const { email, otp } = req.body;
 
-      console.log("Received OTP:", otp);
+    console.log("Received OTP:", otp);
 
-      const otpRecord = await OtpUserawait.findOne({ email });
-      if (!otpRecord) {
-          return res
-              .status(400)
-              .json({ message: "OTP record not found" });
-      }
+    const otpRecord = await OtpUserawait.findOne({ email });
+    if (!otpRecord) {
+      return res
+        .status(400)
+        .json({ message: "OTP record not found" });
+    }
 
-      console.log("Stored OTP:", otpRecord.otp);
+    console.log("Stored OTP:", otpRecord.otp);
 
-      if (otpRecord.otp !== otp) {
-          return res.status(400).json({ message: "Invalid OTP" });
-      }
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
 
-      if (otpRecord.expiresAt < new Date()) {
-          return res.status(400).json({ message: "OTP has expired" });
-      }
+    if (otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
 
-      await OtpUser.deleteMany({ email });
+    await OtpUser.deleteMany({ email });
 
-      const resettoken = await generalResetPasswordToken({
-          email: email,
-      });
-      console.log("Reset token: ", resettoken);
+    const resettoken = await generalResetPasswordToken({
+      email: email,
+    });
+    console.log("Reset token: ", resettoken);
 
-      return res.status(200).json({
-          message: "Email verified successfully",
-          resettoken: resettoken,
-      });
+    return res.status(200).json({
+      message: "Email verified successfully",
+      resettoken: resettoken,
+    });
   } catch (err) {
-      console.error("Error verifying password reset OTP");
-      next(err);
+    console.error("Error verifying password reset OTP");
+    next(err);
   }
 };
 
-exports.resetPassword = async(req, res, next) => {
+exports.resetPassword = async (req, res, next) => {
   try {
-      const { newPassword } = req.body;
-      const payload = req.user.payload;
+    const { newPassword } = req.body;
+    const payload = req.user.payload;
 
-      if (!newPassword) {
-          throw new BadRequestError("New password is required");
-      }
+    if (!newPassword) {
+      throw new BadRequestError("New password is required");
+    }
 
-      // // Verify payload before allowing password reset
-      if (!payload) {
-        console.log("ERRORERROR ");
-      } else {
-          console.log("new Password: ", newPassword);
-      }
+    // // Verify payload before allowing password reset
+    if (!payload) {
+      console.log("ERRORERROR ");
+    } else {
+      console.log("new Password: ", newPassword);
+    }
 
-      const result = await UserService.resetPassword(
-          payload.email,
-          newPassword
-      );
+    const result = await UserService.resetPassword(
+      payload.email,
+      newPassword
+    );
 
-      res.status(200).json({
-          status: "Success",
-          message: result.message,
-      });
+    res.status(200).json({
+      status: "Success",
+      message: result.message,
+    });
   } catch (err) {
-      console.error("Error verifying OTP and resetting password");
-      next(err);
+    console.error("Error verifying OTP and resetting password");
+    next(err);
   }
 };
 

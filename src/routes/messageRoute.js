@@ -2,10 +2,10 @@ const { addMessage, getMessages, createGroup, getGroups, addMemberToGroup } = re
 const router = require("express").Router();
 const { authMiddleware } = require('../middlewares/Authmiddlewares');
 
-router.post("/addmessage", authMiddleware, addMessage);
-router.post("/getmessage", authMiddleware, getMessages);
-router.post("/creategroup", authMiddleware, createGroup);
-router.get("/getgroups", authMiddleware, getGroups);
-router.post("/addmembertogroup", authMiddleware, addMemberToGroup);
+router.post("/addmessage", authMiddleware("access"), addMessage);
+router.post("/getmessage", authMiddleware("access"), getMessages);
+router.post("/creategroup", authMiddleware("access"), createGroup);
+router.get("/getgroups", authMiddleware("access"), getGroups);
+router.post("/addmembertogroup", authMiddleware("access"), addMemberToGroup);
 
 module.exports = router;

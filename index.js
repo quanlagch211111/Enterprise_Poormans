@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const http = require('http');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const socket = require('socket.io');
 const cookieParser = require('cookie-parser');
 
 dotenv.config();
@@ -55,66 +56,41 @@ server.listen(port, () => {
     console.log("Server is running on port: " + port);
 });
 
-// Socket.IO setup
-const socket = require('socket.io');
-const io = socket(server,{
-    cors :{
-      origin : '*',
-      credentials : true
+const io = socket(server, {
+    cors: {
+      origin: "http://localhost:3000",
+      credentials: true
     }
-  })
-const usersInRoom = {}; // all user(socket id) connected to a chatroom
-const socketToRoom = {}; // roomId in which a socket id is connected
-
-// io.use(socketAuthMiddleware);
-
-io.on('connection', socket => {
-    console.log('Someone joined socketId: ' + socket.id);
-
-    socket.on("joinRoom", roomId => {
-        if (usersInRoom[roomId]) {
-            usersInRoom[roomId].push(socket.id);
-        } else {
-            usersInRoom[roomId] = [socket.id];
-        }
-        socketToRoom[socket.id] = roomId;
-        const usersInThisRoom = usersInRoom[roomId].filter(id => id !== socket.id);
-        socket.join(roomId);
-        socket.emit("usersInRoom", usersInThisRoom);
-    });
-
-    socket.on("sendingSignal", payload => {
-        console.log('Before sending userJoined', payload.callerId);
-        io.to(payload.userIdToSendSignal).emit('userJoined', { signal: payload.signal, callerId: payload.callerId });
-    });
-
-    socket.on("returningSignal", payload => {
-        io.to(payload.callerId).emit('takingReturnedSignal', { signal: payload.signal, id: socket.id });
-    });
-
-    socket.on('sendMessage', payload => {
-        io.to(payload.roomId).emit('receiveMessage', { message: payload.message, name: socket.name, username: socket.username });
-    });
-
-    socket.on('disconnect', () => {
-        const roomId = socketToRoom[socket.id];
-        let socketsIdConnectedToRoom = usersInRoom[roomId];
-        if (socketsIdConnectedToRoom) {
-            socketsIdConnectedToRoom = socketsIdConnectedToRoom.filter(id => id !== socket.id);
-            usersInRoom[roomId] = socketsIdConnectedToRoom;
-        }
-        socket.leave(roomId);
-        socket.broadcast.emit("userLeft", socket.id);
-    });
-
+  });
+  
+  
+  global.onlineUsers = new Map();
+  
+  io.on("connection", (socket)=>{
+    // console.log('connect to socket', socket.id);
+    global.chatSocket = socket;
+  
     socket.on("add-user", (userId) => {
-        onlineUsers[userId] = socket.id;
-      });
-    
-      socket.on("send-msg", (data) => {
-        const sendUserSocket = onlineUsers[data.to];
-        if (sendUserSocket) {
-          socket.to(sendUserSocket).emit("msg-receive", data.message);
-        }
-      });
-});
+      onlineUsers.set(userId, socket.id);
+      console.log("Online users:", Array.from(onlineUsers.entries())); // Log danh sách người dùng online
+    });
+  
+    socket.on("send-msg", (data) => {
+      const sendUnderSocket = onlineUsers.get(data.to);
+      console.log("msg abcabc", data); // Log để kiểm tra dữ liệu nhận được
+      if (sendUnderSocket) {
+        socket.to(sendUnderSocket).emit("msg-recieve", {
+          from: data.from,
+          message: data.message,
+        });
+      }
+    });
+      
+    socket.on("send-notification", (data)=>{
+      const sendUnderSocket = onlineUsers.get(data.to);
+      if(sendUnderSocket){
+        socket.to(sendUnderSocket).emit("notification-recieve",data.message)
+      }
+    })
+  
+  })
