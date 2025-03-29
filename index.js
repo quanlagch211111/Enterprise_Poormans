@@ -30,7 +30,7 @@ mongoose.connect(process.env.MONGO_URL)
 const SubmissionFolderRouter = require('./src/routes/submissionfolderRoute');
 const documentRouter = require('./src/routes/documentRoute');
 const otpRouter = require('./src/routes/otpRoute');
-
+const GoogleDriveRouter = require('./src/routes/GoogleDriveRoute');
 const UserRouter = require('./src/routes/Userroutes');
 const MessageRouter = require('./src/routes/messageRoute');
 const AssignmentRouter = require('./src/routes/assignmentRoute');
@@ -50,12 +50,12 @@ app.use('/api/submissionFolders', SubmissionFolderRouter);
 app.use('/api/documents', documentRouter);
 app.use('/api/assignments', AssignmentRouter);
 app.use('/api/otp', otpRouter);
+app.use('/api/google-drive', GoogleDriveRouter);
 
 // Thay app.listen bằng server.listen
 server.listen(port, () => {
     console.log("Server is running on port: " + port);
-});
-
+  });
 const io = socket(server, {
     cors: {
       origin: "http://localhost:3000",

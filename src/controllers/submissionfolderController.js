@@ -54,3 +54,26 @@ exports.deleteSubmissionFolderById = async (req, res) => {
     }
 };
 
+const SubmissionFolder = require('../models/SubmissionFolder');
+
+exports.getSubmissionFoldersByAssignment = async (req, res) => {
+  try {
+    const { assignment_id } = req.body;
+
+    if (!assignment_id) {
+      return res.status(400).json({ message: "Assignment ID is required" });
+    }
+
+    const folders = await SubmissionFolder.find({ assignment_id });
+
+    if (!folders || folders.length === 0) {
+      return res.status(200).json({ message: "No submission folders found for this assignment" });
+    }
+
+    res.status(200).json(folders);
+  } catch (error) {
+    console.error("Error fetching submission folders:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

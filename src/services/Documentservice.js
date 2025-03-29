@@ -20,3 +20,7 @@ exports.updateDocumentById = async (id, data) => {
 exports.deleteDocumentById = async (id) => {
     return await Document.findByIdAndDelete(id);
 };
+
+exports.getDocumentsByFolderId = async (folder_id) => {
+    return await Document.find({ folder_id });
+};

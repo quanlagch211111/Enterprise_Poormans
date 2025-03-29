@@ -1,0 +1,16 @@
+# Bỏ qua thư mục node_modules
+node_modules/
+
+# Bỏ qua file .env (chứa thông tin nhạy cảm)
+.env
+
+# Không bỏ qua package.json và package-lock.json
+# (Xóa các dòng sau nếu chúng đang có trong .gitignore)
+# package.json
+# package-lock.json
+
+# Bỏ qua các file log
+*.log
+
+# Bỏ qua các file tạm
+uploads/

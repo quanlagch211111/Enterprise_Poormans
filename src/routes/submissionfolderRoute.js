@@ -9,6 +9,7 @@ router.post('/', submissionFolderController.createSubmissionFolder);
 router.get('/:id', submissionFolderController.getSubmissionFolderById);
 router.put('/:id', submissionFolderController.updateSubmissionFolderById);
 router.delete('/:id', submissionFolderController.deleteSubmissionFolderById);
+router.post('/getSubmissionFoldersByAssignment', submissionFolderController.getSubmissionFoldersByAssignment);
 
 
 
