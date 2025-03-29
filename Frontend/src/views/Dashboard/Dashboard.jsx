@@ -197,7 +197,7 @@ export const Dashboard = () => {
 
   return (
     <>
-      {role === "TEACHER" && (
+      {role === "TUTOR" && (
         <div className="main-content">
           <Container fluid>
             <Col md={9} lg={10} className="p-4 w-100">

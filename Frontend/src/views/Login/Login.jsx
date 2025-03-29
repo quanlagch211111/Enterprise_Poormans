@@ -56,14 +56,13 @@ export const Login = () => {
       );
   
       if (response.status === 200) {
-        const { accesstoken, refreshToken, isVerifiedToken, ...userData } = response.data;
+        const { accesstoken, refreshToken, isVerifiedToken,user, ...userData } = response.data;
   
         // Kiểm tra trạng thái trả về từ backend
         if (response.data.status === "NEED_VERIFICATION") {
           toast.warning("Your account is not verified. Redirecting to OTP confirmation...");
           localStorage.setItem("isVerifiedToken", isVerifiedToken); 
           const isverifyDecoded = jwtDecode(isVerifiedToken);
-          console.log("isVerifiedToken:", isverifyDecoded);
           localStorage.setItem("emailtoverify", isverifyDecoded.payload.email);
           setLoading(false);
           try {
@@ -84,10 +83,9 @@ export const Login = () => {
         console.log("Decoded JWT:", decoded);
         console.log("refreshToken:", refreshToken);
         localStorage.setItem("accessToken", accesstoken);
+        localStorage.setItem('userlogged',JSON.stringify(user));
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
-        localStorage.setItem("userData", JSON.stringify(userData));
-  
         toast.success("Login successful!");
         setLoading(false);
         navigate("/");

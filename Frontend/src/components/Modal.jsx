@@ -38,8 +38,7 @@ export const ConfirmLogout = (props) => {
       );
 
       if (response.status === 200) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("userId");
+        localStorage.clear();
         navigate("/login");
       } else {
         console.error("Failed to log out:", response.data.message);

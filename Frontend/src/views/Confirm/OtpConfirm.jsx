@@ -7,21 +7,20 @@ import { Button, Card, Col, Container, Row } from "react-bootstrap";
 export const OtpConfirm = () => {
   const navigate = useNavigate(); // Ensure navigate is defined at the top level
   const [otp, setOTP] = useState("");
-  const emailtoverify = localStorage.getItem("emailtoverify");
+  const email = localStorage.getItem("emailtoverify");
 
   useEffect(() => {
-    if (!emailtoverify) {
+    if (!email) {
       navigate("/login"); // Redirect to login if email is not found
     }
-  }, [navigate, emailtoverify]); // Add emailtoverify as a dependency
+  }, [navigate, email]); 
 
   const handleVerify = async () => {
     try {
       const response = await axios.post("users/verify-otp", {
-        emailtoverify,
+        email,
         otp,
       });
-      console.log(response);
       if (response.status === 200) {
         localStorage.removeItem("emailtoverify");
         navigate("/login");
@@ -42,7 +41,7 @@ export const OtpConfirm = () => {
               We've sent a verification code to
             </span>
             <span className="d-flex text-muted fw-bold justify-content-center mb-3">
-              {emailtoverify || "example@gmail.com"}
+              {email || "example@gmail.com"}
             </span>
             <MDBInput
               label="OTP"

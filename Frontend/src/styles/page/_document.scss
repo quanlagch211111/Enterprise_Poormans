@@ -77,9 +77,11 @@
 }
 
 .left-side {
-  width: 20%;
+  flex: 0.5; /* Giảm chiều rộng của phần Assignments */
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
 }
-
 .right-side {
   width: 80%;
   margin-left: 20px;
@@ -105,4 +107,190 @@
   border: 1px solid #c7c7c7;
   padding: 0.5rem 1rem;
   width: 100%;
+}
+
+.submission-item {
+  color: black;
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.submission-item {
+  color: black;
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.folder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.folder-card {
+  background-color: #f9f9f9;
+  transition: background-color 0.2s ease;
+}
+
+.folder-card:hover {
+  background-color: #e9ecef;
+}
+
+.folder-info h5 {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.folder-info p {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.folder-meta {
+  font-size: 12px;
+  text-align: right;
+}
+
+.folder-details {
+  display: flex;
+  gap: 20px;
+}
+
+.left-side {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.right-side {
+  flex: 2;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.file-card {
+  background-color: #f1f1f1;
+  padding: 10px;
+  border-radius: 5px;
+  width: 200px;
+  text-align: center;
+}
+
+.uploaded-file {
+  background-color: #e9ecef;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.document-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.document-card {
+  width: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  background-color: #fff;
+}
+
+.document-card h5 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.document-card p {
+  font-size: 14px;
+  color: #666;
+}
+
+.document-card a {
+  font-size: 14px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.document-card a:hover {
+  text-decoration: underline;
+}
+
+/* New styles for student work */
+.student-work {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.student-work .uploaded-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #e9ecef;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.student-work .uploaded-file p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.student-work .uploaded-file small {
+  font-size: 12px;
+  color: #666;
+}
+
+.student-work .uploaded-file button {
+  background-color: #fa5454;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.student-work .uploaded-file button:hover {
+  background-color: #fe6c6a;
+}
+
+.student-work .add-or-create {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.student-work .add-or-create:hover {
+  background-color: #0056b3;
+}
+
+.student-work .status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
 }
