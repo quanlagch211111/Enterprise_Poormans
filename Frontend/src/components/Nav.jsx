@@ -5,7 +5,7 @@ import axios from "../services/AxiosCustom";
 import { ConfirmLogout } from "./Modal";
 
 export const Sidebar = () => {
-  const { role } = useContext(RoleContext);
+  const role = localStorage.getItem("role");
   const [showModalLogout, setShowModalLogout] = useState(false);
   return (
     <>
@@ -19,14 +19,12 @@ export const Sidebar = () => {
         </NavLink>
         <NavLink to="/document" className="nav-item">
           <i className="fas fa-file-alt"></i>
-          Documents
+          Assignment
         </NavLink>
-        {role === "ADMIN" && (
-          <NavLink to="/assignment" className="nav-item">
-            <i className="fas fa-book"></i>
-            Assignment
-          </NavLink>
-        )}
+        <NavLink to="/assignment" className="nav-item">
+          <i className="fas fa-book"></i>
+          Class
+        </NavLink>
         <NavLink to="/schedule" className="nav-item">
           <i className="fas fa-video"></i>
           Schedule

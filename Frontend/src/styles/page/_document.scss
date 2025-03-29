@@ -30,6 +30,13 @@
     color: #fe6c6a;
   }
 }
+.assignment-download {
+  color: #0660bf;
+  cursor: pointer;
+  &:hover {
+    color: #007bff;
+  }
+}
 
 .assignment-card {
   cursor: pointer;
@@ -199,7 +206,7 @@
 }
 
 .document-card {
-  width: 200px;
+  width: 100%;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 16px;
@@ -211,7 +218,20 @@
   font-size: 16px;
   margin-bottom: 8px;
 }
-
+.document-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.assignment-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wrapper {
+  overflow-y: auto;
+  height: 300px;
+}
 .document-card p {
   font-size: 14px;
   color: #666;

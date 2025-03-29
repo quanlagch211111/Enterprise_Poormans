@@ -12,6 +12,7 @@ import { Sidebar } from "./components/Nav";
 import { MeetingCall } from "./views/Meeting/MeetingCall";
 import { OtpConfirm } from "./views/Confirm/OtpConfirm";
 import { Schedule } from "./views/Schedule/Schedule";
+import { Profile } from "./views/User/Profile";
 
 function App() {
   const location = useLocation();
@@ -33,6 +34,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/meeting" element={<MeetingCall />} />
           <Route path="/otp-confirm" element={<OtpConfirm />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </>

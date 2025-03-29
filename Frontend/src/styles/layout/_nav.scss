@@ -63,3 +63,40 @@
   background: var(--light);
   overflow-y: auto;
 }
+
+.profile-image {
+  transition: transform 0.2s;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  margin-top: 0.5rem;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  z-index: 1000;
+}
+
+.dropdown-item {
+  color: #333;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.active {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

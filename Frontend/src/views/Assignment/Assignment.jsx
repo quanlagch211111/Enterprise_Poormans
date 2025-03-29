@@ -33,6 +33,7 @@ const Assignment = () => {
 
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     if (!accessToken) {
@@ -90,13 +91,15 @@ const Assignment = () => {
               value={searchTerm}
               onChange={handleSearch}
             />
-            <MDBBtn onClick={setShowModalNewAsm}>Add</MDBBtn>
+            {role === "STAFF" && (
+              <MDBBtn onClick={setShowModalNewAsm}>Add</MDBBtn>
+            )}
           </div>
           <div className="body">
             <MDBTable className="rouded-2">
               <MDBTableHead className="table-header rouded-2">
                 <tr>
-                  <th>Assignment Name</th>
+                  <th>Class Name</th>
                   <th>Student Name</th>
                   <th>Teacher Name</th>
                   <th>Date</th>

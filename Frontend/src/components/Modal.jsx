@@ -376,7 +376,11 @@ export const ConfirmDeleteAsm = (props) => {
               <MDBBtn color="secondary" onClick={handleClose}>
                 Close
               </MDBBtn>
-              <MDBBtn onClick={handleDeleteAssignment} disabled={isLoading}>
+              <MDBBtn
+                onClick={handleDeleteAssignment}
+                color="danger"
+                disabled={isLoading}
+              >
                 {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
               </MDBBtn>
             </MDBModalFooter>
@@ -501,7 +505,11 @@ export const DeleteBlog = (props) => {
               <MDBBtn color="secondary" onClick={handleClose}>
                 Close
               </MDBBtn>
-              <MDBBtn onClick={handleDeleteBlog} disabled={isLoading}>
+              <MDBBtn
+                onClick={handleDeleteBlog}
+                color="danger"
+                disabled={isLoading}
+              >
                 {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
               </MDBBtn>
             </MDBModalFooter>
@@ -910,7 +918,7 @@ export const DeleteEvent = (props) => {
               <MDBBtn color="secondary" onClick={handleClose}>
                 Close
               </MDBBtn>
-              <MDBBtn onClick={deleteEvent} disabled={isLoading}>
+              <MDBBtn onClick={deleteEvent} color="danger" disabled={isLoading}>
                 {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
               </MDBBtn>
             </MDBModalFooter>
@@ -1074,6 +1082,446 @@ export const UpdateEvent = (props) => {
               </MDBBtn>
               <MDBBtn onClick={handUpdate} disabled={isLoading}>
                 {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Lưu"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+
+// Assignment
+
+export const UploadAssignment = (props) => {
+  const { accessToken, selectedFolder, newDocument, setNewDocument, role } =
+    props;
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const [isLoading, setLoading] = useState(false);
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+
+  const handleDocumentUpload = async (e) => {
+    e.preventDefault();
+
+    if (!selectedFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      setLoading(true);
+      // Upload file to Google Drive
+      const uploadResponse = await axios.post(
+        "/google-drive/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (uploadResponse.status === 200) {
+        const fileUrl = uploadResponse.data.fileUrl;
+
+        // Prepare document data
+        const documentData = {
+          ...newDocument,
+          folder_id: selectedFolder._id,
+          file_path: fileUrl,
+          content: role === "STUDENT" ? "submit" : newDocument.content, // Nếu là STUDENT, content mặc định là "submit"
+        };
+
+        // Log the body of the POST request
+        console.log("Document Data to be sent:", documentData);
+
+        // Save document to database
+        const saveResponse = await axios.post("/documents", documentData, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (saveResponse.status === 201) {
+          alert("Document uploaded and saved successfully!");
+          handleClose();
+          setSelectedFile(null);
+          setNewDocument({
+            owner_id: localStorage.getItem("userId"),
+            folder_id: selectedFolder?._id,
+            types: "",
+            content: "",
+          });
+          toast.success("Assignment has been uploaded successfully.");
+        } else {
+          toast.error("Failed to save document.");
+        }
+      } else {
+        toast.error("Failed to upload file.");
+      }
+    } catch (error) {
+      if (error.response) {
+        toast.error("Server responded with an error:", error.response.data);
+      } else if (error.request) {
+        toast.error("No response received from server:", error.request);
+      } else {
+        toast.error("Error setting up the request:", error.message);
+      }
+      toast.error("An error occurred while uploading the document.");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const fileType = file.type.split("/")[1]; // Lấy phần mở rộng của file (e.g., pdf, docx)
+      setSelectedFile(file);
+      setNewDocument((prev) => ({
+        ...prev,
+        types: fileType, // Cập nhật type vào state
+      }));
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Upload Assignment</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => {
+                  handleClose();
+                }}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <>
+                <div className="form-group">
+                  <label htmlFor="document-type" className="form-label">
+                    Document Type
+                  </label>
+                  <input
+                    type="text"
+                    id="document-type"
+                    className="form-control"
+                    value={newDocument.types} // Hiển thị type tự động lấy từ file
+                    readOnly // Không cho phép chỉnh sửa
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="document-content" className="form-label">
+                    Content
+                  </label>
+                  <textarea
+                    id="document-content"
+                    className="form-control"
+                    placeholder="Enter document content"
+                    value={newDocument.content}
+                    onChange={(e) =>
+                      setNewDocument({
+                        ...newDocument,
+                        content: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="document-file" className="form-label">
+                    File
+                  </label>
+                  <input
+                    type="file"
+                    id="document-file"
+                    className="form-control"
+                    onChange={handleFileChange} // Gọi hàm xử lý khi chọn file
+                    required
+                  />
+                </div>
+              </>
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn
+                color="secondary"
+                onClick={() => {
+                  handleClose();
+                }}
+              >
+                Close
+              </MDBBtn>
+              <MDBBtn onClick={handleDocumentUpload} disabled={isLoading}>
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Lưu"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+export const DeleteAssignment = (props) => {
+  const [isLoading, setLoading] = useState(false);
+  const { accessToken, documentId, fetchDocuments, selectedFolder } = props;
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+  const handleDeleteAssignment = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.delete(`/documents/${documentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.status === 200) {
+        toast.success("Assignment has been deleted successfully.");
+        fetchDocuments(selectedFolder._id); // Refresh danh sách documents
+        setLoading(false);
+        handleClose();
+      } else {
+        alert("Failed to remove file.");
+      }
+    } catch (error) {
+      toast.error("Error removing file:", error);
+      toast.error("An error occurred while removing the file.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>
+                Are you sure to delete this assignment?
+              </MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={handleClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={handleClose}>
+                Close
+              </MDBBtn>
+              <MDBBtn
+                onClick={handleDeleteAssignment}
+                color="danger"
+                disabled={isLoading}
+              >
+                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+
+// User
+
+export const EditUser = (props) => {
+  const { accessToken, userData } = props;
+  const [isLoading, setLoading] = useState(false);
+  const [userEdit, setUserEdit] = useState({
+    id: "",
+    fullName: "",
+    email: "",
+    address: "",
+    role: "",
+    status: "",
+    avatar: "",
+  });
+  useEffect(() => {
+    setUserEdit({
+      id: userData.id,
+      fullName: userData.fullName,
+      email: userData.email,
+      address: userData.address,
+      role: userData.role,
+      status: userData.status,
+      avatar: userData.avatar,
+    });
+  }, [userData]);
+
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+  const handleEditUser = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been created successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been created failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Edit User</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={handleClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <MDBInput
+                className="mb-3"
+                label="Full Name"
+                id="typeText"
+                type="text"
+                value={userEdit.fullName}
+                onChange={(e) =>
+                  setUserEdit({ ...userEdit, fullName: e.target.value })
+                }
+              />
+              <MDBInput
+                className="mb-3"
+                label="Email"
+                id="typeText"
+                type="text"
+                value={userEdit.email}
+                onChange={(e) =>
+                  setUserEdit({ ...userEdit, email: e.target.value })
+                }
+              />
+              <MDBInput
+                className="mb-3"
+                label="Address"
+                id="typeText"
+                type="text"
+                value={userEdit.address}
+                onChange={(e) =>
+                  setUserEdit({ ...userEdit, address: e.target.value })
+                }
+              />
+              <MDBInput
+                className="mb-3"
+                label="role"
+                id="typeText"
+                type="text"
+                value={userEdit.role}
+                disabled={true}
+                onChange={(e) =>
+                  setUserEdit({ ...userEdit, role: e.target.value })
+                }
+              />
+              <MDBInput
+                className="mb-3"
+                label="Title"
+                id="typeText"
+                type="file"
+              />
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={handleClose}>
+                Close
+              </MDBBtn>
+              <MDBBtn onClick={handleEditUser} disabled={isLoading}>
+                {isLoading ? (
+                  <ClipLoader color="#ffffff" size={15} />
+                ) : (
+                  "Update"
+                )}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};
+export const EditPassword = (props) => {
+  const { accessToken } = props;
+  const [isLoading, setLoading] = useState(false);
+  const [passwordEdit, setPasswordEdit] = useState({
+    oldPass: "",
+    newPass: "",
+  });
+
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+  const handleEditPass = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been created successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been created failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Change Password</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={handleClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <MDBInput
+                className="mb-3"
+                label="Old Password"
+                id="typeText"
+                type="text"
+                value={passwordEdit.oldPass}
+                onChange={(e) =>
+                  setPasswordEdit({ ...passwordEdit, oldPass: e.target.value })
+                }
+              />
+              <MDBInput
+                className="mb-3"
+                label="New Password"
+                id="typeText"
+                type="text"
+                value={passwordEdit.newPass}
+                onChange={(e) =>
+                  setPasswordEdit({ ...passwordEdit, newPass: e.target.value })
+                }
+              />
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={handleClose}>
+                Close
+              </MDBBtn>
+              <MDBBtn
+                onClick={handleEditPass}
+                disabled={isLoading}
+                color="info"
+              >
+                {isLoading ? (
+                  <ClipLoader color="#ffffff" size={15} />
+                ) : (
+                  "Update"
+                )}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
