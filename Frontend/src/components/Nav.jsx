@@ -33,6 +33,13 @@ export const Sidebar = () => {
           <i className="fas fa-blog"></i>
           Blog
         </NavLink>
+        {role === "STAFF" && (
+           <NavLink to="/account" className="nav-item">
+          <i className="fas fa-blog"></i>
+          Account
+        </NavLink>
+        )}
+       
         <a
           href="#"
           className="nav-item logout"

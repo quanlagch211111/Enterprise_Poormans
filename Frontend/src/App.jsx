@@ -13,6 +13,8 @@ import { MeetingCall } from "./views/Meeting/MeetingCall";
 import { OtpConfirm } from "./views/Confirm/OtpConfirm";
 import { Schedule } from "./views/Schedule/Schedule";
 import { Profile } from "./views/User/Profile";
+import Account from "./views/Account/Account";
+
 
 function App() {
   const location = useLocation();
@@ -35,6 +37,7 @@ function App() {
           <Route path="/meeting" element={<MeetingCall />} />
           <Route path="/otp-confirm" element={<OtpConfirm />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </div>
     </>
