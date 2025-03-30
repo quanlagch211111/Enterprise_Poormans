@@ -49,4 +49,16 @@ const uploadFileToGoogleDrive = async (filePath, fileName, mimeType) => {
     }
 };
 
-module.exports = { uploadFileToGoogleDrive };
+const deleteFileFromGoogleDrive = async (fileId) => {
+    try {
+        await drive.files.delete({
+            fileId: fileId,
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting file from Google Drive:', error.message);
+        return { success: false, error: error.message };
+    }
+};
+
+module.exports = { uploadFileToGoogleDrive, deleteFileFromGoogleDrive };

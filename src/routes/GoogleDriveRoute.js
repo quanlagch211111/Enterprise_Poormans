@@ -17,5 +17,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/upload', upload.single('file'), googleDriveController.uploadFile);
+router.delete('/delete', googleDriveController.deleteFile);
 
 module.exports = router;

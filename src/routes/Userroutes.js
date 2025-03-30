@@ -1,6 +1,6 @@
 const express = require('express'); 
 const { createUser, signinUser, updateUser, deleteUser, 
-  getallUser,getAllUserForChat, detailUser, reprovideToken, verifyOtp, logoutUser,
+  getallUser,getAllUserForChat,getUsersWithRoles, detailUser, reprovideToken, verifyOtp, logoutUser,
    requestPasswordReset, verifyPasswordResetOtp, resetPassword  } = require('../controllers/UserControllers');    
 const router = express.Router();
 const { authMiddleware, isStaff} = require('../middlewares/Authmiddlewares');
@@ -20,7 +20,7 @@ router.delete('/delete/:id', authMiddleware("access"),isStaff, deleteUser);
 
 router.get('/getallusers', authMiddleware("access"),isStaff,  getallUser);
 
-router.get('/getuserwithroles', authMiddleware("access"), isStaff, getAllUserForChat);
+router.get('/getuserwithroles', authMiddleware("access"), isStaff, getUsersWithRoles);
 
 router.get('/detailuser/:id', detailUser);
 
