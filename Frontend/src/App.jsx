@@ -14,6 +14,8 @@ import { OtpConfirm } from "./views/Confirm/OtpConfirm";
 import { Schedule } from "./views/Schedule/Schedule";
 import { Profile } from "./views/User/Profile";
 import Account from "./views/Account/Account";
+import ForgotPassword from "./views/ForgotPassword/ForgotPassword";
+import ResetPassword from "./views/ForgotPassword/ResetPassword";
 
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
           <Route path="/otp-confirm" element={<OtpConfirm />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>
     </>

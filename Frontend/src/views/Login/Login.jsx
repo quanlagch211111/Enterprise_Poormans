@@ -135,6 +135,11 @@ export const Login = () => {
               >
                 {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Login"}
               </MDBBtn>
+              <div>
+                <p className="mb-0 text-end text-decoration-underline text-muted">
+                  <Link to="/forgot-password">Forgot Password</Link>
+                </p>
+              </div>
               <div className="text-center">
                 <p>or login with:</p>
                 <MDBBtn floating color="primary" className="mx-1">
