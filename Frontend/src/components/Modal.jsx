@@ -1530,3 +1530,93 @@ export const EditPassword = (props) => {
     </>
   );
 };
+
+// folder
+export const NewFolder = (props) => {
+  const { accessToken } = props;
+  const [isVisibility, setVisibility] = useState(false);
+  const toggleVisibility = () => setVisibility(!isVisibility);
+  const [newFolder, setNewFolder] = useState({
+    title: "",
+    description: "",
+    deadline: "",
+  });
+  const [isLoading, setLoading] = useState(false);
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+  const handleAddBlog = async () => {
+    try {
+      // before call api
+      setLoading(true);
+      // ...
+      // after call api
+      setLoading(false);
+      toast.success("Blog has been created successfully.");
+      handleClose();
+    } catch (error) {
+      toast.error("Blog has been created failed.");
+    }
+  };
+  return (
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Create New Folder</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={handleClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              <MDBInput
+                className="mb-3"
+                label="Title"
+                id="typeText"
+                type="text"
+                value={newFolder.title}
+                onChange={(e) =>
+                  setNewFolder({ ...newFolder, title: e.target.value })
+                }
+              />
+              <MDBTextArea
+                label="Description"
+                id="textAreaExample"
+                rows="{4}"
+                value={newFolder.description}
+                onChange={(e) =>
+                  setNewFolder({ ...newFolder, description: e.target.value })
+                }
+              />
+              <MDBInput
+                className="my-3"
+                label="Deadline"
+                id="typeText"
+                type="date"
+                value={newFolder.deadline}
+                onChange={(e) =>
+                  setNewFolder({ ...newFolder, deadline: e.target.value })
+                }
+              />
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={handleClose}>
+                Close
+              </MDBBtn>
+              <MDBBtn onClick={handleAddBlog} disabled={isLoading}>
+                {isLoading ? (
+                  <ClipLoader color="#ffffff" size={15} />
+                ) : (
+                  "Create"
+                )}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+    </>
+  );
+};

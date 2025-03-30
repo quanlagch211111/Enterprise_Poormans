@@ -103,7 +103,7 @@ const Assignment = () => {
                   <th>Student Name</th>
                   <th>Teacher Name</th>
                   <th>Date</th>
-                  <th>Action</th>
+                  {role !== "STUDENT" && <th>Action</th>}
                 </tr>
               </MDBTableHead>
               <MDBTableBody className="table-body bg-white ">
@@ -121,47 +121,51 @@ const Assignment = () => {
                     <td>
                       {new Date(assignment.assigned_at).toLocaleDateString()}
                     </td>
-                    <td>
-                      <div className="dropdown-assignment">
-                        <div className="container-select d-flex justify-content-end">
-                          <div
-                            className="dropdown-select  d-flex align-items-center justify-content-center"
-                            onClick={() => toggleVisibility(assignment._id)}
-                          >
-                            <img
-                              src={require("../../assets/images/more.png")}
-                              alt=""
-                            />
+                    {role !== "STUDENT" && (
+                      <td>
+                        <div className="dropdown-assignment">
+                          <div className="container-select d-flex justify-content-end">
+                            <div
+                              className="dropdown-select  d-flex align-items-center justify-content-center"
+                              onClick={() => toggleVisibility(assignment._id)}
+                            >
+                              <img
+                                src={require("../../assets/images/more.png")}
+                                alt=""
+                              />
+                            </div>
                           </div>
+                          <ul
+                            className={
+                              "dropdown-list d-flex gap-2 flex-column " +
+                              (isVisibilityId === assignment._id
+                                ? "active"
+                                : "")
+                            }
+                          >
+                            <li
+                              className="dropdown-item"
+                              onClick={() => {
+                                setIdAsmDelete(assignment._id);
+                                setShowModalDeleteAsm(true);
+                              }}
+                            >
+                              Delete
+                            </li>
+                            <li
+                              className="dropdown-item"
+                              onClick={() => {
+                                setEditAssignment(assignment);
+                                setIdAsmEdit(assignment.id);
+                                setShowModalEditAsm(true);
+                              }}
+                            >
+                              Update
+                            </li>
+                          </ul>
                         </div>
-                        <ul
-                          className={
-                            "dropdown-list d-flex gap-2 flex-column " +
-                            (isVisibilityId === assignment._id ? "active" : "")
-                          }
-                        >
-                          <li
-                            className="dropdown-item"
-                            onClick={() => {
-                              setIdAsmDelete(assignment._id);
-                              setShowModalDeleteAsm(true);
-                            }}
-                          >
-                            Delete
-                          </li>
-                          <li
-                            className="dropdown-item"
-                            onClick={() => {
-                              setEditAssignment(assignment);
-                              setIdAsmEdit(assignment.id);
-                              setShowModalEditAsm(true);
-                            }}
-                          >
-                            Update
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </MDBTableBody>

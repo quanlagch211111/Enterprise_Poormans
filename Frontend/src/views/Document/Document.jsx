@@ -3,7 +3,12 @@ import axios from "../../services/AxiosCustom";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Modal from "react-modal";
-import { DeleteAssignment, UploadAssignment } from "../../components/Modal";
+import {
+  DeleteAssignment,
+  NewAssignment,
+  NewFolder,
+  UploadAssignment,
+} from "../../components/Modal";
 
 Modal.setAppElement("#root"); // Đặt root element cho modal
 
@@ -23,6 +28,7 @@ export const Document = () => {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [modalCreateAssignment, setModalCreateAssignment] = useState(false);
   const [modalDeleteAssignment, setModalDeleteAssignment] = useState(false);
+  const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
   const [newDocument, setNewDocument] = useState({
     owner_id: localStorage.getItem("userId"),
@@ -196,7 +202,14 @@ export const Document = () => {
       {role === "STAFF" ||
         (role === "TUTOR" && (
           <div className="d-flex justify-content-end">
-            <MDBBtn className="mb-3">New Folder</MDBBtn>
+            <MDBBtn
+              className="mb-3"
+              onClick={() => {
+                setModalNewFolder(true);
+              }}
+            >
+              New Folder
+            </MDBBtn>
           </div>
         ))}
 
@@ -430,6 +443,11 @@ export const Document = () => {
         selectedFolder={selectedFolder}
         documentId={documentDeleteId}
       ></DeleteAssignment>
+      <NewFolder
+        show={modalNewFolder}
+        onClose={() => setModalNewFolder(false)}
+        accessToken={accessToken}
+      ></NewFolder>
     </>
   );
 };

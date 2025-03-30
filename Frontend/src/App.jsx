@@ -17,10 +17,15 @@ import Account from "./views/Account/Account";
 import ForgotPassword from "./views/ForgotPassword/ForgotPassword";
 import ResetPassword from "./views/ForgotPassword/ResetPassword";
 
-
 function App() {
   const location = useLocation();
-  const hideNavRoutes = ["/meeting", "/login", "/otp-confirm"];
+  const hideNavRoutes = [
+    "/meeting",
+    "/login",
+    "/otp-confirm",
+    "/forgot-password",
+    "/reset-password",
+  ];
   const shouldShowNav = !hideNavRoutes.includes(location.pathname);
 
   return (
