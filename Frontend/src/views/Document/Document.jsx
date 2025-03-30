@@ -30,13 +30,13 @@ export const Document = () => {
   const [modalDeleteAssignment, setModalDeleteAssignment] = useState(false);
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
+  const [documentFilePath, setDocumentFilePath] = useState(false);
   const [newDocument, setNewDocument] = useState({
     owner_id: localStorage.getItem("userId"),
     folder_id: "",
     types: "",
     content: "",
   });
-  const [selectedFile, setSelectedFile] = useState(null);
   const role = localStorage.getItem("role");
   const accessToken = localStorage.getItem("accessToken");
 
@@ -50,15 +50,33 @@ export const Document = () => {
 
   const fetchAssignments = async () => {
     try {
+      const userId = localStorage.getItem("userId"); // Lấy userId từ localStorage
+      const role = localStorage.getItem("role"); // Lấy role từ localStorage
       const response = await axios.get("/assignments", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      setAssignments(response.data);
+
+      let filteredAssignments;
+
+      if (role === "STAFF") {
+        // Nếu role là STAFF, hiển thị toàn bộ assignments
+        filteredAssignments = response.data;
+      } else {
+        // Lọc assignment dựa trên tutor_id hoặc student_id
+        filteredAssignments = response.data.filter((assignment) => {
+          const isTutor = assignment.tutor_id?._id === userId; // Kiểm tra nếu user là tutor
+          const isStudent = assignment.student_id.some(
+            (student) => student._id === userId // Kiểm tra nếu user là student
+          );
+          return isTutor || isStudent;
+        });
+      }
+
+      setAssignments(filteredAssignments); // Cập nhật state với danh sách đã lọc
     } catch (error) {
       console.error("Error fetching assignments:", error);
     }
   };
-
   const fetchFolders = async (assignmentId) => {
     try {
       const response = await axios.post(
@@ -68,10 +86,22 @@ export const Document = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
-      setFolders(response.data || []); // Đảm bảo folders luôn là một mảng
+      setFolders(response.data || []);
     } catch (error) {
       console.error("Error fetching folders:", error);
-      setFolders([]); // Đặt folders thành mảng rỗng nếu có lỗi
+      setFolders([]);
+    }
+  };
+  const fetchUsername = async (ownerId) => {
+    try {
+      const response = await axios.get(`/users/detailuser/${ownerId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+
+      });
+      return response.data.data.username;
+    } catch (error) {
+      console.error("Error fetching username:", error);
+      return "Unknown User"; // Trả về giá trị mặc định nếu lỗi
     }
   };
 
@@ -81,31 +111,21 @@ export const Document = () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      // Lấy danh sách ID của sinh viên từ assignment
-      const studentIds =
-        selectedAssignment?.student_id.map((student) => student._id) || [];
-      console.log("Student IDs:", studentIds); // Log danh sách ID sinh viên
-      const tutorId = selectedAssignment?.tutor_id?._id; // Lấy ID của tutor
-
-      const allDocuments = response.data;
-
-      // Lọc tài liệu của tutor
-      const tutorDocuments = allDocuments.filter(
-        (doc) => doc.owner_id === tutorId
+      const allDocuments = await Promise.all(
+        response.data.map(async (doc) => {
+          const username = await fetchUsername(doc.owner_id); // Lấy `username` từ `owner_id`
+          return { ...doc, username }; // Gắn `username` vào tài liệu
+        })
       );
-      console.log("Tutor Documents:", tutorDocuments); // Log tài liệu của tutor
 
-      // Lọc tài liệu của sinh viên
-      const studentDocuments = allDocuments.filter((doc) => {
-        console.log(`Checking ${doc.owner_id} against`, studentIds);
-        return studentIds.some((id) => id === doc.owner_id);
-      });
+      // Lọc tài liệu của tutor và sinh viên
+      const tutorDocuments = allDocuments.filter(
+        (doc) => doc.owner_id === selectedAssignment?.tutor_id?._id
+      );
+      const studentDocuments = allDocuments.filter((doc) =>
+        selectedAssignment?.student_id.some((student) => student._id === doc.owner_id)
+      );
 
-      console.log("Filtered Student Documents:", studentDocuments);
-      console.log("Student Documents:", studentDocuments); // Log tài liệu của sinh viên
-      console.log("all", allDocuments); // Log tất cả tài liệu
-
-      // Cập nhật state
       setDocuments({ tutorDocuments, studentDocuments });
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -137,9 +157,8 @@ export const Document = () => {
         assignments.map((assignment) => (
           <span
             key={assignment._id}
-            className={`class-name ${
-              selectedAssignment?._id === assignment._id ? "active" : ""
-            }`}
+            className={`class-name ${selectedAssignment?._id === assignment._id ? "active" : ""
+              }`}
             onClick={() => {
               setSelectedAssignment(assignment);
               setSelectedFolder(null);
@@ -321,35 +340,36 @@ export const Document = () => {
               <>
                 <div className="wrapper">
                   {studentDocuments.length > 0 ? (
-                    studentDocuments.map((doc) => (
-                      <div
-                        key={doc._id}
-                        className="assignment-container d-flex flex-row align-items-center justify-content-between"
-                      >
-                        <div className="assignment-card  d-flex flex-row align-items-center gap-2">
-                          <i className="fas fa-file-pdf assignment-icon"></i>
-                          <div className="assignment-name">{doc.content}</div>
-                          <div className="assignment-meta d-flex flex-row gap-2 small">
-                            <span className="assignment-size small text-muted">
-                              {doc.types.toUpperCase()}
-                            </span>
+                    studentDocuments
+                      .filter((doc) => doc.owner_id === localStorage.getItem("userId")) // Lọc tài liệu của sinh viên đã nộp
+                      .map((doc) => (
+                        <div
+                          key={doc._id}
+                          className="assignment-container d-flex flex-row align-items-center justify-content-between"
+                        >
+                          <div className="assignment-card d-flex flex-row align-items-center gap-2">
+                            <i className="fas fa-file-pdf assignment-icon"></i>
+                            <div className="assignment-name">{doc.content}</div>
+                            <div className="assignment-meta d-flex flex-row gap-2 small">
+                              <span className="assignment-size small text-muted">
+                                {doc.types.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="action-assignment">
+                            <i
+                              className="fa-solid fa-trash assignment-delete"
+                              onClick={() => {
+                                setDocumentDeleteId(doc._id);
+                                setDocumentFilePath(doc.file_path);
+                                setModalDeleteAssignment(true);
+                              }}
+                            ></i>
                           </div>
                         </div>
-                        <div className="action-assignment">
-                          <i
-                            class="fa-solid fa-trash assignment-delete "
-                            onClick={() => {
-                              setDocumentDeleteId(doc._id);
-                              setModalDeleteAssignment(true);
-                            }}
-                          ></i>
-                        </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
-                    <p className="text-muted">
-                      No assignments have been uploaded yet.
-                    </p>
+                    <p className="text-muted">No assignments have been uploaded yet.</p>
                   )}
                 </div>
                 <div className="d-flex justify-content-center w-100">
@@ -385,6 +405,11 @@ export const Document = () => {
                           <div className="assignment-meta d-flex flex-row gap-2">
                             <span className="assignment-size small text-muted">
                               {doc.types.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="assignment-meta d-flex flex-row gap-2">
+                            <span className="assignment-size small text-muted">
+                              Submitted by: {doc.username || "Unknown User"}
                             </span>
                           </div>
                         </div>
@@ -442,12 +467,16 @@ export const Document = () => {
         fetchDocuments={fetchDocuments}
         selectedFolder={selectedFolder}
         documentId={documentDeleteId}
+        documentFilePath={documentFilePath}
       ></DeleteAssignment>
       <NewFolder
         show={modalNewFolder}
         onClose={() => setModalNewFolder(false)}
+        assignmentId={selectedAssignment?._id}
         accessToken={accessToken}
-      ></NewFolder>
+        folders={folders}
+        setFolders={setFolders}
+      />
     </>
   );
 };

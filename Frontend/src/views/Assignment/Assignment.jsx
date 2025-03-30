@@ -92,7 +92,7 @@ const Assignment = () => {
               onChange={handleSearch}
             />
             {role === "STAFF" && (
-              <MDBBtn onClick={setShowModalNewAsm}>Add</MDBBtn>
+              <MDBBtn onClick={() => setShowModalNewAsm(true)}>Add</MDBBtn>
             )}
           </div>
           <div className="body">
@@ -180,8 +180,8 @@ const Assignment = () => {
         assignments={assignments}
         userId={userId}
         accessToken={accessToken}
-        students={students}
-        tutors={tutors}
+        students={students} // Truyền danh sách students
+        tutors={tutors} // Truyền danh sách tutors
         onClose={() => setShowModalNewAsm(false)}
       ></NewAssignment>
       <ConfirmDeleteAsm
@@ -197,7 +197,7 @@ const Assignment = () => {
         setAssignments={setAssignments}
         assignments={assignments}
         editAssignment={editAssignment}
-        students={students}
+        students={students} // Truyền danh sách students
         tutors={tutors}
         setEditAssignment={setEditAssignment}
         accessToken={accessToken}

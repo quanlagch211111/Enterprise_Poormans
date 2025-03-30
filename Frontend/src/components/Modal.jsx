@@ -75,133 +75,130 @@ export const ConfirmLogout = (props) => {
 
 // Assignment
 export const NewAssignment = (props) => {
-  const { setAssignments, assignments, userId, accessToken, students, tutors } =
-    props;
+  const { setAssignments, assignments, userId, accessToken, students, tutors } = props;
+
   const [newAssignment, setNewAssignment] = useState({
     title: "",
-    student_id: [], // Added to fix the issue
+    student_id: [],
     tutor_id: "",
     assigned_by: userId,
   });
+
   const [isLoading, setLoading] = useState(false);
+
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
+
+  const handleCheckboxChange = (studentId) => {
+    setNewAssignment((prev) => ({
+      ...prev,
+      student_id: prev.student_id.includes(studentId)
+        ? prev.student_id.filter((id) => id !== studentId) // Bỏ chọn
+        : [...prev.student_id, studentId], // Thêm vào danh sách đã chọn
+    }));
+  };
+
+  const handleTutorSelect = (tutorId) => {
+    setNewAssignment((prev) => ({
+      ...prev,
+      tutor_id: tutorId,
+    }));
+  };
+
   const handleAddAssignment = async () => {
     try {
       setLoading(true);
-      console.log("Data being sent:", newAssignment); // Log data trước khi gửi
-
       const response = await axios.post("/assignments", newAssignment, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-
-      console.log("Response from server:", response.data); // Log response từ server
-
       setAssignments([...assignments, response.data.assignment]);
-      toast.success("Assignment has been created successfully");
       setLoading(false);
       handleClose();
-      setNewAssignment({
-        title: "",
-        student_id: [], // Reset student_ids
-        tutor_id: "",
-        assigned_by: userId,
-      });
     } catch (error) {
-      toast.error("Error adding assignment:", error);
+      console.error("Error adding assignment:", error);
+      setLoading(false);
     }
   };
+
   return (
-    <>
-      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
-        <MDBModalDialog centered>
-          <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>Create New Assignment</MDBModalTitle>
-              <MDBBtn
-                className="btn-close"
-                color="none"
-                onClick={handleClose}
-              ></MDBBtn>
-            </MDBModalHeader>
-            <MDBModalBody>
-              <div className="d-flex flex-column gap-2">
-                <MDBInput
-                  label="Title"
-                  id="title"
-                  type="text"
-                  value={newAssignment.title}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      title: e.target.value,
-                    })
-                  }
-                />
-
-                {/* Student Select */}
-                <label>Select Students</label>
-                <select
-                  multiple
-                  className="form-select"
-                  value={newAssignment.student_id}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      student_id: Array.from(
-                        e.target.selectedOptions,
-                        (option) => option.value
-                      ),
-                    })
-                  }
-                >
-                  {students.map((student) => (
-                    <option key={student._id} value={student._id}>
-                      {student.username}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Tutor Select */}
-                <label>Select Tutor</label>
-                <select
-                  className="form-select"
-                  value={newAssignment.tutor_id || ""}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      tutor_id: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select a tutor</option>
-                  {tutors.map((tutor) => (
-                    <option key={tutor._id} value={tutor._id}>
-                      {tutor.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </MDBModalBody>
-            <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={handleClose}>
-                Close
-              </MDBBtn>
-              <MDBBtn onClick={handleAddAssignment} disabled={isLoading}>
-                {isLoading ? (
-                  <ClipLoader color="#ffffff" size={15} />
-                ) : (
-                  "Create"
-                )}
-              </MDBBtn>
-            </MDBModalFooter>
-          </MDBModalContent>
-        </MDBModalDialog>
-      </MDBModal>
-    </>
+    <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+      <MDBModalDialog centered>
+        <MDBModalContent>
+          <MDBModalHeader>
+            <MDBModalTitle>Create New Assignment</MDBModalTitle>
+            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            <div className="form-group">
+              <label htmlFor="title">Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                className="form-control"
+                value={newAssignment.title}
+                onChange={(e) =>
+                  setNewAssignment({ ...newAssignment, title: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label>Students</label>
+              {students.map((student) => (
+                <div key={student._id} className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id={`student-${student._id}`}
+                    checked={newAssignment.student_id.includes(student._id)}
+                    onChange={() => handleCheckboxChange(student._id)}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor={`student-${student._id}`}
+                  >
+                    {student.username}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="form-group">
+              <label htmlFor="tutor">Tutor</label>
+              {tutors.map((tutor) => (
+                <div key={tutor._id} className="form-check">
+                  <input
+                    type="radio"
+                    className="form-check-input"
+                    id={`tutor-${tutor._id}`}
+                    name="tutor"
+                    checked={newAssignment.tutor_id === tutor._id}
+                    onChange={() => handleTutorSelect(tutor._id)}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor={`tutor-${tutor._id}`}
+                  >
+                    {tutor.username}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn color="secondary" onClick={handleClose}>
+              Close
+            </MDBBtn>
+            <MDBBtn onClick={handleAddAssignment} disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create"}
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalContent>
+      </MDBModalDialog>
+    </MDBModal>
   );
 };
+
 export const EditAssignment = (props) => {
   const {
     setAssignments,
@@ -212,129 +209,139 @@ export const EditAssignment = (props) => {
     students,
     tutors,
   } = props;
+
   const [isLoading, setLoading] = useState(false);
-  if (!editAssignment || !Array.isArray(editAssignment.student_id)) return null;
-  console.log("Edit asm: ", editAssignment.student_id);
-  console.log("student: ", students);
-  console.log("tutors: ", tutors);
+  const [formState, setFormState] = useState({
+    title: "",
+    student_id: [],
+    tutor_id: "",
+  });
+
+  // Đồng bộ dữ liệu từ editAssignment vào formState khi editAssignment thay đổi
+  useEffect(() => {
+    if (editAssignment) {
+      setFormState({
+        title: editAssignment.title || "",
+        student_id: editAssignment.student_id.map((student) => student._id) || [],
+        tutor_id: editAssignment.tutor_id?._id || "",
+      });
+    }
+  }, [editAssignment]);
+
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
-  const handleEditAssignment = async (id, updatedData) => {
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (studentId) => {
+    setFormState((prev) => ({
+      ...prev,
+      student_id: prev.student_id.includes(studentId)
+        ? prev.student_id.filter((id) => id !== studentId) // Bỏ chọn
+        : [...prev.student_id, studentId], // Thêm vào danh sách đã chọn
+    }));
+  };
+
+  const handleSubmit = async () => {
     try {
       setLoading(true);
-      const response = await axios.put(`/assignments/${id}`, updatedData, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      setAssignments(
-        assignments.map((assignment) =>
-          assignment._id === id ? response.data.assignment : assignment
-        )
+      const response = await axios.put(
+        `/assignments/${editAssignment._id}`,
+        formState,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
       );
-      setLoading(false);
-      toast.success("Assignment has been updated successfully.");
-      handleClose();
+      if (response.status === 200) {
+        setAssignments((prev) =>
+          prev.map((assignment) =>
+            assignment._id === editAssignment._id ? response.data.assignment : assignment
+          )
+        );
+        toast.success("Assignment updated successfully!");
+        handleClose();
+      }
     } catch (error) {
-      toast.error("Error editing assignment:", error);
+      toast.error("Failed to update assignment.");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
-    <>
-      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
-        <MDBModalDialog centered>
-          <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>Update Assignment</MDBModalTitle>
-              <MDBBtn
-                className="btn-close"
-                color="none"
-                onClick={handleClose}
-              ></MDBBtn>
-            </MDBModalHeader>
-            <MDBModalBody>
-              <div className="d-flex flex-column gap-2">
-                <MDBInput
-                  label="Title"
-                  id="editTitle"
-                  type="text"
-                  value={editAssignment?.title || ""}
-                  onChange={(e) =>
-                    setEditAssignment({
-                      ...editAssignment,
-                      title: e.target.value,
-                    })
-                  }
-                />
-
-                {/* Student Select */}
-                <label>Select Students</label>
-                <select
-                  multiple
-                  className="form-select"
-                  value={
-                    Array.isArray(editAssignment?.student_id)
-                      ? editAssignment.student_id.map((s) => s._id)
-                      : []
-                  }
-                  onChange={(e) =>
-                    setEditAssignment({
-                      ...editAssignment,
-                      student_id: Array.from(
-                        e.target.selectedOptions,
-                        (option) => option.value
-                      ),
-                    })
-                  }
-                >
-                  {students.map((student) => (
-                    <option key={student._id} value={student._id}>
-                      {student.username}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Tutor Select */}
-                <label>Select Tutor</label>
-                <select
-                  className="form-select"
-                  value={editAssignment?.tutor_id?._id || ""}
-                  onChange={(e) =>
-                    setEditAssignment({
-                      ...editAssignment,
-                      tutor_id: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select a tutor</option>
-                  {tutors.map((tutor) => (
-                    <option key={tutor._id} value={tutor._id}>
-                      {tutor.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </MDBModalBody>
-            <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={handleClose}>
-                Close
-              </MDBBtn>
-              <MDBBtn
-                onClick={() =>
-                  handleEditAssignment(editAssignment._id, editAssignment)
-                }
-                disabled={isLoading}
+    <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+      <MDBModalDialog centered>
+        <MDBModalContent>
+          <MDBModalHeader>
+            <MDBModalTitle>Update Assignment</MDBModalTitle>
+            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            <div className="form-group">
+              <label htmlFor="title">Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                className="form-control"
+                value={formState.title}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Students</label>
+              {students.map((student) => (
+                <div key={student._id} className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id={`student-${student._id}`}
+                    checked={formState.student_id.includes(student._id)}
+                    onChange={() => handleCheckboxChange(student._id)}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor={`student-${student._id}`}
+                  >
+                    {student.username}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="form-group">
+              <label htmlFor="tutor">Tutor</label>
+              <select
+                id="tutor"
+                name="tutor_id"
+                className="form-control"
+                value={formState.tutor_id}
+                onChange={handleInputChange}
               >
-                {isLoading ? (
-                  <ClipLoader color="#ffffff" size={15} />
-                ) : (
-                  "Update"
-                )}
-              </MDBBtn>
-            </MDBModalFooter>
-          </MDBModalContent>
-        </MDBModalDialog>
-      </MDBModal>
-    </>
+                <option value="">Select a tutor</option>
+                {tutors.map((tutor) => (
+                  <option key={tutor._id} value={tutor._id}>
+                    {tutor.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn color="secondary" onClick={handleClose}>
+              Close
+            </MDBBtn>
+            <MDBBtn color="primary" onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? "Updating..." : "Save Changes"}
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalContent>
+      </MDBModalDialog>
+    </MDBModal>
   );
 };
 export const ConfirmDeleteAsm = (props) => {
@@ -469,6 +476,8 @@ export const NewBlog = (props) => {
     </>
   );
 };
+
+
 export const DeleteBlog = (props) => {
   const [isLoading, setLoading] = useState(false);
   const { accessToken } = props;
@@ -1269,7 +1278,7 @@ export const UploadAssignment = (props) => {
 };
 export const DeleteAssignment = (props) => {
   const [isLoading, setLoading] = useState(false);
-  const { accessToken, documentId, fetchDocuments, selectedFolder } = props;
+  const { accessToken, documentId, fetchDocuments, selectedFolder, documentFilePath } = props;
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
@@ -1280,7 +1289,12 @@ export const DeleteAssignment = (props) => {
       const response = await axios.delete(`/documents/${documentId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (response.status === 200) {
+
+      const removeFileResponse = await axios.delete("/google-drive/delete", {
+        data: { fileUrl: documentFilePath }, 
+      });
+      
+      if (response.status === 200 && removeFileResponse.status === 200) {
         toast.success("Assignment has been deleted successfully.");
         fetchDocuments(selectedFolder._id); // Refresh danh sách documents
         setLoading(false);
@@ -1533,90 +1547,96 @@ export const EditPassword = (props) => {
 
 // folder
 export const NewFolder = (props) => {
-  const { accessToken } = props;
-  const [isVisibility, setVisibility] = useState(false);
-  const toggleVisibility = () => setVisibility(!isVisibility);
+  const { folders, accessToken, assignmentId } = props;
   const [newFolder, setNewFolder] = useState({
+    assignment_id: assignmentId, 
     title: "",
     description: "",
     deadline: "",
   });
+
   const [isLoading, setLoading] = useState(false);
+
+  // Update newFolder.assignment_id when assignmentId changes
+  useEffect(() => {
+    setNewFolder((prev) => ({
+      ...prev,
+      assignment_id: assignmentId,
+    }));
+  }, [assignmentId]);
+
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
-  const handleAddBlog = async () => {
+
+  const handleAddNewFolder = async () => {
     try {
-      // before call api
+      console.log("Form Data:", newFolder); // Debug log
       setLoading(true);
-      // ...
-      // after call api
+      const response = await axios.post("/submissionFolders", newFolder, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      console.log("API Response:", response);
       setLoading(false);
-      toast.success("Blog has been created successfully.");
-      handleClose();
+      if (response.status === 201 || response.status === 200) {
+        toast.success("Folder created successfully.");
+        // setNewFolder([...folders, response.data.folder]);
+        handleClose();
+      }
     } catch (error) {
-      toast.error("Blog has been created failed.");
+      toast.error("Folder creation failed.");
     }
   };
+
   return (
-    <>
-      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
-        <MDBModalDialog centered>
-          <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>Create New Folder</MDBModalTitle>
-              <MDBBtn
-                className="btn-close"
-                color="none"
-                onClick={handleClose}
-              ></MDBBtn>
-            </MDBModalHeader>
-            <MDBModalBody>
-              <MDBInput
-                className="mb-3"
-                label="Title"
-                id="typeText"
-                type="text"
-                value={newFolder.title}
-                onChange={(e) =>
-                  setNewFolder({ ...newFolder, title: e.target.value })
-                }
-              />
-              <MDBTextArea
-                label="Description"
-                id="textAreaExample"
-                rows="{4}"
-                value={newFolder.description}
-                onChange={(e) =>
-                  setNewFolder({ ...newFolder, description: e.target.value })
-                }
-              />
-              <MDBInput
-                className="my-3"
-                label="Deadline"
-                id="typeText"
-                type="date"
-                value={newFolder.deadline}
-                onChange={(e) =>
-                  setNewFolder({ ...newFolder, deadline: e.target.value })
-                }
-              />
-            </MDBModalBody>
-            <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={handleClose}>
-                Close
-              </MDBBtn>
-              <MDBBtn onClick={handleAddBlog} disabled={isLoading}>
-                {isLoading ? (
-                  <ClipLoader color="#ffffff" size={15} />
-                ) : (
-                  "Create"
-                )}
-              </MDBBtn>
-            </MDBModalFooter>
-          </MDBModalContent>
-        </MDBModalDialog>
-      </MDBModal>
-    </>
+    <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+      <MDBModalDialog centered>
+        <MDBModalContent>
+          <MDBModalHeader>
+            <MDBModalTitle>Create New Folder</MDBModalTitle>
+            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            <MDBInput
+              className="mb-3"
+              label="Title"
+              id="typeText"
+              type="text"
+              value={newFolder.title}
+              onChange={(e) =>
+                setNewFolder({ ...newFolder, title: e.target.value })
+              }
+            />
+            <MDBTextArea
+              label="Description"
+              id="textAreaExample"
+              rows="4"
+              value={newFolder.description}
+              onChange={(e) =>
+                setNewFolder({ ...newFolder, description: e.target.value })
+              }
+            />
+            <MDBInput
+              className="my-3"
+              label="Deadline"
+              id="typeText"
+              type="date"
+              value={newFolder.deadline}
+              onChange={(e) =>
+                setNewFolder({ ...newFolder, deadline: e.target.value })
+              }
+            />
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn color="secondary" onClick={handleClose}>
+              Close
+            </MDBBtn>
+            <MDBBtn onClick={handleAddNewFolder} disabled={isLoading}>
+              {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Create"}
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalContent>
+      </MDBModalDialog>
+    </MDBModal>
   );
 };

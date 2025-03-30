@@ -28,6 +28,7 @@ export const Schedule = () => {
   const [modalUpdateEvent, setModalUpdateEvent] = useState(false);
   const [isVisibility, setVisibility] = useState(false);
   const toggleVisibility = () => setVisibility(!isVisibility);
+
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
