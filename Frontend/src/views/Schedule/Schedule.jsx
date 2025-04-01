@@ -12,85 +12,153 @@ import * as React from "react";
 import { MDBBtn } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
+import axios from "../../services/AxiosCustom";
 import { DeleteEvent, NewEvent, UpdateEvent } from "../../components/Modal";
+import { color } from "@mui/system";
 
 setOptions({
   theme: "ios",
   themeVariant: "light",
 });
 export const Schedule = () => {
+  const navigate = useNavigate(); // Ensure useNavigate is called before usage
   const role = localStorage.getItem("role");
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
+  const [users, setUsers] = useState([]);
   const accessToken = localStorage.getItem("accessToken");
   const [modelShowNewEvent, setModelShowNewEvent] = useState(false);
   const [modalDeleteEvent, setModalDeleteEvent] = useState(false);
   const [modalUpdateEvent, setModalUpdateEvent] = useState(false);
   const [isVisibility, setVisibility] = useState(false);
+  const students = users.filter((user) => user.role === "Student");
+  const tutors = users.filter((user) => user.role === "Tutor");
   const toggleVisibility = () => setVisibility(!isVisibility);
 
+  
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
       return;
     }
-  }, []);
+
+    const fetchMeetings = async () => {
+      try {
+        const response = await axios.get("/meetings", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        console.log("Meetings:", response.data);
+
+        const formattedEvents = response.data.meetings.map((meeting) => ({
+          id: meeting._id,
+          title: meeting.title || "Event",
+          start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`), // Kết hợp date và start_time
+          end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`), // Kết hợp date và end_time
+          note: meeting.note,
+          type: meeting.type,
+          organizer_id: meeting.organizer_id,
+          participant_ids: meeting.participant_ids,
+          room_id: meeting.room_id,
+          status: meeting.status,
+        }));
+        setEvents(formattedEvents);
+        console.log("Formatted Events:", formattedEvents);
+      } catch (error) {
+        console.error("Error fetching meetings:", error);
+      }
+    };
+
+    const fetchUsersWithRoles = async () => {
+      try {
+        const response = await axios.get("/users/getuserwithroles", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setUsers(response.data);
+        console.log("Users with roles:", response.data);
+      } catch (error) {
+        console.error("Error fetching users with roles:", error);
+      }
+    };
+
+    fetchUsersWithRoles();
+    fetchMeetings();
+  }, [accessToken, navigate]);
+
+
+
   const timer = useRef(null);
-  const navigate = useNavigate();
   const [events, setEvents] = useState([
     {
-      id: uuidv4(),
-      start: "2025-03-03",
-      end: "2025-03-04",
-      title: "Short trip!",
-      teacher: "Thầy Hiếu",
-      student: "Trò Quân, Đức, Kiên",
+      id: "",
+      room_id: "",
+      title: "",
+      type: "",
+      organizer_id: "",
+      participant_ids: [],
+      date: "",
+      start_time: "",
+      end_time: "",
+      status: "",
+      note: "",
+      color: "",
+
     },
   ]);
+  console.log("Events:", events);
 
   const [argDoubleClick, setArgDoubleClick] = useState(null);
   const [isTooltipOpen, setTooltipOpen] = useState(false);
+  console.log("Tooltip open state:", isTooltipOpen);
   const [toastMessage, setToastMessage] = useState("");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [tooltipColor, setTooltipColor] = useState("4895ef");
   const [detailTooltip, setDetailToolTip] = useState({
     id: "",
+    room_id: "",
     title: "",
-    time: "",
+    type: "",
+    organizer_id: "",
+    participant_ids: [],
     date: "",
-    teacher: "",
-    student: "",
+    start: "",
+    end: "",
+    status: "",
+    note: "",
   });
 
   const myView = useMemo(
-    () => ({ calendar: { labels: true, count: true } }),
+    () => ({
+      calendar: {
+        type: 'month',
+        labels: true,
+        popover: false,
+        count: true
+      }
+    }),
     []
   );
   const openTooltip = useCallback((args) => {
     const event = args.event;
-    console.log("Event: ", args.event);
-    const time =
-      formatDate("hh:mm A", new Date(event.start)) +
-      " - " +
-      formatDate("hh:mm A", new Date(event.end));
-
-    if (timer.current) {
-      clearTimeout(timer.current);
-      timer.current = null;
-    }
-    const date =
-      dayjs(event.start).format("DD/MM/YYYY") +
-      " - " +
-      dayjs(event.end).format("DD/MM/YYYY");
-    // setAppointment(event);
+    if (!event) return; // Thêm kiểm tra này
+    
+    console.log("Event data for tooltip:", event);
+    
     setDetailToolTip({
       id: event.id,
       title: event.title,
-      time: time,
-      date: date,
-      teacher: event.teacher,
-      student: event.student,
+      start: formatDate(event.start, "HH:mm"),
+      end: formatDate(event.end, "HH:mm"),
+      date: formatDate(event.start, "YYYY-MM-DD"),
+      note: event.note,
+      type: event.type,
+      organizer_id: event.organizer_id,
+      participant_ids: event.participant_ids,
+      // Thêm các trường teacher và student nếu cần
+      teacher: "Teacher Name", // Thay bằng dữ liệu thực tế
+      student: "Student Name", // Thay bằng dữ liệu thực tế
+      time: `${formatDate(event.start, "HH:mm")} - ${formatDate(event.end, "HH:mm")}`
     });
+    
     setTooltipAnchor(args.domEvent.target);
     setTooltipOpen(true);
   }, []);
@@ -106,13 +174,12 @@ export const Schedule = () => {
     setToastOpen(false);
   }, []);
 
-  const handleEventClick = useCallback(
-    (args) => {
+  const handleEventClick = useCallback((args) => {
+    console.log("Event clicked:", args.event); // Kiểm tra xem event có được nhận không
+    if (args.event) {
       openTooltip(args);
-    },
-    [openTooltip]
-  );
-
+    }
+  }, [openTooltip]);
   const handleCellDoubleClick = useCallback((args) => {
     setArgDoubleClick(args);
     setModelShowNewEvent(true);
@@ -159,91 +226,15 @@ export const Schedule = () => {
         dragToMove={false}
         dragToResize={false}
         eventDelete={true}
-        data={events}
+        data={events} // Pass the formatted events here
         showEventTooltip={false}
         view={myView}
-        // renderLabel={renderLabel}
         onEventClick={handleEventClick}
         displayTimezone="none"
+        renderScheduleEvent={renderLabel}
       />
 
-      {/* Toast */}
-      <Toast
-        message={toastText}
-        isOpen={isToastOpen}
-        onClose={handleToastClose}
-      />
-
-      {/* Modal */}
-      {/* <MDBModal
-        tabIndex="-1"
-        open={centredModal}
-        onClose={() => setCentredModal(false)}
-      >
-        <MDBModalDialog centered>
-          <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>
-                {isCreate ? "Tạo sự kiện mới" : "Tham gia cuộc họp"}
-              </MDBModalTitle>
-              <MDBBtn
-                className="btn-close"
-                color="none"
-                onClick={() => {
-                  toggleOpen();
-                  setIsCreate(false);
-                }}
-              ></MDBBtn>
-            </MDBModalHeader>
-            <MDBModalBody>
-              {isCreate ? (
-                <>
-                  <MDBInput
-                    label="Tiêu đề sự kiện"
-                    id="form1"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                  <div className="start-end-date d-flex gap-3 mt-3">
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DateTimePicker
-                        label="Bắt đầu"
-                        value={startAt}
-                        onChange={(newValue) => setStartAt(newValue)}
-                      />
-                      <DateTimePicker
-                        label="Kết thúc"
-                        value={endAt}
-                        onChange={(newValue) => setEndAt(newValue)}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                </>
-              ) : (
-                <p>Bạn có muốn tham gia cuộc họp không?</p>
-              )}
-            </MDBModalBody>
-            <MDBModalFooter>
-              <MDBBtn
-                color="secondary"
-                onClick={() => {
-                  toggleOpen();
-                  setIsCreate(false);
-                }}
-              >
-                Đóng
-              </MDBBtn>
-              {isCreate ? (
-                <MDBBtn onClick={createEvent}>Lưu</MDBBtn>
-              ) : (
-                <MDBBtn onClick={() => navigate("/meeting")}>Có</MDBBtn>
-              )}
-            </MDBModalFooter>
-          </MDBModalContent>
-        </MDBModalDialog>
-      </MDBModal> */}
-
+      {/* Tooltip for event details */}
       <Popup
         anchor={tooltipAnchor}
         contentPadding={false}
@@ -260,16 +251,16 @@ export const Schedule = () => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="mds-tooltip-header  danger-bg d-flex align-items-center justify-content-between">
+          <div className="mds-tooltip-header danger-bg d-flex align-items-center justify-content-between">
             <span>{detailTooltip.title}</span>
             <div className="d-flex justify-content-end">
               <div className="dropdown-custom">
                 <div className="container-select d-flex justify-content-end">
                   <div
-                    className="dropdown-select  d-flex align-items-center justify-content-center"
+                    className="dropdown-select d-flex align-items-center justify-content-center"
                     onClick={toggleVisibility}
                   >
-                    <i class="fa-solid fa-ellipsis fs-4"></i>
+                    <i className="fa-solid fa-ellipsis fs-4"></i>
                   </div>
                 </div>
                 <ul
@@ -300,12 +291,10 @@ export const Schedule = () => {
           </div>
           <div className="mbsc-padding">
             <div className="mds-tooltip-label mbsc-margin">
-              Teacher:{" "}
-              <span className="mbsc-light">{detailTooltip.teacher}</span>
+              Teacher: <span className="mbsc-light">{detailTooltip.teacher}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Student:{" "}
-              <span className="mbsc-light">{detailTooltip.student}</span>
+              Student: <span className="mbsc-light">{detailTooltip.student}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
               Date: <span className="mbsc-light">{detailTooltip.date}</span>
@@ -325,6 +314,8 @@ export const Schedule = () => {
           </div>
         </div>
       </Popup>
+
+      {/* Modals */}
       <NewEvent
         show={modelShowNewEvent}
         onClose={() => setModelShowNewEvent(false)}
@@ -332,6 +323,8 @@ export const Schedule = () => {
         accessToken={accessToken}
         setEvents={setEvents}
         argDoubleClick={argDoubleClick}
+        students={students}
+        tutors={tutors}
       />
       <UpdateEvent
         show={modalUpdateEvent}
@@ -340,7 +333,8 @@ export const Schedule = () => {
         eventUpdate={detailTooltip}
         accessToken={accessToken}
         setEvents={setEvents}
-        argDoubleClick={argDoubleClick}
+        students={students}
+        tutors={tutors}
       />
       <DeleteEvent
         show={modalDeleteEvent}
