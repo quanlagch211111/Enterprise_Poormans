@@ -15,6 +15,7 @@ import dayjs from "dayjs";
 import axios from "../../services/AxiosCustom";
 import { DeleteEvent, NewEvent, UpdateEvent } from "../../components/Modal";
 import { color } from "@mui/system";
+import { use } from "react";
 
 setOptions({
   theme: "ios",
@@ -24,8 +25,11 @@ export const Schedule = () => {
   const navigate = useNavigate(); // Ensure useNavigate is called before usage
   const role = localStorage.getItem("role");
   const [userInfo, setUserInfo] = useState(null);
-  const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem("userId").toString();
+  const username = localStorage.getItem("username");
+  console.log("username", username);
   const [users, setUsers] = useState([]);
+  console.log("users", users);
   const accessToken = localStorage.getItem("accessToken");
   const [modelShowNewEvent, setModelShowNewEvent] = useState(false);
   const [modalDeleteEvent, setModalDeleteEvent] = useState(false);
@@ -34,47 +38,87 @@ export const Schedule = () => {
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
   const toggleVisibility = () => setVisibility(!isVisibility);
+  // const {username, setUsername} = useState(); 
+  // const {roomId, SetRoomId} = useState();
 
-  
+
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
       return;
     }
 
+    // const fetchMeetings = async () => {
+    //   try {
+    //     const response = await axios.get("/meetings", {
+    //       headers: { Authorization: `Bearer ${accessToken}` },
+    //     });
+
+    //     const formattedEvents = response.data.meetings.map((meeting) => ({
+    //       id: meeting._id,
+    //       title: meeting.title || "Event",
+    //       start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`),
+    //       end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`),
+    //       note: meeting.note,
+    //       type: meeting.type,
+    //       organizer_id: meeting.organizer_id._id,
+    //       organizer_username: meeting.organizer_id.username, // Lấy username của organizer
+    //       participant_ids: meeting.participant_ids.map((participant) => participant._id),
+    //       participant_usernames: meeting.participant_ids.map((participant) => participant.username), // Lấy username của participants
+    //       room_id: meeting.room_id,
+    //       status: meeting.status,
+    //     }));
+    //     setEvents(formattedEvents);
+    //   } catch (error) {
+    //     console.error("Error fetching meetings:", error);
+    //   }
+    // };
+
+
     const fetchMeetings = async () => {
       try {
         const response = await axios.get("/meetings", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        console.log("Meetings:", response.data);
 
         const formattedEvents = response.data.meetings.map((meeting) => ({
           id: meeting._id,
           title: meeting.title || "Event",
-          start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`), // Kết hợp date và start_time
-          end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`), // Kết hợp date và end_time
+          start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`),
+          end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`),
           note: meeting.note,
           type: meeting.type,
-          organizer_id: meeting.organizer_id,
-          participant_ids: meeting.participant_ids,
+          organizer_id: meeting.organizer_id._id,
+          organizer_username: meeting.organizer_id.username,
+          participant_ids: meeting.participant_ids.map((participant) => participant._id),
+          participant_usernames: meeting.participant_ids.map((participant) => participant.username),
           room_id: meeting.room_id,
           status: meeting.status,
         }));
-        setEvents(formattedEvents);
-        console.log("Formatted Events:", formattedEvents);
+
+        // Lọc sự kiện dựa trên vai trò
+        const filteredEvents = formattedEvents.filter((event) => {
+          if (role === "STAFF") {
+            return true; // Staff có thể xem tất cả sự kiện
+          } else if (role === "TUTOR") {
+            return event.organizer_id === userId; // Tutor chỉ xem sự kiện do họ tổ chức
+          } else if (role === "STUDENT") {
+            return event.participant_ids.includes(userId); // Student chỉ xem sự kiện mà họ tham gia
+          }
+          return false;
+        });
+
+        setEvents(filteredEvents);
       } catch (error) {
         console.error("Error fetching meetings:", error);
       }
     };
-
     const fetchUsersWithRoles = async () => {
       try {
         const response = await axios.get("/users/getuserwithroles", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setUsers(response.data);
-        console.log("Users with roles:", response.data);
       } catch (error) {
         console.error("Error fetching users with roles:", error);
       }
@@ -104,11 +148,9 @@ export const Schedule = () => {
 
     },
   ]);
-  console.log("Events:", events);
 
   const [argDoubleClick, setArgDoubleClick] = useState(null);
   const [isTooltipOpen, setTooltipOpen] = useState(false);
-  console.log("Tooltip open state:", isTooltipOpen);
   const [toastMessage, setToastMessage] = useState("");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [tooltipColor, setTooltipColor] = useState("4895ef");
@@ -131,7 +173,7 @@ export const Schedule = () => {
       calendar: {
         type: 'month',
         labels: true,
-        popover: false,
+        popover: true,
         count: true
       }
     }),
@@ -139,26 +181,33 @@ export const Schedule = () => {
   );
   const openTooltip = useCallback((args) => {
     const event = args.event;
-    if (!event) return; // Thêm kiểm tra này
-    
-    console.log("Event data for tooltip:", event);
-    
+    if (!event) return;
+
     setDetailToolTip({
       id: event.id,
       title: event.title,
-      start: formatDate(event.start, "HH:mm"),
-      end: formatDate(event.end, "HH:mm"),
-      date: formatDate(event.start, "YYYY-MM-DD"),
+      date: event.start.toLocaleDateString([], {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }),
+      room_id: event.room_id,
       note: event.note,
       type: event.type,
       organizer_id: event.organizer_id,
+      organizer_username: event.organizer_username, // Hiển thị username của organizer
       participant_ids: event.participant_ids,
-      // Thêm các trường teacher và student nếu cần
-      teacher: "Teacher Name", // Thay bằng dữ liệu thực tế
-      student: "Student Name", // Thay bằng dữ liệu thực tế
-      time: `${formatDate(event.start, "HH:mm")} - ${formatDate(event.end, "HH:mm")}`
+      participant_usernames: event.participant_usernames.join(", "), // Hiển thị username của participants
+      start_time: event.start.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      end_time: event.end.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
     });
-    
+
     setTooltipAnchor(args.domEvent.target);
     setTooltipOpen(true);
   }, []);
@@ -175,7 +224,6 @@ export const Schedule = () => {
   }, []);
 
   const handleEventClick = useCallback((args) => {
-    console.log("Event clicked:", args.event); // Kiểm tra xem event có được nhận không
     if (args.event) {
       openTooltip(args);
     }
@@ -291,22 +339,34 @@ export const Schedule = () => {
           </div>
           <div className="mbsc-padding">
             <div className="mds-tooltip-label mbsc-margin">
-              Teacher: <span className="mbsc-light">{detailTooltip.teacher}</span>
+              Teacher: <span className="mbsc-light">{detailTooltip.organizer_username}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Student: <span className="mbsc-light">{detailTooltip.student}</span>
+              Students: <span className="mbsc-light">{detailTooltip.participant_usernames}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
               Date: <span className="mbsc-light">{detailTooltip.date}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Time: <span className="mbsc-light">{detailTooltip.time}</span>
+              Start Time: <span className="mbsc-light">{detailTooltip.start_time}</span>
             </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              End Time: <span className="mbsc-light">{detailTooltip.end_time}</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              RoomID: <span className="mbsc-light">{detailTooltip.room_id}</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              Type: <span className="mbsc-light">{detailTooltip.type}</span>
+            </div>
+            <div className="mds-tooltip-label mbsc-margin">
+              Note: <span className="mbsc-light">{detailTooltip.note}</span>
+            </div>
+
             <div className="action d-flex justify-content-center">
               <MDBBtn
                 className="me-1"
                 color="danger"
-                onClick={() => navigate("/meeting")}
               >
                 Join Meeting
               </MDBBtn>

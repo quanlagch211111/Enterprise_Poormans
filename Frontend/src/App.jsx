@@ -1,6 +1,5 @@
-import logo from "./logo.svg";
-import "./App.css";
-import { Routes, Route, useLocation } from "react-router-dom";
+import React from "react";
+import { Routes, Route, useLocation } from "react-router-dom"; // Ensure Routes is imported
 import { Dashboard } from "./views/Dashboard/Dashboard";
 import { Message } from "./views/Message/Message";
 import { Blog } from "./views/Blog/Blog";
@@ -16,38 +15,43 @@ import { Profile } from "./views/User/Profile";
 import Account from "./views/Account/Account";
 import ForgotPassword from "./views/ForgotPassword/ForgotPassword";
 import ResetPassword from "./views/ForgotPassword/ResetPassword";
+import { SocketProvider } from "./services/Socket";
 
 function App() {
   const location = useLocation();
   const hideNavRoutes = [
-    "/meeting",
+    "/meeting/:room_id", // Routes where navbar should be hidden
     "/login",
     "/otp-confirm",
     "/forgot-password",
     "/reset-password",
   ];
-  const shouldShowNav = !hideNavRoutes.includes(location.pathname);
+
+  // Check if the current route is in the list of routes to hide the navbar
+  const shouldShowNav = !hideNavRoutes.some((route) =>
+    location.pathname.startsWith(route.replace(":room_id", ""))
+  );
 
   return (
     <>
       {shouldShowNav && <Sidebar />}
       <div className="right-bar">
         {shouldShowNav && <Header />}
-        <Routes>
-          <Route path="/" element={<Dashboard />} exact></Route>
-          <Route path="/message" element={<Message />}></Route>
-          <Route path="/document" element={<Document />} />
-          <Route path="/assignment" element={<Assignment />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/meeting" element={<MeetingCall />} />
-          <Route path="/otp-confirm" element={<OtpConfirm />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/message" element={<Message />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/document" element={<Document />} />
+              <Route path="/assignment" element={<Assignment />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/meeting/:room_id" element={<MeetingCall />} />
+              <Route path="/otp-confirm" element={<OtpConfirm />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+            </Routes>
       </div>
     </>
   );

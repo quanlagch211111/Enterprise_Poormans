@@ -18,80 +18,14 @@ import { FaUser } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
-
-// Mock data cho accounts
-const mockAccounts = [
-  {
-    _id: "1",
-    username: "johndoe",
-    email: "john.doe@example.com",
-    role: "Student",
-    status: "active",
-    created_at: "2024-02-15T00:00:00.000Z",
-  },
-  {
-    _id: "2",
-    username: "janedoe",
-    email: "jane.doe@example.com",
-    role: "Tutor",
-    status: "active",
-    created_at: "2024-01-20T00:00:00.000Z",
-  },
-  {
-    _id: "3",
-    username: "adminuser",
-    email: "admin@example.com",
-    role: "STAFF",
-    status: "active",
-    created_at: "2023-12-10T00:00:00.000Z",
-  },
-  {
-    _id: "4",
-    username: "alexnguyen",
-    email: "alex.nguyen@example.com",
-    role: "Student",
-    status: "inactive",
-    created_at: "2024-02-05T00:00:00.000Z",
-  },
-  {
-    _id: "5",
-    username: "mariatran",
-    email: "maria.tran@example.com",
-    role: "Tutor",
-    status: "active",
-    created_at: "2024-01-10T00:00:00.000Z",
-  },
-  {
-    _id: "6",
-    username: "davidle",
-    email: "david.le@example.com",
-    role: "Student",
-    status: "active",
-    created_at: "2024-03-01T00:00:00.000Z",
-  },
-  {
-    _id: "7",
-    username: "sophiapham",
-    email: "sophia.pham@example.com",
-    role: "Student",
-    status: "active",
-    created_at: "2024-02-28T00:00:00.000Z",
-  },
-  {
-    _id: "8",
-    username: "michaelhoang",
-    email: "michael.hoang@example.com",
-    role: "Tutor",
-    status: "active",
-    created_at: "2024-01-15T00:00:00.000Z",
-  },
-];
+import { use } from "react";
+import axios from "../../services/AxiosCustom";
 
 const Account = () => {
+  const accessToken = localStorage.getItem("accessToken")
   const navigate = useNavigate();
   const role = localStorage.getItem("role") || "STAFF"; // Mặc định role là STAFF để hiển thị nút Add
-
-  const [accounts, setAccounts] = useState(mockAccounts);
+  const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isVisibilityId, setVisibilityId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -102,7 +36,29 @@ const Account = () => {
   const [showModalDeleteAccount, setShowModalDeleteAccount] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accountToDelete, setAccountToDelete] = useState(null);
+  const [users, setUsers] = useState([]);
 
+
+  useEffect(() => {
+    const token = accessToken; // Lấy token từ localStorage hoặc state
+    if (!token) {
+      navigate("/login"); // Chuyển hướng đến trang đăng nhập nếu không có token
+    }
+    fetchUsersWithRoles(); // Gọi hàm lấy danh sách người dùng với vai trò
+  }, []);
+
+  const fetchUsersWithRoles = async () => {
+    try {
+      const response = await axios.get("/users/getuserwithroles", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      console.log("response:", response);
+      setAccounts(response.data);
+      console.log("account:", accounts);
+    } catch (error) {
+      console.error("Error fetching users with roles:", error);
+    }
+  };
   // Form state for new account
   const [newAccount, setNewAccount] = useState({
     username: "",
@@ -183,14 +139,21 @@ const Account = () => {
 
     try {
       setIsLoading(true);
-      // Giả lập xóa tài khoản
-      setTimeout(() => {
-        setAccounts(accounts.filter((acc) => acc._id !== accountToDelete._id));
-        toast.success("Xóa tài khoản thành công!");
-        setShowModalDeleteAccount(false);
-        setAccountToDelete(null);
-        setIsLoading(false);
-      }, 800);
+      const respone = await axios.delete(
+        `/users/delete/${accountToDelete._id}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      if (respone.status === 200) {
+        setTimeout(() => {
+          toast.success("Xóa tài khoản thành công!");
+          setShowModalDeleteAccount(false);
+          setAccountToDelete(null);
+          setIsLoading(false);
+        }, 800);
+      }
+     
     } catch (error) {
       console.error("Error deleting account:", error);
       toast.error("Không thể xóa tài khoản");
@@ -267,14 +230,14 @@ const Account = () => {
                       <td>
                         <span
                           className={`badge ${
-                            account.status === "active"
+                            account.status === true
                               ? "bg-success"
                               : "bg-secondary"
                           }`}
                         >
-                          {account.status === "active"
-                            ? "Hoạt động"
-                            : "Không hoạt động"}
+                          {account.status === true
+                            ? "Verified"
+                            : "Not Verified"}
                         </span>
                       </td>
                       <td>

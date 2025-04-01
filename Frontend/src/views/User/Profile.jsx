@@ -21,33 +21,38 @@ import {
   FaHistory,
 } from "react-icons/fa";
 import { EditPassword, EditUser } from "../../components/Modal";
+import { useNavigate } from "react-router-dom";
+import axios from "../../services/AxiosCustom";
 
 export const Profile = () => {
+  const navigate = useNavigate();
+  const accessToken = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId")
+  const role = localStorage.getItem("role")
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalEditUser, setModalEditUser] = useState(false);
   const [modalEditPass, setModalEditPass] = useState(false);
-
+     
   useEffect(() => {
+    if (!accessToken) {
+      navigate("/login"); // Redirect to login if no accessToken
+      return;
+    }
     const fetchCurrentUser = async () => {
       try {
         // Mô phỏng API call
         setLoading(true);
-
+        const response = await axios.get(`users/detailuser/${userId}`, {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
         setTimeout(() => {
-          // Dữ liệu mẫu của người dùng
-          const userData = {
-            id: "1234567890",
-            fullName: "Nguyễn Văn A",
-            email: "nguyenvana@example.com",
-            address: "Số 123, Đường Lê Lợi, Quận 1, TP.HCM",
-            role: "Quản trị viên",
-            status: "active",
-            avatar: "https://via.placeholder.com/150",
-          };
-
-          setUser(userData);
+          setUser(response.data.data);
+          console.log(response)
           setLoading(false);
         }, 1000);
       } catch (err) {
@@ -96,14 +101,14 @@ export const Profile = () => {
                 className="rounded-circle img-thumbnail mb-3"
                 style={{ width: "150px", height: "150px", objectFit: "cover" }}
               />
-              <h4>{user.fullName}</h4>
+              <h4>{user.username}</h4>
               <Badge
-                bg={user.status === "active" ? "success" : "secondary"}
+                bg={user.isVerified === true ? "success" : "secondary"}
                 className="mb-3"
               >
-                {user.status === "active"
-                  ? "Đang hoạt động"
-                  : "Không hoạt động"}
+                {user.isVerified === true
+                  ? "Verified"
+                  : "Not Verified"}
               </Badge>
               <div className="d-grid gap-2 mt-3">
                 <Button
@@ -134,13 +139,13 @@ export const Profile = () => {
                 <Col sm={4} className="text-muted">
                   ID User:
                 </Col>
-                <Col sm={8}>{user.id}</Col>
+                <Col sm={8}>{user._id}</Col>
               </Row>
               <Row className="mb-3">
                 <Col sm={4} className="text-muted">
                   Full Name:
                 </Col>
-                <Col sm={8}>{user.fullName}</Col>
+                <Col sm={8}>{user.username}</Col>
               </Row>
               <Row className="mb-3">
                 <Col sm={4} className="text-muted">
@@ -153,7 +158,7 @@ export const Profile = () => {
                   Role:
                 </Col>
                 <Col sm={8}>
-                  <Badge bg="primary">{user.role}</Badge>
+                  <Badge bg="primary">{role}</Badge>
                 </Col>
               </Row>
               <Row className="mb-3">
@@ -162,11 +167,12 @@ export const Profile = () => {
                 </Col>
                 <Col sm={8}>
                   <Badge
-                    bg={user.status === "active" ? "success" : "secondary"}
+                    bg={user.isVerified === true ? "success" : "secondary"}
                   >
-                    {user.status === "active"
-                      ? "Đang hoạt động"
-                      : "Không hoạt động"}
+                    {user.isVerified === true
+                      ? "Verified"
+                      : "Not Verified"}
+                    
                   </Badge>
                 </Col>
               </Row>

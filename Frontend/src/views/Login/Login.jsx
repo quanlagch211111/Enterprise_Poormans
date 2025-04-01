@@ -80,10 +80,9 @@ export const Login = () => {
         }
   
         const decoded = jwtDecode(accesstoken);
-        console.log("Decoded JWT:", decoded);
-        console.log("refreshToken:", refreshToken);
         localStorage.setItem("accessToken", accesstoken);
         localStorage.setItem('userlogged',JSON.stringify(user));
+        localStorage.setItem("username", user.username);
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
         toast.success("Login successful!");
