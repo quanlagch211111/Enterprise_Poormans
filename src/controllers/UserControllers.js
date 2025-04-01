@@ -361,9 +361,8 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.getUsersWithRoles = async (req, res) => {
   try {
-    // Fetch all users
-    const users = await User.find({}, { username: 1, email: 1 }); // Fetch only username and email
-
+    // Fetch all users and include the `isVerified` field explicitly
+    const users = await User.find({}, 'username email address phone isVerified created_at');
     // Determine roles for each user
     const usersWithRoles = await Promise.all(
       users.map(async (user) => {
@@ -385,10 +384,15 @@ exports.getUsersWithRoles = async (req, res) => {
           _id: user._id,
           username: user.username,
           email: user.email,
-          role: role || "Unknown", // Default to "Unknown" if no role is found
+          role: role || "Unknown",
+          address: user.address,
+          phone: user.phone,
+          status : user.isVerified,
+          created_at: user.created_at // Ensure this field is included
         };
       })
     );
+
 
     res.status(200).json(usersWithRoles);
   } catch (error) {

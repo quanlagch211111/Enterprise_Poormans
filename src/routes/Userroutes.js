@@ -22,7 +22,7 @@ router.get('/getallusers', authMiddleware("access"),isStaff,  getallUser);
 
 router.get('/getuserwithroles', authMiddleware("access"), isStaff, getUsersWithRoles);
 
-router.get('/detailuser/:id', detailUser);
+router.get('/detailuser/:id',authMiddleware("access"), detailUser);
 
 router.get('/getuserforchat/:id', authMiddleware("access"),  getAllUserForChat);
 

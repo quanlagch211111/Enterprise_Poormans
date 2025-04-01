@@ -29,7 +29,9 @@ exports.createMeeting = async (req, res) => {
 // Lấy danh sách cuộc họp
 exports.getMeetings = async (req, res) => {
   try {
-    const meetings = await Meeting.find().populate("organizer_id participant_ids");
+    const meetings = await Meeting.find()
+    .populate("organizer_id", "username") // Lấy username của organizer
+    .populate("participant_ids", "username"); // Lấy username của participants
     res.status(200).json({ success: true, meetings });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
