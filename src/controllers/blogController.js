@@ -2,13 +2,13 @@ const Blog = require('../models/Blog');
 
 exports.createBlog = async (req, res) => {
     try {
-        const { title, content, author_id, tags } = req.body;
+        const { title, content, author_id, tags, status } = req.body;
 
         if (!title || !content || !author_id) {
             return res.status(400).json({ message: 'Title, content, and author ID are required' });
         }
 
-        const newBlog = new Blog({ title, content, author_id, tags });
+        const newBlog = new Blog({ title, content, author_id, tags, status });
         await newBlog.save();
 
         res.status(201).json({ message: 'Blog created successfully', blog: newBlog });
@@ -40,7 +40,8 @@ exports.getBlogById = async (req, res) => {
 
 exports.updateBlogById = async (req, res) => {
     try {
-        const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { status, ...updateData } = req.body; // Allow updating the status field
+        const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, { ...updateData, status }, { new: true });
         if (!updatedBlog) {
             return res.status(404).json({ message: 'Blog not found' });
         }
