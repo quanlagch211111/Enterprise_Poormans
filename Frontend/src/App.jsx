@@ -16,6 +16,7 @@ import Account from "./views/Account/Account";
 import ForgotPassword from "./views/ForgotPassword/ForgotPassword";
 import ResetPassword from "./views/ForgotPassword/ResetPassword";
 import { SocketProvider } from "./services/Socket";
+import NotificationPage from "./views/Notification/Notification";
 
 function App() {
   const location = useLocation();
@@ -51,6 +52,7 @@ function App() {
               <Route path="/account" element={<Account />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/notification" element={<NotificationPage/>}/>
             </Routes>
       </div>
     </>

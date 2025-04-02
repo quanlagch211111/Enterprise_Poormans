@@ -75,7 +75,7 @@ export const Login = () => {
           } catch (error) {
             
           }
-          navigate("/otp-confirm"); // Chuyển hướng đến trang OTP
+          navigate("/otp-confirm"); 
           return;
         }
   
