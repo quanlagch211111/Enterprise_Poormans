@@ -1,30 +1,25 @@
-require('dotenv').config();
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-        // user: "duclmgch211370@fpt.edu.vn",
-        // pass: "etvfwicoahdmehts"
-            user: "leduc03102003@gmail.com",
-        pass: "klmr nlzr detd grko"
-    
-    }
-});
+const sendNotification = async () => {
+  const data = {
+    user_id: "67e1adc21040cbd389afc8c7",   // ID người nhận thông báo
+    from: "admin",                        // Người gửi thông báo
+    message: "📢 Đây là thông báo test!",  // Nội dung thông báo
+    entityType: "Message",                // Kiểu thực thể
+    entityId: "67e29a2ba80f10bb1178a7a1"  // ID của thực thể
+  };
 
-const mailOptions = {
-    from: process.env.EMAIL_USERNAME,
-    to: 'emailnguoinhan@gmail.com',
-    subject: 'Test Mail',
-    text: 'This is a test email'
+  try {
+    const response = await axios.post("http://localhost:3001/api/notifications", data, {
+      headers: {
+        "Content-Type": "application/json", // Đảm bảo header đúng
+      }
+    });
+
+    console.log("Notification sent successfully:", response.data);
+  } catch (error) {
+    console.error("Error sending notification:", error.response ? error.response.data : error.message);
+  }
 };
 
-transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        console.log('Error:', error);
-    } else {
-        console.log('Email sent:', info.response);
-    }
-});
+sendNotification();

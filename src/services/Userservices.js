@@ -178,11 +178,13 @@ const deleteUser = (id) => {
          });
        }
 
-        await User.findOneAndDelete(id);
+
+        await User.findByIdAndDelete(id);
 
        resolve({
          status: 'Success',
-         message: 'User updated successfully'
+         message: 'User delete successfully',
+         checkUser
        });
  
      } catch (err) {

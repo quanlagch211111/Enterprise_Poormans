@@ -128,7 +128,6 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const userid = req.params.id;
-    console.log(userid);
 
     if (!userid) {
       return res.status(400).json({ message: 'this Id is required' });
