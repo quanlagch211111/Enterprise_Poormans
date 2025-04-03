@@ -1,15 +1,26 @@
 const assignmentService = require('../services/AssignmentService');
+const  {sendEmailByStudentIds, sendEmailByTutorId} = require('../services/sentEmailService');
 
 exports.createAssignment = async (req, res) => {
     try {
         const { title, student_id, tutor_id, assigned_by } = req.body;
 
-        // Validate required fields
+
         if (!title || !student_id || !tutor_id || !assigned_by) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
         const assignment = await assignmentService.createAssignment(req.body);
+        if (!assignment) {
+            return res.status(400).json({ message: 'Failed to create assignment' });
+        }
+        // notification to students and tutor by email
+        await sendEmailByStudentIds(student_id, 'new_assignment', { assignmentTitle: title });
+        await sendEmailByTutorId(tutor_id, 'new_assignment', { assignmentTitle: title });
+
+        // notification to students and tutor by notification service
+        
+
         res.status(201).json({ message: 'Assignment created successfully', assignment });
     } catch (error) {
         res.status(500).json({ error: error.message });

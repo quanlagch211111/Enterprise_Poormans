@@ -99,5 +99,18 @@ const sendOtpEmail = async (email, otp) => {
     await transporter.sendMail(mailOptions);
 };
 
-module.exports = { generateOtp, sendOtpEmail, sendOtp, resendOtp };
+
+const sendEmailNotification = async (email, subject, text) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: email,
+        subject: subject,
+        text: text
+    };
+
+    await transporter.sendMail(mailOptions);
+};  
+
+
+module.exports = { generateOtp, sendOtpEmail, sendOtp, resendOtp, sendEmailNotification };
 
