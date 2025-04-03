@@ -133,8 +133,18 @@ exports.deleteUser = async (req, res) => {
       return res.status(400).json({ message: 'this Id is required' });
     }
 
-    const response = await UserService.deleteUser(userid);
-    return res.status(200).json(response)
+    const user = await UserService.detailUser(userid);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await Student.deleteOne({ user_id: userid });
+    await Tutor.deleteOne({ user_id: userid });
+    await Staff.deleteOne({ user_id: userid });
+
+    await UserService.deleteUser(userid);
+
+    return res.status(200).json({ message: 'User and associated role deleted successfully' });
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }

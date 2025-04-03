@@ -1,10 +1,11 @@
 const assignmentService = require('../services/AssignmentService');
 const  {sendEmailByStudentIds, sendEmailByTutorId} = require('../services/sentEmailService');
+const { createNotification, createNotificationsForUsers } = require('./notificationController');
+
 
 exports.createAssignment = async (req, res) => {
     try {
         const { title, student_id, tutor_id, assigned_by } = req.body;
-
 
         if (!title || !student_id || !tutor_id || !assigned_by) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -14,12 +15,30 @@ exports.createAssignment = async (req, res) => {
         if (!assignment) {
             return res.status(400).json({ message: 'Failed to create assignment' });
         }
-        // notification to students and tutor by email
+
+
         await sendEmailByStudentIds(student_id, 'new_assignment', { assignmentTitle: title });
         await sendEmailByTutorId(tutor_id, 'new_assignment', { assignmentTitle: title });
 
-        // notification to students and tutor by notification service
-        
+        await createNotificationsForUsers({
+            body: {
+                user_ids: student_id, 
+                from: assigned_by,
+                message: `New assignment: ${title}`,
+                entityType: 'Assignment',
+                entityId: assignment._id
+            }
+        }, { status: () => ({ json: () => {} }) }); 
+
+        await createNotification({
+            body: {
+                user_id: tutor_id,
+                from: assigned_by,
+                message: `New assignment: ${title}`,
+                entityType: 'Assignment',
+                entityId: assignment._id
+            }
+        }, { status: () => ({ json: () => {} }) });
 
         res.status(201).json({ message: 'Assignment created successfully', assignment });
     } catch (error) {

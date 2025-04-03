@@ -10,8 +10,6 @@ exports.createNotification = async (req, res) => {
     const { user_id, from, message, entityType, entityId } = req.body;
     try {
       const notification = await notificationService.createNotification(req.body);
-    //   if(!notification)
-    //   notificationService.sendNotificationToUser(notification)
 
       const receiverSocketId = global.onlineUsers.get(user_id);
       
@@ -70,12 +68,6 @@ exports.createNotificationsForUsers = async (req, res) => {
 
       // Duyệt từng user_id để tạo notification riêng
       for (const user_id of user_ids) {
-          // // Kiểm tra user_id có hợp lệ không
-          // if (!mongoose.Types.ObjectId.isValid(user_id)) {
-          //     console.log(`Invalid user_id: ${user_id}`);
-          //     continue; // Bỏ qua nếu user_id không hợp lệ
-          // }
-
           const notificationData = {
               user_id: user_id, 
               from,
@@ -87,7 +79,6 @@ exports.createNotificationsForUsers = async (req, res) => {
           const notification = await notificationService.createNotification(notificationData);
           notifications.push(notification);
 
-          // Kiểm tra nếu user đang online và gửi qua socket
           const receiverSocketId = global.onlineUsers.get(user_id);
           if (receiverSocketId) {
               io.to(receiverSocketId).emit('notification-receive', notification);
