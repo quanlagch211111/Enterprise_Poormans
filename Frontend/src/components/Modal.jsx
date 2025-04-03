@@ -74,6 +74,7 @@ export const ConfirmLogout = (props) => {
 };
 
 // Assignment
+//#region Assignment
 export const NewAssignment = (props) => {
   const { setAssignments, assignments, userId, accessToken, students, tutors } = props;
 
@@ -397,8 +398,10 @@ export const ConfirmDeleteAsm = (props) => {
     </>
   );
 };
+//#endregion
 
 // Blog
+//#region Blog
 export const NewBlog = (props) => {
   const { accessToken } = props;
   const [newBlog, setNewBlog] = useState({
@@ -1089,8 +1092,10 @@ export const EditBlog = (props) => {
     </MDBModal>
   );
 };
+//#endregion
 
 // Event meeting
+//#region meeting
 export const NewEvent = (props) => {
   const { accessToken, events, setEvents, students, tutors, onClose } = props;
 
@@ -1400,9 +1405,10 @@ export const UpdateEvent = (props) => {
     </MDBModal>
   );
 };
-
+//#endregion
 // Assignment
 
+//#region document
 export const UploadAssignment = (props) => {
   const { accessToken, selectedFolder, newDocument, setNewDocument, role } =
     props;
@@ -1641,9 +1647,11 @@ export const DeleteAssignment = (props) => {
     </>
   );
 };
+//#endregion
 
 // User
 
+//#region user
 export const EditUser = (props) => {
   const { accessToken, userData } = props;
   const [isLoading, setLoading] = useState(false);
@@ -1845,8 +1853,10 @@ export const EditPassword = (props) => {
     </>
   );
 };
+//#endregion
 
 // folder
+//#region folder
 export const NewFolder = (props) => {
   const { folders, accessToken, assignmentId } = props;
   const [newFolder, setNewFolder] = useState({
@@ -1941,3 +1951,4 @@ export const NewFolder = (props) => {
     </MDBModal>
   );
 };
+//#endregion

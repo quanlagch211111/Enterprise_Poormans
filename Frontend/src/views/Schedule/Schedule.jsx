@@ -16,20 +16,19 @@ import axios from "../../services/AxiosCustom";
 import { DeleteEvent, NewEvent, UpdateEvent } from "../../components/Modal";
 import { color } from "@mui/system";
 import { use } from "react";
+import { useSocket } from "../../services/Socket";
 
 setOptions({
   theme: "ios",
   themeVariant: "light",
 });
 export const Schedule = () => {
+  const socket = useSocket(); // Ensure socket is initialized correctly
   const navigate = useNavigate(); // Ensure useNavigate is called before usage
   const role = localStorage.getItem("role");
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId").toString();
-  const username = localStorage.getItem("username");
-  console.log("username", username);
   const [users, setUsers] = useState([]);
-  console.log("users", users);
   const accessToken = localStorage.getItem("accessToken");
   const [modelShowNewEvent, setModelShowNewEvent] = useState(false);
   const [modalDeleteEvent, setModalDeleteEvent] = useState(false);
@@ -38,6 +37,8 @@ export const Schedule = () => {
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
   const toggleVisibility = () => setVisibility(!isVisibility);
+  const [email, setEmail] = useState();
+  const [room, setRoom] = useState();
   // const {username, setUsername} = useState(); 
   // const {roomId, SetRoomId} = useState();
 
@@ -47,34 +48,6 @@ export const Schedule = () => {
       navigate("/login"); // Redirect to login if no accessToken
       return;
     }
-
-    // const fetchMeetings = async () => {
-    //   try {
-    //     const response = await axios.get("/meetings", {
-    //       headers: { Authorization: `Bearer ${accessToken}` },
-    //     });
-
-    //     const formattedEvents = response.data.meetings.map((meeting) => ({
-    //       id: meeting._id,
-    //       title: meeting.title || "Event",
-    //       start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`),
-    //       end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`),
-    //       note: meeting.note,
-    //       type: meeting.type,
-    //       organizer_id: meeting.organizer_id._id,
-    //       organizer_username: meeting.organizer_id.username, // Lấy username của organizer
-    //       participant_ids: meeting.participant_ids.map((participant) => participant._id),
-    //       participant_usernames: meeting.participant_ids.map((participant) => participant.username), // Lấy username của participants
-    //       room_id: meeting.room_id,
-    //       status: meeting.status,
-    //     }));
-    //     setEvents(formattedEvents);
-    //   } catch (error) {
-    //     console.error("Error fetching meetings:", error);
-    //   }
-    // };
-
-
     const fetchMeetings = async () => {
       try {
         const response = await axios.get("/meetings", {
@@ -96,7 +69,6 @@ export const Schedule = () => {
           status: meeting.status,
         }));
 
-        // Lọc sự kiện dựa trên vai trò
         const filteredEvents = formattedEvents.filter((event) => {
           if (role === "STAFF") {
             return true; // Staff có thể xem tất cả sự kiện
@@ -119,6 +91,7 @@ export const Schedule = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setUsers(response.data);
+        console.log("Users with roles:", response.data);
       } catch (error) {
         console.error("Error fetching users with roles:", error);
       }
@@ -126,9 +99,8 @@ export const Schedule = () => {
 
     fetchUsersWithRoles();
     fetchMeetings();
+
   }, [accessToken, navigate]);
-
-
 
   const timer = useRef(null);
   const [events, setEvents] = useState([
@@ -211,6 +183,7 @@ export const Schedule = () => {
     setTooltipAnchor(args.domEvent.target);
     setTooltipOpen(true);
   }, []);
+
   const [centredModal, setCentredModal] = useState(false);
 
   const toggleOpen = () => setCentredModal(!centredModal);

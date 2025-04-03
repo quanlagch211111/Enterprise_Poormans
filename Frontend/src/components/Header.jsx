@@ -27,7 +27,9 @@ export const Header = () => {
         <NavLink to="/message">
           <i className="fas fa-comment-alt"></i>
         </NavLink>
-        <i className="fas fa-bell"></i>
+        <NavLink to="/notification">
+          <i className="fas fa-bell"></i>
+        </NavLink>
         <div className="profile position-relative" ref={profileRef}>
           <div
             className="profile-image rounded-circle overflow-hidden cursor-pointer"

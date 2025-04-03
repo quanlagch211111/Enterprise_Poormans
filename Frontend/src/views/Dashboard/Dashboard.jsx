@@ -30,6 +30,7 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { RoleContext } from "../../services/RoleContext";
 import axios from "../../services/AxiosCustom";
+import { MDBInput, MDBModalBody, MDBBtn } from "mdb-react-ui-kit";
 const localizer = momentLocalizer(moment);
 
 export const Dashboard = () => {
@@ -38,8 +39,20 @@ export const Dashboard = () => {
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
-
+  const [users, setUsers] = useState([]);
+  const [studentCount, setStudentCount] = useState();
+  const [tutorCount, setTutorCount] = useState();
   const [userLists, setUserLists] = useState([]);
+  const [blogList, setBlogList] = useState([]);
+  const [pendingBlogs, setPendingBlogs] = useState([]);
+  const [documentListCount, setDocumentList] = useState([]);
+  const [notiform, setNotiform] = useState({
+    user_id: [],
+    from: "",
+    message: ""
+  });
+  const userList = users.map(user => user._id);
+
 
   useEffect(() => {
     if (!accessToken) {
@@ -64,34 +77,87 @@ export const Dashboard = () => {
       }
     };
 
-    // const fetchUserLists = async () => {
-    //   try {
-    //     const response = await axios.get("/users/getallusers", {
-    //       headers: { Authorization: `Bearer ${accessToken}` },
-    //     });
+    const fetchUsersWithRoles = async () => {
+      try {
+        const response = await axios.get("/users/getuserwithroles", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setUsers(response.data);
+        console.log("Users with roles:", response.data);
+        const studentCount = users.filter(user => user.role === "Student").length;
+        setStudentCount(studentCount);
+        console.log("Student Count:", studentCount);
+        const tutorCount = users.filter(user => user.role === "Tutor").length;
+        setTutorCount(tutorCount);
+        console.log("Tutor Count:", tutorCount);
+      } catch (error) {
+        console.error("Error fetching users with roles:", error);
+      }
+    };
 
-    //     if (response.status === 200) {
-    //       // Assuming the API returns an array of users with `isVerify` field
-    //       const usersWithStatus = response.data.map((user) => ({
-    //         id: user.id,
-    //         username: user.username,
-    //         email: user.email,
-    //         isVerify: user.isVerify, // Extract the `isVerify` field
-    //       }));
+    const fetchPendingBlogs = async () => {
+      try {
+        const response = await axios.get("/blogs/", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setBlogList(response.data);
+        console.log("Blogs:", response.data);
+        const pendingBlogs = response.data.filter(blog => blog.status === "pending").length;
+        setPendingBlogs(pendingBlogs);
+        console.log("Pending Blogs:", pendingBlogs);
+      } catch (error) {
+        console.error("Error fetching pending blogs:", error);
+      }
+    };
 
-    //       console.log("Users with status:", usersWithStatus);
-    //       setUserLists(usersWithStatus); // Save the processed data to state
-    //     }
-    //   } catch (error) {
-    //     console.error("Error fetching users:", error);
-    //   }
-    // };
+    const fetchDocumentList = async () => {
+      try {
+        const response = await axios.get("/documents/", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const documentListCount = response.data.length;
+        setDocumentList(documentListCount);
+      } catch (error) {
+        console.error("Error fetching pending documents:", error);
+      }
+    };
 
     if (userId) {
       fetchUserInfo();
+      fetchUsersWithRoles();
+      fetchPendingBlogs();
+      fetchDocumentList();
+
     }
   }, [userId, accessToken, navigate]);
 
+  const SendNotification = async () => {
+    try {
+      console.log("Sending notification with data:", {
+        user_id: userList,
+        from: userId,
+        message: notiform.message,
+      });
+
+      const response = await axios.post("/notifications", {
+        user_id: userList,
+        from: userId,
+        message: notiform.message,
+      }, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      console.log("Notification sent:", response.data);
+
+      setNotiform({
+        user_id: [],
+        from: "",
+        message: ""
+      });
+    } catch (error) {
+      console.error("Error sending notification:", error.response ? error.response.data : error.message);
+    }
+  };
   // Show a loading spinner or message until userInfo is fetched
   if (!userInfo) {
     return (
@@ -357,11 +423,10 @@ export const Dashboard = () => {
                                   <td>{doc.name}</td>
                                   <td>
                                     <span
-                                      className={`badge ${
-                                        doc.status === "Đã phê duyệt"
-                                          ? "bg-success"
-                                          : "bg-warning"
-                                      }`}
+                                      className={`badge ${doc.status === "Đã phê duyệt"
+                                        ? "bg-success"
+                                        : "bg-warning"
+                                        }`}
                                     >
                                       {doc.status}
                                     </span>
@@ -527,11 +592,10 @@ export const Dashboard = () => {
                               <td>{doc.name}</td>
                               <td>
                                 <span
-                                  className={`badge ${
-                                    doc.status === "Đã phê duyệt"
-                                      ? "bg-success"
-                                      : "bg-warning"
-                                  }`}
+                                  className={`badge ${doc.status === "Đã phê duyệt"
+                                    ? "bg-success"
+                                    : "bg-warning"
+                                    }`}
                                 >
                                   {doc.status}
                                 </span>
@@ -581,7 +645,7 @@ export const Dashboard = () => {
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>120</Card.Title>
+                      <Card.Title>{studentCount}</Card.Title>
                       <Card.Text>Tổng số sinh viên</Card.Text>
                     </Card.Body>
                   </Card>
@@ -589,7 +653,7 @@ export const Dashboard = () => {
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>30</Card.Title>
+                      <Card.Title>{tutorCount}</Card.Title>
                       <Card.Text>Tổng số giảng viên</Card.Text>
                     </Card.Body>
                   </Card>
@@ -597,16 +661,16 @@ export const Dashboard = () => {
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>15</Card.Title>
-                      <Card.Text>New Blog</Card.Text>
+                      <Card.Title>{pendingBlogs}</Card.Title>
+                      <Card.Text>All Pending Blogs</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>5</Card.Title>
-                      <Card.Text>Hoạt động gần đây</Card.Text>
+                      <Card.Title>{documentListCount}</Card.Title>
+                      <Card.Text>Documents Submission</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -628,19 +692,19 @@ export const Dashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {studentData.map((student) => (
-                            <tr key={student.id}>
-                              <td>{student.name}</td>
+                          {users.map((user) => (
+                            <tr key={user._id}>
+                              <td>{user.username}</td>
                               <td>Sinh viên</td>
                               <td>
                                 <Badge
                                   bg={
-                                    student.status === "active"
+                                    user.status === true
                                       ? "success"
                                       : "warning"
                                   }
                                 >
-                                  {student.status}
+                                  {user.status ? "verified" : "not verified"}
                                 </Badge>
                               </td>
                               <td>
@@ -672,20 +736,27 @@ export const Dashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {blogData.map((blog) => (
+                          {blogList.map((blog) => (
                             <tr key={blog.id}>
-                              <td>{blog.name}</td>
+                              <td>{blog.title}</td>
                               <td>10/2/2024</td>
                               <td>
                                 <Badge
                                   bg={
-                                    blog.status === "active"
+                                    blog.status === "published"
                                       ? "success"
-                                      : "warning"
+                                      : blog.status === "pending"
+                                        ? "warning"
+                                        : "danger"
                                   }
                                 >
-                                  {blog.status}
+                                  {blog.status === "published"
+                                    ? "Published"
+                                    : blog.status === "pending"
+                                      ? "Pending"
+                                      : "Canceled"}
                                 </Badge>
+
                               </td>
                               <td>
                                 <Button variant="outline-primary" size="sm">
@@ -696,34 +767,6 @@ export const Dashboard = () => {
                           ))}
                         </tbody>
                       </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* Phân Bổ Người Hướng Dẫn */}
-              <Row className="mb-4">
-                <Col>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Phân Bổ Người Hướng Dẫn</Card.Title>
-                      <Form>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Chọn giảng viên</Form.Label>
-                          <Form.Select>
-                            <option>Giảng viên 1</option>
-                            <option>Giảng viên 2</option>
-                          </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Chọn sinh viên</Form.Label>
-                          <Form.Select multiple>
-                            <option>Sinh viên 1</option>
-                            <option>Sinh viên 2</option>
-                          </Form.Select>
-                        </Form.Group>
-                        <Button variant="primary">Phân bổ</Button>
-                      </Form>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -752,34 +795,6 @@ export const Dashboard = () => {
                 </Col>
               </Row>
 
-              {/* Quản Lý Tương Tác và Nội Dung */}
-              <Row className="mb-4">
-                <Col>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Quản Lý Tương Tác và Nội Dung</Card.Title>
-                      <Table striped hover>
-                        <thead>
-                          <tr>
-                            <th>Người gửi</th>
-                            <th>Nội dung</th>
-                            <th>Ngày</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {studentData.map((student) => (
-                            <tr key={student.id}>
-                              <td>{student.name}</td>
-                              <td>Tin nhắn mẫu</td>
-                              <td>{student.lastInteraction}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
 
               {/* Hệ Thống Thông Báo */}
               <Row className="mb-4">
@@ -787,17 +802,20 @@ export const Dashboard = () => {
                   <Card>
                     <Card.Body>
                       <Card.Title>Hệ Thống Thông Báo</Card.Title>
-                      <Form>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Tiêu đề thông báo</Form.Label>
-                          <Form.Control type="text" />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Nội dung thông báo</Form.Label>
-                          <Form.Control as="textarea" rows={3} />
-                        </Form.Group>
-                        <Button variant="primary">Gửi thông báo</Button>
-                      </Form>
+                      <MDBModalBody>
+                        <MDBInput
+                          label="Message"
+                          id="typeText"
+                          type="text"
+                          value={notiform.message}
+                          onChange={(e) =>
+                            setNotiform({ ...notiform, message: e.target.value })
+                          }
+                        />
+                        <MDBBtn className="mt-3" onClick={SendNotification} >
+                          Send
+                        </MDBBtn>
+                      </MDBModalBody>
                     </Card.Body>
                   </Card>
                 </Col>
