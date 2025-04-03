@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const assignmentSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    student_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }], 
-    tutor_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-    assigned_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    student_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true }], 
+    tutor_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tutor', required: true },
+    assigned_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', required: true },
     assigned_at: { type: Date, default: Date.now }
 });
 

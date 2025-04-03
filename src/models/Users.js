@@ -11,5 +11,5 @@ const userSchema = new mongoose.Schema({
   updated_at: { type: Date, default: Date.now },
   isVerified : {type: Boolean}
 });
-
+  
 module.exports = mongoose.model('Users', userSchema);
