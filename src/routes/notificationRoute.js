@@ -15,4 +15,7 @@ router.get('/:userId', notificationController.getNotifications);
 // Đánh dấu thông báo đã đọc
 router.put('/:notificationId/read', notificationController.markAsRead);
 
+// Tạo thông báo cho nhiều người dùng
+router.post('/multiple', notificationController.createNotificationsForUsers);
+
 module.exports = router;

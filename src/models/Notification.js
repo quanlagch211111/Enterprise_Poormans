@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    entityType: { type: String, required: true }, // Loại thực thể liên quan (ví dụ: "Assignment", "Message")
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    entityType: { type: String, required: true }, 
     entityId: { type: mongoose.Schema.Types.ObjectId, required: true }, 
     isRead: { type: Boolean, default: false }, 
     message: { type: String, required: true }, 
