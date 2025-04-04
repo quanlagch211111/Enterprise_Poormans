@@ -45,11 +45,11 @@ mongoose.connect(process.env.MONGO_URL)
 const SubmissionFolderRouter = require('./src/routes/submissionfolderRoute');
 const documentRouter = require('./src/routes/documentRoute');
 const otpRouter = require('./src/routes/otpRoute');
-// const GoogleDriveRouter = require('./src/routes/GoogleDriveRoute');
+const GoogleDriveRouter = require('./src/routes/GoogleDriveRoute');
 const UserRouter = require('./src/routes/Userroutes');
 const MessageRouter = require('./src/routes/messageRoute');
 const AssignmentRouter = require('./src/routes/assignmentRoute');
-// const MeetingRouter = require('./src/routes/meetingRoute');
+const MeetingRouter = require('./src/routes/meetingRoute');
 const blogRouter = require('./src/routes/blogRoute');
 const notificationRouter = require('./src/routes/notificationRoute');
 
@@ -68,8 +68,8 @@ app.use('/api/submissionFolders', SubmissionFolderRouter);
 app.use('/api/documents', documentRouter);
 app.use('/api/assignments', AssignmentRouter);
 app.use('/api/otp', otpRouter);
-// app.use('/api/google-drive', GoogleDriveRouter);
-// app.use('/api/meetings', MeetingRouter);
+app.use('/api/google-drive', GoogleDriveRouter);
+app.use('/api/meetings', MeetingRouter);
 app.use('/api/blogs', blogRouter);
 app.use('/api/notifications', notificationRouter );
 

@@ -89,3 +89,41 @@ module.exports.addMemberToGroup = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports.getMessagesCountLast7Days = async (req, res, next) => {
+  try {
+      const today = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 7);
+
+      const messagesCount = await Messages.aggregate([
+          {
+              $match: {
+                  created_at: {
+                      $gte: sevenDaysAgo,
+                      $lte: today,
+                  },
+              },
+          },
+          {
+              $group: {
+                  _id: {
+                      $dateToString: { format: "%Y-%m-%d", date: "$created_at" },
+                  },
+                  count: { $sum: 1 },
+              },
+          },
+          {
+              $sort: { _id: 1 },
+          },
+      ]);
+
+      res.status(200).json({
+          message: "Messages count for the last 7 days retrieved successfully",
+          data: messagesCount,
+      });
+  } catch (error) {
+      console.error("Error fetching messages count for the last 7 days:", error.message);
+      res.status(500).json({ message: "Failed to retrieve messages count", error: error.message });
+  }
+};
