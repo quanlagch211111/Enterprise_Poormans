@@ -38,14 +38,16 @@ export const Sidebar = () => {
           <i className="fas fa-file-alt"></i>
           Assignment
         </NavLink>
-        <NavLink
-          to="/assignment"
-          className="nav-item"
-          onClick={() => setIsOpen(false)}
-        >
-          <i className="fas fa-book"></i>
-          Class
-        </NavLink>
+        {role === "STAFF" && (
+          <NavLink
+            to="/assignment"
+            className="nav-item"
+            onClick={() => setIsOpen(false)}
+          >
+            <i className="fas fa-book"></i>
+            Class
+          </NavLink>
+        )}
         <NavLink
           to="/schedule"
           className="nav-item"

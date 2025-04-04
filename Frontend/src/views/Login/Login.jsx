@@ -41,7 +41,7 @@ export const Login = () => {
       toast.error("Please fill in password field");
       return false;
     }
-  
+
     try {
       setLoading(true);
       const response = await axios.post(
@@ -54,14 +54,22 @@ export const Login = () => {
           withCredentials: true,
         }
       );
-  
+
       if (response.status === 200) {
-        const { accesstoken, refreshToken, isVerifiedToken,user, ...userData } = response.data;
-  
+        const {
+          accesstoken,
+          refreshToken,
+          isVerifiedToken,
+          user,
+          ...userData
+        } = response.data;
+
         // Kiểm tra trạng thái trả về từ backend
         if (response.data.status === "NEED_VERIFICATION") {
-          toast.warning("Your account is not verified. Redirecting to OTP confirmation...");
-          localStorage.setItem("isVerifiedToken", isVerifiedToken); 
+          toast.warning(
+            "Your account is not verified. Redirecting to OTP confirmation..."
+          );
+          localStorage.setItem("isVerifiedToken", isVerifiedToken);
           const isverifyDecoded = jwtDecode(isVerifiedToken);
           localStorage.setItem("emailtoverify", isverifyDecoded.payload.email);
           setLoading(false);
@@ -72,16 +80,14 @@ export const Login = () => {
             if (response.status === 200) {
               console.log(response.data);
             }
-          } catch (error) {
-            
-          }
-          navigate("/otp-confirm"); 
+          } catch (error) {}
+          navigate("/otp-confirm");
           return;
         }
-  
+
         const decoded = jwtDecode(accesstoken);
         localStorage.setItem("accessToken", accesstoken);
-        localStorage.setItem('userlogged',JSON.stringify(user));
+        localStorage.setItem("userlogged", JSON.stringify(user));
         localStorage.setItem("username", user.username);
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
@@ -92,9 +98,9 @@ export const Login = () => {
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.data.message) {
-        toast.error(error.response.data.message);
+        toast.error("Wrong email or password. Please try again.");
       } else {
-        toast.error("An error occurred. Please try again.");
+        toast.error("Wrong email or password. Please try again.");
       }
     }
   };

@@ -84,7 +84,6 @@
 }
 
 .left-side {
-  flex: 0.5; /* Giảm chiều rộng của phần Assignments */
   background-color: #f9f9f9;
   padding: 20px;
   border-radius: 8px;
@@ -129,20 +128,13 @@
     color: var(--primary);
   }
 }
-
-.folder-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.folder-card .card {
+  transition: all 0.3s ease-in-out;
 }
 
-.folder-card {
-  background-color: #f9f9f9;
-  transition: background-color 0.2s ease;
-}
-
-.folder-card:hover {
-  background-color: #e9ecef;
+.folder-card .card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Bóng đậm hơn */
+  border: 1px solid #007bff; /* Viền xanh đẹp */
 }
 
 .folder-info h5 {
@@ -163,13 +155,6 @@
 .folder-details {
   display: flex;
   gap: 20px;
-}
-
-.left-side {
-  flex: 1;
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
 }
 
 .right-side {

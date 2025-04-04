@@ -1,6 +1,7 @@
 import { MDBBtn, MDBFile } from "mdb-react-ui-kit";
 import axios from "../../services/AxiosCustom";
 import React, { useState, useEffect } from "react";
+import { Col } from "react-bootstrap";
 import { useNavigate } from "react-router";
 import Modal from "react-modal";
 import {
@@ -31,6 +32,7 @@ export const Document = () => {
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
   const [documentFilePath, setDocumentFilePath] = useState(false);
+  const [selectedAsmId, setSelectedAsmId] = useState(null);
   const [newDocument, setNewDocument] = useState({
     owner_id: localStorage.getItem("userId"),
     folder_id: "",
@@ -165,6 +167,7 @@ export const Document = () => {
               setSelectedAssignment(assignment);
               setSelectedFolder(null);
               fetchFolders(assignment._id);
+              setSelectedAsmId(assignment._id);
             }}
           >
             {assignment.title}
@@ -235,11 +238,11 @@ export const Document = () => {
         ))}
 
       {Array.isArray(folders) && folders.length > 0 ? (
-        <div className="folder-list row g-3">
+        <div className="folder-list row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
           {folders.map((folder) => (
             <div
               key={folder._id}
-              className="folder-card col-md-6 col-lg-4"
+              className="folder-card col-sm-6 col-md-4"
               onClick={() => {
                 setSelectedFolder(folder);
                 fetchDocuments(folder._id);
@@ -476,6 +479,7 @@ export const Document = () => {
         documentFilePath={documentFilePath}
       ></DeleteAssignment>
       <NewFolder
+        fetchFolders={fetchFolders(selectedAsmId)}
         show={modalNewFolder}
         onClose={() => setModalNewFolder(false)}
         assignmentId={selectedAssignment?._id}

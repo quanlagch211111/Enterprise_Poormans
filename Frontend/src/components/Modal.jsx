@@ -552,9 +552,8 @@ export const NewBlog = (props) => {
   );
 };
 
-
 export const DetailBlog = (props) => {
-  const { blog, accessToken, onClose, onUpdate,onDelete, fetchBlogs } = props;
+  const { blog, accessToken, onClose, onUpdate, onDelete, fetchBlogs } = props;
   const [modalDeleteBlog, setModalDeleteBlog] = useState(false);
   const role = localStorage.getItem("role"); // Get the user's role
   const userId = localStorage.getItem("userId"); // Get the logged-in user's ID
@@ -636,7 +635,6 @@ export const DetailBlog = (props) => {
         toast.success("Blog approved successfully.");
         onClose();
       }
-      
     } catch (error) {
       toast.error("Failed to approve blog.");
     } finally {
@@ -661,8 +659,6 @@ export const DetailBlog = (props) => {
         toast.success("Blog rejected successfully.");
         onClose();
       }
-
-
     } catch (error) {
       toast.error("Failed to reject blog.");
       console.error("Error rejecting blog:", error);
@@ -673,7 +669,7 @@ export const DetailBlog = (props) => {
 
   const DeleteBlog = (props) => {
     const [isLoading, setLoading] = useState(false);
-    const { accessToken, blog,  } = props;
+    const { accessToken, blog } = props;
     const handleClose = () => {
       if (props.onClose) props.onClose();
     };
@@ -684,11 +680,11 @@ export const DetailBlog = (props) => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (response.status === 200) {
-        toast.success("Blog deleted successfully.");
-        handleClose();
-        if (onDelete) {
-          onDelete(blog._id);
-        }
+          toast.success("Blog deleted successfully.");
+          handleClose();
+          if (onDelete) {
+            onDelete(blog._id);
+          }
         }
       } catch (error) {
         toast.error("Failed to delete blog.");
@@ -1062,7 +1058,10 @@ export const NewEvent = (props) => {
       return;
     }
 
-    if (new Date(`${newMeeting.date}T${newMeeting.start_time}`) >= new Date(`${newMeeting.date}T${newMeeting.end_time}`)) {
+    if (
+      new Date(`${newMeeting.date}T${newMeeting.start_time}`) >=
+      new Date(`${newMeeting.date}T${newMeeting.end_time}`)
+    ) {
       toast.error("Start time must be earlier than end time!");
       return;
     }
@@ -1464,7 +1463,6 @@ export const UploadAssignment = (props) => {
         });
 
         if (saveResponse.status === 201) {
-          alert("Document uploaded and saved successfully!");
           handleClose();
           setSelectedFile(null);
           setNewDocument({
@@ -1473,6 +1471,7 @@ export const UploadAssignment = (props) => {
             types: "",
             content: "",
           });
+          setLoading(false);
           toast.success("Assignment has been uploaded successfully.");
         } else {
           toast.error("Failed to save document.");
@@ -1482,12 +1481,16 @@ export const UploadAssignment = (props) => {
       }
     } catch (error) {
       if (error.response) {
+        setLoading(false);
         toast.error("Server responded with an error:", error.response.data);
       } else if (error.request) {
+        setLoading(false);
         toast.error("No response received from server:", error.request);
       } else {
+        setLoading(false);
         toast.error("Error setting up the request:", error.message);
       }
+      setLoading(false);
       toast.error("An error occurred while uploading the document.");
     }
   };
@@ -1864,13 +1867,21 @@ export const EditPassword = (props) => {
 // folder
 //#region folder
 export const NewFolder = (props) => {
-  const { folders, accessToken, assignmentId } = props;
+  const { folders, accessToken, assignmentId, fetchFolders } = props;
   const [newFolder, setNewFolder] = useState({
     assignment_id: assignmentId,
     title: "",
     description: "",
     deadline: "",
   });
+  const resetFields = () => {
+    setNewFolder({
+      assignment_id: "",
+      title: "",
+      description: "",
+      deadline: "",
+    });
+  };
 
   const [isLoading, setLoading] = useState(false);
 
@@ -1896,11 +1907,14 @@ export const NewFolder = (props) => {
       console.log("API Response:", response);
       setLoading(false);
       if (response.status === 201 || response.status === 200) {
+        resetFields();
+        fetchFolders();
         toast.success("Folder created successfully.");
         // setNewFolder([...folders, response.data.folder]);
         handleClose();
       }
     } catch (error) {
+      setLoading(false);
       toast.error("Folder creation failed.");
     }
   };
@@ -1942,6 +1956,7 @@ export const NewFolder = (props) => {
               label="Deadline"
               id="typeText"
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={newFolder.deadline}
               onChange={(e) =>
                 setNewFolder({ ...newFolder, deadline: e.target.value })
