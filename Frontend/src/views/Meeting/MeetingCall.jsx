@@ -1,51 +1,100 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
-import { useSocket } from "../../services/Socket";
-import peer from "../../services/peer";
+import { useLocation } from 'react-router-dom';
+import FirebaseSignaling from "../../services/firebaseSignaling";
+import PeerService from "../../services/peer";
 import {
-  Col,
-  Container,
-  Row,
-  Offcanvas,
-  ListGroup,
-  Form,
-  Button,
+  Container, Row, Offcanvas,
+  ListGroup, Form, Button
 } from "react-bootstrap";
-import { use } from "react";
-import { stringify } from "uuid";
 
 export const MeetingCall = () => {
-
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
-  const [userInfo, setUserInfo] = useState(null);
+  const videoGridRef = useRef(null);
+  const myVideoRef = useRef(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
+  const [stream, setStream] = useState(null);
+  const peers = useRef({});
+  const location = useLocation();
+  const roomId = location.pathname.split('/').pop();
+  
+  // Khởi tạo services
+  const signaling = useRef(null);
+  const peerService = useRef(null);
 
-  const socket = useSocket();
-  const [remoteSocketId, setRemoteSocketId] = useState(null);
-  const [myStream, setMyStream] = useState();
-  const [remoteStream, setRemoteStream] = useState();
-
-
-  useEffect(() => {
-    if (!accessToken) {
-      navigate("/login"); // Redirect to login if no accessToken
-      return;
-    }
-  }, []);
+  // UI states
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const users = [];
+  // Thêm video stream vào grid
+  const addVideoStream = useCallback((videoElement, stream) => {
+    if (videoElement && videoGridRef.current) {
+      videoElement.srcObject = stream;
+      videoElement.addEventListener('loadedmetadata', () => {
+        videoElement.play();
+      });
+      videoGridRef.current.append(videoElement);
+    }
+  }, []);
 
-  const visibleUsers = users.slice(0, 12);
-  const extraUsersCount = users.length > 12 ? users.length - 12 : 0;
+  // Kết nối với peer mới
+  const connectToNewUser = useCallback((peerId, localStream) => {
+    if (!localStream || peers.current[peerId]) return;
 
+    const call = peerService.current.peer.call(peerId, localStream);
+    const video = document.createElement('video');
+
+    call.on('stream', userVideoStream => {
+      addVideoStream(video, userVideoStream);
+    });
+
+    call.on('close', () => {
+      video.remove();
+      delete peers.current[peerId];
+    });
+
+    peers.current[peerId] = call;
+  }, [addVideoStream]);
+
+  // Xử lý khi nhận call
+  const setupCallAnswer = useCallback((localStream) => {
+    peerService.current.on('call', call => {
+      call.answer(localStream);
+      const video = document.createElement('video');
+
+      call.on('stream', userVideoStream => {
+        addVideoStream(video, userVideoStream);
+      });
+
+      call.on('close', () => {
+        video.remove();
+      });
+    });
+  }, [addVideoStream]);
+
+  // Khởi tạo stream video/audio
+  const initStream = useCallback(async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: isCamOn,
+        audio: isMicOn
+      });
+      setStream(mediaStream);
+      addVideoStream(myVideoRef.current, mediaStream);
+      return mediaStream;
+    } catch (err) {
+      console.error('Failed to get media stream', err);
+      return null;
+    }
+  }, [isCamOn, isMicOn, addVideoStream]);
+
+  // Xử lý gửi tin nhắn
   const handleSendMessage = () => {
     if (message.trim()) {
       setMessages([
@@ -56,149 +105,103 @@ export const MeetingCall = () => {
     }
   };
 
-  //#region Socket Events
-  const handleUserJoined = useCallback(({ email, id }) => {
-    console.log(`Email ${email} joined room`);
-    setRemoteSocketId(id);
-  }, []);
-
-  const handleCallUser = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    const offer = await peer.getOffer();
-    socket.emit("user:call", { to: remoteSocketId, offer });
-    setMyStream(stream);
-  }, [remoteSocketId, socket]);
-
-  const handleIncommingCall = useCallback(
-    async ({ from, offer }) => {
-      setRemoteSocketId(from);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-      setMyStream(stream);
-      console.log(`Incoming Call`, from, offer);
-      const ans = await peer.getAnswer(offer);
-      socket.emit("call:accepted", { to: from, ans });
-    },
-    [socket]
-  );
-
-  const sendStreams = useCallback(() => {
-    for (const track of myStream.getTracks()) {
-      peer.peer.addTrack(track, myStream);
+  // Thiết lập signaling và WebRTC
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login");
+      return;
     }
-  }, [myStream]);
 
-  const handleCallAccepted = useCallback(
-    ({ from, ans }) => {
-      peer.setLocalDescription(ans);
-      console.log("Call Accepted!");
-      sendStreams();
-    },
-    [sendStreams]
-  );
+    const initialize = async () => {
+      // Khởi tạo services
+      signaling.current = new FirebaseSignaling(roomId, userId);
+      await signaling.current.initialize(); // Wait for auth
 
-  const handleNegoNeeded = useCallback(async () => {
-    const offer = await peer.getOffer();
-    socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
-  }, [remoteSocketId, socket]);
+      peerService.current = new PeerService(userId);
 
-  useEffect(() => {
-    peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
-    return () => {
-      peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded);
+      const localStream = await initStream();
+      if (!localStream) return;
+
+      // Tham gia phòng
+      await signaling.current.joinRoom();
+
+      // Thiết lập nhận call
+      setupCallAnswer(localStream);
+
+      // Lắng nghe peer mới
+      signaling.current.onPeerJoined((peerId) => {
+        connectToNewUser(peerId, localStream);
+      });
+
+      // Xử lý signaling
+      peerService.current.on('signal', (data) => {
+        if (data.to) {
+          signaling.current.sendSignal(data.to, data);
+        }
+      });
+
+      signaling.current.onSignalReceived((signal) => {
+        peerService.current.peer.signal(signal);
+      });
     };
-  }, [handleNegoNeeded]);
 
-  const handleNegoNeedIncomming = useCallback(
-    async ({ from, offer }) => {
-      const ans = await peer.getAnswer(offer);
-      socket.emit("peer:nego:done", { to: from, ans });
-    },
-    [socket]
-  );
+    initialize();
 
-  const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-    await peer.setLocalDescription(ans);
-  }, []);
+    return () => {
+      // Dọn dẹp khi unmount
+      if (signaling.current) {
+        signaling.current.cleanup();
+        signaling.current.leaveRoom();
+      }
+      
+      if (peerService.current) {
+        peerService.current.destroy();
+      }
+      
+      Object.values(peers.current).forEach(call => call.close());
+      
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [accessToken, navigate, roomId, userId, initStream, setupCallAnswer, connectToNewUser]);
 
+  // Xử lý tắt/bật mic và camera
   useEffect(() => {
-    peer.peer.addEventListener("track", async (ev) => {
-      const remoteStream = ev.streams;
-      console.log("GOT TRACKS!!");
-      setRemoteStream(remoteStream[0]);
+    if (!stream) return;
+
+    stream.getAudioTracks().forEach(track => {
+      track.enabled = isMicOn;
     });
-  }, []);
+  }, [isMicOn, stream]);
 
   useEffect(() => {
-    socket.on("user:joined", handleUserJoined);
-    socket.on("incomming:call", handleIncommingCall);
-    socket.on("call:accepted", handleCallAccepted);
-    socket.on("peer:nego:needed", handleNegoNeedIncomming);
-    socket.on("peer:nego:final", handleNegoNeedFinal);
+    if (!stream) return;
 
-    return () => {
-      socket.off("user:joined", handleUserJoined);
-      socket.off("incomming:call", handleIncommingCall);
-      socket.off("call:accepted", handleCallAccepted);
-      socket.off("peer:nego:needed", handleNegoNeedIncomming);
-      socket.off("peer:nego:final", handleNegoNeedFinal);
-    };
-  }, [
-    socket,
-    handleUserJoined,
-    handleIncommingCall,
-    handleCallAccepted,
-    handleNegoNeedIncomming,
-    handleNegoNeedFinal,
-  ]);
+    stream.getVideoTracks().forEach(track => {
+      track.enabled = isCamOn;
+    });
+  }, [isCamOn, stream]);
 
-  //#endregion
   return (
-    <Container
-      fluid
-      className="bg-dark text-light vh-100 d-flex flex-column p-0"
-    >
+    <Container fluid className="bg-dark text-light vh-100 d-flex flex-column p-0">
       <Row className="flex-grow-1 g-0 position-relative">
-        {/* Main Video Grid */}
-        <div className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2">
-          {visibleUsers.map((user, index) => (
-            <div
-              key={user.id}
-              className="video-box bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative transition-all"
-              style={{
-                width: `calc((100% / 4) - 16px)`,
-                height: "200px",
-                minWidth: "240px",
-              }}
-            >
-              <div className="position-absolute top-0 left-0 p-2">
-                <span className="badge bg-dark bg-opacity-75 text-white">
-                  <i className="fas fa-microphone-slash me-1"></i>
-                  {user.name}
-                </span>
-              </div>
-
-              {user.isMe && (
-                <div className="position-absolute bottom-0 start-0 m-2">
-                  <span className="badge bg-primary">
-                    <i className="fas fa-user me-1"></i>You
-                  </span>
-                </div>
-              )}
-
-              {index === 11 && extraUsersCount > 0 && (
-                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-90 d-flex flex-column justify-content-center align-items-center">
-                  <div className="display-4">+{extraUsersCount}</div>
-                  <div className="text-muted">More participants</div>
-                </div>
-              )}
-            </div>
-          ))}
+        {/* Video Grid */}
+        <div
+          ref={videoGridRef}
+          className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2"
+          id="video-grid"
+        >
+          <video 
+            ref={myVideoRef} 
+            
+            className="bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative transition-all"
+            style={{
+              width: `calc((100% / 4) - 16px)`,
+              height: "200px",
+              minWidth: "240px",
+            }}
+          />
         </div>
 
         {/* Right Sidebar */}
@@ -214,10 +217,7 @@ export const MeetingCall = () => {
         >
           <Offcanvas.Header className="border-bottom border-secondary">
             <Offcanvas.Title className="d-flex align-items-center gap-2">
-              <i
-                className={`fas ${showParticipants ? "fa-users" : "fa-comment"
-                  }`}
-              ></i>
+              <i className={`fas ${showParticipants ? "fa-users" : "fa-comment"}`} />
               {showParticipants ? "Participants" : "Chat"}
             </Offcanvas.Title>
           </Offcanvas.Header>
@@ -230,10 +230,7 @@ export const MeetingCall = () => {
                     key={user.id}
                     className="d-flex align-items-center bg-transparent text-light border-secondary"
                   >
-                    <div
-                      className={`position-relative ${user.isMe ? "text-primary" : ""
-                        }`}
-                    >
+                    <div className={`position-relative ${user.isMe ? "text-primary" : ""}`}>
                       <i className="fas fa-user-circle me-2 fs-4"></i>
                       {user.isMe && (
                         <div className="position-absolute top-0 start-0 translate-middle badge bg-primary rounded-circle p-1"></div>
@@ -249,16 +246,10 @@ export const MeetingCall = () => {
                   {messages.map((msg, idx) => (
                     <div
                       key={idx}
-                      className={`mb-3 d-flex ${msg.sender === "You"
-                        ? "justify-content-end"
-                        : "justify-content-start"
-                        }`}
+                      className={`mb-3 d-flex ${msg.sender === "You" ? "justify-content-end" : "justify-content-start"}`}
                     >
                       <div
-                        className={`rounded-3 p-3 ${msg.sender === "You"
-                          ? "bg-primary text-white"
-                          : "bg-secondary bg-opacity-25"
-                          }`}
+                        className={`rounded-3 p-3 ${msg.sender === "You" ? "bg-primary text-white" : "bg-secondary bg-opacity-25"}`}
                         style={{ maxWidth: "75%" }}
                       >
                         <div className="d-flex justify-content-between align-items-center mb-1">
@@ -277,9 +268,7 @@ export const MeetingCall = () => {
                       type="text"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      onKeyPress={(e) =>
-                        e.key === "Enter" && handleSendMessage()
-                      }
+                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                       placeholder="Type a message"
                       className="bg-dark border-secondary text-light"
                     />
@@ -308,10 +297,7 @@ export const MeetingCall = () => {
               onClick={() => setIsMicOn(!isMicOn)}
               className="rounded-pill px-4 d-flex align-items-center gap-2"
             >
-              <i
-                className={`fas ${isMicOn ? "fa-microphone" : "fa-microphone-slash"
-                  }`}
-              ></i>
+              <i className={`fas ${isMicOn ? "fa-microphone" : "fa-microphone-slash"}`} />
               <span>{isMicOn ? "Mute" : "Unmute"}</span>
             </Button>
 
@@ -320,9 +306,7 @@ export const MeetingCall = () => {
               onClick={() => setIsCamOn(!isCamOn)}
               className="rounded-pill px-4 d-flex align-items-center gap-2"
             >
-              <i
-                className={`fas ${isCamOn ? "fa-video" : "fa-video-slash"}`}
-              ></i>
+              <i className={`fas ${isCamOn ? "fa-video" : "fa-video-slash"}`} />
               <span>{isCamOn ? "Stop Video" : "Start Video"}</span>
             </Button>
           </div>
@@ -345,16 +329,11 @@ export const MeetingCall = () => {
               <i className="fas fa-users me-2"></i>
               Participants
             </Button>
-
-            <Button variant="outline-light" className="rounded-pill px-4">
-              <i className="fas fa-share-square me-2"></i>
-              Share
-            </Button>
           </div>
 
           <Button
             variant="danger"
-            onClick={() => console.log("Leave meeting")}
+            onClick={() => navigate("/")}
             className="rounded-pill px-4"
           >
             <i className="fas fa-phone-slash me-2"></i>

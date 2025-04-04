@@ -7,6 +7,7 @@ import {
 } from "@mobiscroll/react";
 import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import {Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
 import { MDBBtn } from "mdb-react-ui-kit";
@@ -81,9 +82,9 @@ export const Schedule = () => {
           if (role === "STAFF") {
             return true;
           } else if (role === "TUTOR") {
-            return event.organizer_id === userId; 
+            return event.organizer_id === userId;
           } else if (role === "STUDENT") {
-            return event.participant_ids.includes(userId); 
+            return event.participant_ids.includes(userId);
           }
           return false;
         });
@@ -357,9 +358,11 @@ export const Schedule = () => {
             </div>
 
             <div className="action d-flex justify-content-center">
-              <MDBBtn className="me-1" color="danger">
-                Join Meeting
-              </MDBBtn>
+              <Link to={`/meeting/${detailTooltip.room_id}`}>
+                <MDBBtn className="me-1" color="danger">
+                  Join Meeting
+                </MDBBtn>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,42 +1,34 @@
+import { Peer } from 'peerjs';
+
 class PeerService {
-    constructor() {
-      if (!this.peer) {
-        this.peer = new RTCPeerConnection({
-          iceServers: [
-            {
-              urls: [
-                "stun:stun.l.google.com:19302",
-                "stun:global.stun.twilio.com:3478",
-              ],
-            },
-          ],
-        });
+  constructor(userId) {
+    this.peer = new Peer(userId, {
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:global.stun.twilio.com:3478" }
+        ]
       }
-    }
-  
-    async getAnswer(offer) {
-      if (this.peer) {
-        await this.peer.setRemoteDescription(offer);
-        const ans = await this.peer.createAnswer();
-        await this.peer.setLocalDescription(new RTCSessionDescription(ans));
-        return ans;
-      }
-    }
-  
-    async setLocalDescription(ans) {
-      if (this.peer) {
-        await this.peer.setRemoteDescription(new RTCSessionDescription(ans));
-      }
-    }
-  
-    async getOffer() {
-      if (this.peer) {
-        const offer = await this.peer.createOffer();
-        await this.peer.setLocalDescription(new RTCSessionDescription(offer));
-        return offer;
-      }
+    });
+    this.listeners = {};
+  }
+
+  on(event, callback) {
+    this.peer.on(event, callback);
+    this.listeners[event] = callback;
+  }
+
+  off(event) {
+    if (this.listeners[event]) {
+      this.peer.off(event, this.listeners[event]);
+      delete this.listeners[event];
     }
   }
-  
-  export default new PeerService();
-  
+
+  destroy() {
+    Object.keys(this.listeners).forEach(event => this.off(event));
+    this.peer.destroy();
+  }
+}
+
+export default PeerService;
