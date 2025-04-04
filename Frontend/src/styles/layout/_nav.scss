@@ -1,24 +1,77 @@
 @import "../abstracts/variable";
+
+.app-container {
+  display: flex;
+  width: 100%;
+}
+
 .sidebar {
-  width: 280px;
+  width: 280px; // Độ rộng sidebar
   background: white;
   display: flex;
   flex-direction: column;
   padding: 2rem 1.5rem;
   box-shadow: var(--shadow);
-  position: relative;
-  z-index: 2;
+  position: relative; // Để không che nội dung
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+  }
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+.right-bar {
+  flex: 1; // Phần còn lại của màn hình
+  padding: 20px;
+  transition: margin-left 0.3s ease-in-out;
 }
 
 .sidebar-header {
   text-align: center;
   margin-bottom: 2.5rem;
+
   h2 {
     color: var(--primary);
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: -0.5px;
   }
+}
+
+/* Menu button */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 1100; // Luôn hiển thị trên sidebar
+}
+
+.close-btn {
+  display: none;
+  background: transparent;
+  color: var(--dark);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  position: absolute;
+  right: 20px;
+  top: 20px;
 }
 
 .nav-item {
@@ -31,72 +84,52 @@
   border-radius: var(--border-radius);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
+
   i {
     width: 25px;
     margin-right: 1rem;
     font-size: 1.1rem;
     color: var(--dark);
   }
+
   &:hover {
     background: var(--primary);
     color: white;
     transform: translateX(8px);
+
     i {
       color: white;
     }
   }
 }
 
+/* Khi active */
 .nav-item.active {
   background: var(--primary);
   color: white;
   transform: translateX(8px);
+
   i {
     color: white;
   }
 }
 
-/* Modern Main Content */
-.main-content {
-  flex: 1;
-  padding: 3rem 4rem;
-  background: var(--light);
-  overflow-y: auto;
-}
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 230px;
+  }
 
-.profile-image {
-  transition: transform 0.2s;
-}
+  .sidebar.open {
+    transform: translateX(0);
+  }
 
-.profile-image:hover {
-  transform: scale(1.05);
-}
+  .menu-toggle {
+    display: block;
+  }
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  margin-top: 0.5rem;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  z-index: 1000;
-}
-
-.dropdown-item {
-  color: #333;
-  text-decoration: none;
-  display: block;
-}
-
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
-
-.active {
-  background-color: #f8f9fa;
-  font-weight: 500;
-}
-
-.cursor-pointer {
-  cursor: pointer;
+  .close-btn {
+    display: block;
+  }
 }

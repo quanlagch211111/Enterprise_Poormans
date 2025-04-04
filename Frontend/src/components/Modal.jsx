@@ -76,7 +76,8 @@ export const ConfirmLogout = (props) => {
 // Assignment
 //#region Assignment
 export const NewAssignment = (props) => {
-  const { setAssignments, assignments, userId, accessToken, students, tutors } = props;
+  const { setAssignments, assignments, userId, accessToken, students, tutors } =
+    props;
 
   const [newAssignment, setNewAssignment] = useState({
     title: "",
@@ -128,7 +129,11 @@ export const NewAssignment = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Create New Assignment</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
             <div className="form-group">
@@ -223,7 +228,8 @@ export const EditAssignment = (props) => {
     if (editAssignment) {
       setFormState({
         title: editAssignment.title || "",
-        student_id: editAssignment.student_id.map((student) => student._id) || [],
+        student_id:
+          editAssignment.student_id.map((student) => student._id) || [],
         tutor_id: editAssignment.tutor_id?._id || "",
       });
     }
@@ -260,7 +266,9 @@ export const EditAssignment = (props) => {
       if (response.status === 200) {
         setAssignments((prev) =>
           prev.map((assignment) =>
-            assignment._id === editAssignment._id ? response.data.assignment : assignment
+            assignment._id === editAssignment._id
+              ? response.data.assignment
+              : assignment
           )
         );
         toast.success("Assignment updated successfully!");
@@ -280,7 +288,11 @@ export const EditAssignment = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Update Assignment</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
             <div className="form-group">
@@ -403,7 +415,7 @@ export const ConfirmDeleteAsm = (props) => {
 // Blog
 //#region Blog
 export const NewBlog = (props) => {
-  const { accessToken } = props;
+  const { accessToken, fetchBlog, fetchPendingBlogs } = props;
   const [newBlog, setNewBlog] = useState({
     title: "",
     author_id: localStorage.getItem("userId"),
@@ -422,15 +434,13 @@ export const NewBlog = (props) => {
       setLoading(true);
 
       // API call to create a new blog
-      const response = await axios.post(
-        "/blogs",
-        newBlog,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.post("/blogs", newBlog, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
       if (response.status === 201) {
+        fetchBlog();
+        fetchPendingBlogs();
         toast.success("Blog has been created successfully.");
         handleClose();
         setNewBlog({ title: "", tags: [], content: "" });
@@ -533,11 +543,7 @@ export const NewBlog = (props) => {
               Close
             </MDBBtn>
             <MDBBtn onClick={handleAddBlog} disabled={isLoading}>
-              {isLoading ? (
-                <ClipLoader color="#ffffff" size={15} />
-              ) : (
-                "Create"
-              )}
+              {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Create"}
             </MDBBtn>
           </MDBModalFooter>
         </MDBModalContent>
@@ -546,24 +552,25 @@ export const NewBlog = (props) => {
   );
 };
 
-
 export const DeleteBlog = (props) => {
   const [isLoading, setLoading] = useState(false);
-  const { accessToken } = props;
+  const { accessToken, blog, fetchBlogs } = props;
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
   const handleDeleteBlog = async () => {
     try {
-      // before call api
       setLoading(true);
-      // ...
-      // after call api
-      setLoading(false);
-      toast.success("Blog has been deleted successfully.");
+      await axios.delete(`/blogs/${blog._id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      fetchBlogs();
+      toast.success("Blog deleted successfully.");
       handleClose();
     } catch (error) {
-      toast.error("Blog has been deleted failed.");
+      toast.error("Failed to delete blog.");
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -705,7 +712,8 @@ export const DeleteBlog = (props) => {
 // };
 
 export const DetailBlog = (props) => {
-  const { blog, accessToken, onClose, onUpdate } = props;
+  const { blog, accessToken, onClose, onUpdate, fetchBlogs } = props;
+  const [modalDeleteBlog, setModalDeleteBlog] = useState(false);
   const role = localStorage.getItem("role"); // Get the user's role
   const userId = localStorage.getItem("userId"); // Get the logged-in user's ID
   const [isEditing, setIsEditing] = useState(false);
@@ -727,12 +735,11 @@ export const DetailBlog = (props) => {
   const handleEditBlog = async () => {
     try {
       setLoading(true);
-      const response = await axios.put(
-        `/blogs/${blog._id}`,
-        editBlog,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
+      const response = await axios.put(`/blogs/${blog._id}`, editBlog, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       if (response.status === 200) {
+        fetchBlogs(); // Fetch updated blogs
         toast.success("Blog updated successfully.");
         onUpdate(response.data); // Notify parent component
         setIsEditing(false);
@@ -771,23 +778,6 @@ export const DetailBlog = (props) => {
     setEditBlog((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDeleteBlog = async () => {
-    if (!window.confirm("Are you sure you want to delete this blog?")) return;
-
-    try {
-      setLoading(true);
-      await axios.delete(`/blogs/${blog._id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      toast.success("Blog deleted successfully.");
-      onClose(); // Close the modal
-    } catch (error) {
-      toast.error("Failed to delete blog.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleApprove = async () => {
     try {
       setLoading(true);
@@ -817,6 +807,7 @@ export const DetailBlog = (props) => {
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+      fetchBlogs();
       toast.success("Blog rejected successfully.");
       onClose();
     } catch (error) {
@@ -827,120 +818,151 @@ export const DetailBlog = (props) => {
   };
 
   return (
-    <MDBModal tabIndex="-1" open={props.show} onClose={onClose}>
-      <MDBModalDialog centered>
-        <MDBModalContent>
-          <MDBModalHeader>
-            <MDBModalTitle>Blog Details</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={onClose}></MDBBtn>
-          </MDBModalHeader>
-          <MDBModalBody>
-            {isEditing ? (
-              <>
-                <MDBInput
-                  className="mb-3"
-                  label="Title"
-                  name="title"
-                  value={editBlog.title}
-                  onChange={handleInputChange}
-                />
-                <div>
+    <>
+      <MDBModal tabIndex="-1" open={props.show} onClose={onClose}>
+        <MDBModalDialog centered>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Blog Details</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={onClose}
+              ></MDBBtn>
+            </MDBModalHeader>
+            <MDBModalBody>
+              {isEditing ? (
+                <>
                   <MDBInput
                     className="mb-3"
-                    label="Tags"
-                    id="tagInput"
-                    type="text"
-                    onKeyDown={handleTagKeyDown}
+                    label="Title"
+                    name="title"
+                    value={editBlog.title}
+                    onChange={handleInputChange}
                   />
-                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                    {editBlog.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        style={{
-                          background: "#007bff",
-                          color: "#fff",
-                          padding: "5px 10px",
-                          borderRadius: "15px",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => removeTag(index)}
-                      >
-                        {tag} ✖
+                  <div>
+                    <MDBInput
+                      className="mb-3"
+                      label="Tags"
+                      id="tagInput"
+                      type="text"
+                      onKeyDown={handleTagKeyDown}
+                    />
+                    <div
+                      style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}
+                    >
+                      {editBlog.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          style={{
+                            background: "#007bff",
+                            color: "#fff",
+                            padding: "5px 10px",
+                            borderRadius: "15px",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => removeTag(index)}
+                        >
+                          {tag} ✖
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <MDBTextArea
+                    label="Content"
+                    rows="4"
+                    name="content"
+                    value={editBlog.content}
+                    onChange={handleInputChange}
+                  />
+                </>
+              ) : (
+                <>
+                  <h5>{blog?.title}</h5>
+                  <p>{blog?.content}</p>
+                  <div>
+                    <strong>Tags:</strong>{" "}
+                    {blog?.tags.map((tag, index) => (
+                      <span key={index} className="badge bg-primary mx-1">
+                        {tag}
                       </span>
                     ))}
                   </div>
-                </div>
-                <MDBTextArea
-                  label="Content"
-                  rows="4"
-                  name="content"
-                  value={editBlog.content}
-                  onChange={handleInputChange}
-                />
-              </>
-            ) : (
-              <>
-                <h5>{blog?.title}</h5>
-                <p>{blog?.content}</p>
-                <div>
-                  <strong>Tags:</strong>{" "}
-                  {blog?.tags.map((tag, index) => (
-                    <span key={index} className="badge bg-primary mx-1">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <p>
-                  <strong>Status:</strong> {blog?.status}
-                </p>
-              </>
-            )}
-          </MDBModalBody>
-          <MDBModalFooter>
-            {isEditing ? (
-              <>
-                <MDBBtn color="secondary" onClick={() => setIsEditing(false)}>
-                  Cancel
-                </MDBBtn>
-                <MDBBtn color="primary" onClick={handleEditBlog} disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save"}
-                </MDBBtn>
-              </>
-            ) : (
-              <>
-                {/* Approve and Reject buttons for STAFF */}
-                {role === "STAFF" && blog?.status === "pending" && (
-                  <>
-                    <MDBBtn color="success" onClick={handleApprove} disabled={isLoading}>
-                      Approve
-                    </MDBBtn>
-                    <MDBBtn color="warning" onClick={handleReject} disabled={isLoading}>
-                      Reject
-                    </MDBBtn>
-                  </>
-                )}
+                  <p>
+                    <strong>Status:</strong> {blog?.status}
+                  </p>
+                </>
+              )}
+            </MDBModalBody>
+            <MDBModalFooter>
+              {isEditing ? (
+                <>
+                  <MDBBtn color="secondary" onClick={() => setIsEditing(false)}>
+                    Cancel
+                  </MDBBtn>
+                  <MDBBtn
+                    color="primary"
+                    onClick={handleEditBlog}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save"}
+                  </MDBBtn>
+                </>
+              ) : (
+                <>
+                  {/* Approve and Reject buttons for STAFF */}
+                  {role === "STAFF" && blog?.status === "pending" && (
+                    <>
+                      <MDBBtn
+                        color="success"
+                        onClick={handleApprove}
+                        disabled={isLoading}
+                      >
+                        Approve
+                      </MDBBtn>
+                      <MDBBtn
+                        color="warning"
+                        onClick={handleReject}
+                        disabled={isLoading}
+                      >
+                        Reject
+                      </MDBBtn>
+                    </>
+                  )}
 
-                {/* Edit and Delete buttons for blog owner */}
-                {blog?.author_id._id === userId && (
-                  <>
-                    <MDBBtn color="info" onClick={() => setIsEditing(true)}>
-                      Edit
-                    </MDBBtn>
-                    <MDBBtn color="danger" onClick={handleDeleteBlog} disabled={isLoading}>
-                      {isLoading ? "Deleting..." : "Delete"}
-                    </MDBBtn>
-                  </>
-                )}
+                  {/* Edit and Delete buttons for blog owner */}
+                  {blog?.author_id._id === userId && (
+                    <>
+                      <MDBBtn color="info" onClick={() => setIsEditing(true)}>
+                        Edit
+                      </MDBBtn>
+                      <MDBBtn
+                        color="danger"
+                        onClick={() => setModalDeleteBlog(true)}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Deleting..." : "Delete"}
+                      </MDBBtn>
+                    </>
+                  )}
 
-                <MDBBtn color="secondary" onClick={onClose}>
-                  Close
-                </MDBBtn>
-              </>
-            )}
-          </MDBModalFooter>
-        </MDBModalContent>
-      </MDBModalDialog>
-    </MDBModal>
+                  <MDBBtn color="secondary" onClick={onClose}>
+                    Close
+                  </MDBBtn>
+                </>
+              )}
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+      <DeleteBlog
+        accessToken={accessToken}
+        blog={blog}
+        show={modalDeleteBlog}
+        onClose={() => setModalDeleteBlog(false)}
+        fetchBlogs={fetchBlogs}
+      />
+    </>
   );
 };
 export const EditBlog = (props) => {
@@ -969,13 +991,9 @@ export const EditBlog = (props) => {
       setLoading(true);
 
       // API call to update the blog
-      const response = await axios.put(
-        `/blogs/${editBlog._id}`,
-        updatedBlog,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const response = await axios.put(`/blogs/${editBlog._id}`, updatedBlog, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
       if (response.status === 200) {
         toast.success("Blog has been updated successfully.");
@@ -1080,11 +1098,7 @@ export const EditBlog = (props) => {
               Close
             </MDBBtn>
             <MDBBtn onClick={handleUpdateBlog} disabled={isLoading}>
-              {isLoading ? (
-                <ClipLoader color="#ffffff" size={15} />
-              ) : (
-                "Update"
-              )}
+              {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Update"}
             </MDBBtn>
           </MDBModalFooter>
         </MDBModalContent>
@@ -1126,6 +1140,17 @@ export const NewEvent = (props) => {
   };
 
   const handleCreateMeeting = async () => {
+    if (
+      !newMeeting.organizer_id ||
+      newMeeting.participant_ids.length === 0 ||
+      !newMeeting.date ||
+      !newMeeting.start_time ||
+      !newMeeting.end_time ||
+      !newMeeting.type
+    ) {
+      toast.error("Please fill in all the required fields!");
+      return;
+    }
     try {
       const response = await axios.post("/meetings/create", newMeeting, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -1133,7 +1158,7 @@ export const NewEvent = (props) => {
       setEvents([...events, response.data.meeting]);
       onClose();
     } catch (error) {
-      console.error("Error creating meeting:", error);
+      toast.error("Error creating meeting:", error);
     }
   };
 
@@ -1143,47 +1168,64 @@ export const NewEvent = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Create New Meeting</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={onClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={onClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
             <MDBInput
               label="Date"
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={newMeeting.date}
-              onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
+              onChange={(e) =>
+                setNewMeeting({ ...newMeeting, date: e.target.value })
+              }
             />
             <MDBInput
               label="Start Time"
               className="my-3"
               type="time"
               value={newMeeting.start_time}
-              onChange={(e) => setNewMeeting({ ...newMeeting, start_time: e.target.value })}
+              onChange={(e) =>
+                setNewMeeting({ ...newMeeting, start_time: e.target.value })
+              }
             />
             <MDBInput
               label="End Time"
               className="my-3"
               type="time"
               value={newMeeting.end_time}
-              onChange={(e) => setNewMeeting({ ...newMeeting, end_time: e.target.value })}
+              onChange={(e) =>
+                setNewMeeting({ ...newMeeting, end_time: e.target.value })
+              }
             />
             <MDBInput
               label="Type"
               className="my-3"
               type="text"
               value={newMeeting.type}
-              onChange={(e) => setNewMeeting({ ...newMeeting, type: e.target.value })}
+              onChange={(e) =>
+                setNewMeeting({ ...newMeeting, type: e.target.value })
+              }
             />
             <MDBInput
               label="Note"
               className="my-3"
               type="text"
               value={newMeeting.note}
-              onChange={(e) => setNewMeeting({ ...newMeeting, note: e.target.value })}
+              onChange={(e) =>
+                setNewMeeting({ ...newMeeting, note: e.target.value })
+              }
             />
 
             {/* Chọn Tutor (Organize) */}
             <div className="form-group">
-              <label><strong>Select Organizer (Tutor)</strong></label>
+              <label>
+                <strong>Select Organizer (Tutor)</strong>
+              </label>
               {tutors.map((tutor) => (
                 <div key={tutor._id} className="form-check">
                   <input
@@ -1194,7 +1236,10 @@ export const NewEvent = (props) => {
                     checked={newMeeting.organizer_id === tutor._id}
                     onChange={() => handleTutorSelection(tutor._id)}
                   />
-                  <label className="form-check-label" htmlFor={`tutor-${tutor._id}`}>
+                  <label
+                    className="form-check-label"
+                    htmlFor={`tutor-${tutor._id}`}
+                  >
                     {tutor.username}
                   </label>
                 </div>
@@ -1203,7 +1248,9 @@ export const NewEvent = (props) => {
 
             {/* Chọn Students (Participants) */}
             <div className="form-group mt-3">
-              <label><strong>Select Participants (Students)</strong></label>
+              <label>
+                <strong>Select Participants (Students)</strong>
+              </label>
               {students.map((student) => (
                 <div key={student._id} className="form-check">
                   <input
@@ -1213,7 +1260,10 @@ export const NewEvent = (props) => {
                     checked={newMeeting.participant_ids.includes(student._id)}
                     onChange={() => handleStudentSelection(student._id)}
                   />
-                  <label className="form-check-label" htmlFor={`student-${student._id}`}>
+                  <label
+                    className="form-check-label"
+                    htmlFor={`student-${student._id}`}
+                  >
                     {student.username}
                   </label>
                 </div>
@@ -1252,7 +1302,11 @@ export const DeleteEvent = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Delete Meeting</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={onClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={onClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalFooter>
             <MDBBtn color="secondary" onClick={onClose}>
@@ -1269,7 +1323,15 @@ export const DeleteEvent = (props) => {
 };
 
 export const UpdateEvent = (props) => {
-  const { accessToken, events, setEvents, eventUpdate, students, tutors, onClose } = props;
+  const {
+    accessToken,
+    events,
+    setEvents,
+    eventUpdate,
+    students,
+    tutors,
+    onClose,
+  } = props;
 
   const [updatedMeeting, setUpdatedMeeting] = useState({
     ...eventUpdate, // Dữ liệu mặc định từ event cần update
@@ -1295,9 +1357,13 @@ export const UpdateEvent = (props) => {
 
   const handleUpdateMeeting = async () => {
     try {
-      const response = await axios.put(`/meetings/${updatedMeeting._id}`, updatedMeeting, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const response = await axios.put(
+        `/meetings/${updatedMeeting._id}`,
+        updatedMeeting,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
 
       setEvents(
         events.map((event) =>
@@ -1317,47 +1383,69 @@ export const UpdateEvent = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Update Meeting</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={onClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={onClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
             <MDBInput
               label="Date"
               type="date"
               value={updatedMeeting.date}
-              onChange={(e) => setUpdatedMeeting({ ...updatedMeeting, date: e.target.value })}
+              onChange={(e) =>
+                setUpdatedMeeting({ ...updatedMeeting, date: e.target.value })
+              }
             />
             <MDBInput
               label="Start Time"
               className="my-3"
               type="time"
               value={updatedMeeting.start_time}
-              onChange={(e) => setUpdatedMeeting({ ...updatedMeeting, start_time: e.target.value })}
+              onChange={(e) =>
+                setUpdatedMeeting({
+                  ...updatedMeeting,
+                  start_time: e.target.value,
+                })
+              }
             />
             <MDBInput
               label="End Time"
               className="my-3"
               type="time"
               value={updatedMeeting.end_time}
-              onChange={(e) => setUpdatedMeeting({ ...updatedMeeting, end_time: e.target.value })}
+              onChange={(e) =>
+                setUpdatedMeeting({
+                  ...updatedMeeting,
+                  end_time: e.target.value,
+                })
+              }
             />
             <MDBInput
               label="Type"
               className="my-3"
               type="text"
               value={updatedMeeting.type}
-              onChange={(e) => setUpdatedMeeting({ ...updatedMeeting, type: e.target.value })}
+              onChange={(e) =>
+                setUpdatedMeeting({ ...updatedMeeting, type: e.target.value })
+              }
             />
             <MDBInput
               label="Note"
               className="my-3"
               type="text"
               value={updatedMeeting.note}
-              onChange={(e) => setUpdatedMeeting({ ...updatedMeeting, note: e.target.value })}
+              onChange={(e) =>
+                setUpdatedMeeting({ ...updatedMeeting, note: e.target.value })
+              }
             />
 
             {/* Chọn Tutor (Organizer) */}
             <div className="form-group">
-              <label><strong>Select Organizer (Tutor)</strong></label>
+              <label>
+                <strong>Select Organizer (Tutor)</strong>
+              </label>
               {tutors.map((tutor) => (
                 <div key={tutor._id} className="form-check">
                   <input
@@ -1368,7 +1456,10 @@ export const UpdateEvent = (props) => {
                     checked={updatedMeeting.organizer_id === tutor._id}
                     onChange={() => handleTutorSelection(tutor._id)}
                   />
-                  <label className="form-check-label" htmlFor={`tutor-${tutor._id}`}>
+                  <label
+                    className="form-check-label"
+                    htmlFor={`tutor-${tutor._id}`}
+                  >
                     {tutor.username}
                   </label>
                 </div>
@@ -1377,17 +1468,24 @@ export const UpdateEvent = (props) => {
 
             {/* Chọn Students (Participants) */}
             <div className="form-group mt-3">
-              <label><strong>Select Participants (Students)</strong></label>
+              <label>
+                <strong>Select Participants (Students)</strong>
+              </label>
               {students.map((student) => (
                 <div key={student._id} className="form-check">
                   <input
                     type="checkbox"
                     className="form-check-input"
                     id={`student-${student._id}`}
-                    checked={updatedMeeting.participant_ids.includes(student._id)}
+                    checked={updatedMeeting.participant_ids.includes(
+                      student._id
+                    )}
                     onChange={() => handleStudentSelection(student._id)}
                   />
-                  <label className="form-check-label" htmlFor={`student-${student._id}`}>
+                  <label
+                    className="form-check-label"
+                    htmlFor={`student-${student._id}`}
+                  >
                     {student.username}
                   </label>
                 </div>
@@ -1585,7 +1683,13 @@ export const UploadAssignment = (props) => {
 };
 export const DeleteAssignment = (props) => {
   const [isLoading, setLoading] = useState(false);
-  const { accessToken, documentId, fetchDocuments, selectedFolder, documentFilePath } = props;
+  const {
+    accessToken,
+    documentId,
+    fetchDocuments,
+    selectedFolder,
+    documentFilePath,
+  } = props;
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
@@ -1905,7 +2009,11 @@ export const NewFolder = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Create New Folder</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={handleClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
             <MDBInput

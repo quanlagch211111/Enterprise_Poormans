@@ -45,8 +45,12 @@ export const Blog = () => {
       const response = await axios.get("/blogs", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const publishedBlogs = response.data.filter((blog) => blog.status === "published");
-      const myBlogs = response.data.filter((blog) => blog.author_id._id === userId);
+      const publishedBlogs = response.data.filter(
+        (blog) => blog.status === "published"
+      );
+      const myBlogs = response.data.filter(
+        (blog) => blog.author_id._id === userId
+      );
       setBlogs(publishedBlogs);
       setMyBlogs(myBlogs);
     } catch (error) {
@@ -99,7 +103,9 @@ export const Blog = () => {
                 </button>
               )}
               <span
-                className={"doc-tabs " + (!isAllBlogs && !isPendingBlogs ? "active" : "")}
+                className={
+                  "doc-tabs " + (!isAllBlogs && !isPendingBlogs ? "active" : "")
+                }
                 onClick={() => {
                   setAllBlogs(false);
                   setPendingBlogs(false);
@@ -131,69 +137,73 @@ export const Blog = () => {
           </div>
 
           <div className="blog-grid">
-            {(isAllBlogs
-              ? blogs
-              : isPendingBlogs
-              ? pendingBlogs
-              : myBlogs
-            ).map((blog) => (
-              <article key={blog._id} className="blog-card">
-                <div className="blog-image">
-                  <img src="https://via.placeholder.com/150" alt="" />
-                </div>
-                <div className="blog-content">
-                  <div className="blog-tags">
-                    {blog.tags.map((tag, index) => (
-                      <span key={index} className="blog-tag">
-                        {tag}
+            {(isAllBlogs ? blogs : isPendingBlogs ? pendingBlogs : myBlogs).map(
+              (blog) => (
+                <article key={blog._id} className="blog-card">
+                  <div className="blog-image">
+                    <img src="https://via.placeholder.com/150" alt="" />
+                  </div>
+                  <div className="blog-content">
+                    <div className="blog-tags">
+                      {blog.tags.map((tag, index) => (
+                        <span key={index} className="blog-tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h4 className="blog-title">{blog.title}</h4>
+                    <p className="blog-excerpt">
+                      {blog.content.substring(0, 100)}...
+                    </p>
+                    <div className="blog-meta">
+                      <span className="blog-author">
+                        Author: {blog.author_id?.username || "Unknown"}
                       </span>
-                    ))}
+                      <span className="blog-date">
+                        Date: {new Date(blog.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="blog-status">
+                        Status: <strong>{blog.status}</strong>
+                      </span>
+                    </div>
+                    <div className="blog-actions">
+                      <MDBBtn
+                        color="primary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedBlog(blog);
+                          setModalDetailBlog(true);
+                        }}
+                      >
+                        View Detail
+                      </MDBBtn>
+                    </div>
                   </div>
-                  <h4 className="blog-title">{blog.title}</h4>
-                  <p className="blog-excerpt">{blog.content.substring(0, 100)}...</p>
-                  <div className="blog-meta">
-                    <span className="blog-author">
-                      Author: {blog.author_id?.username || "Unknown"}
-                    </span>
-                    <span className="blog-date">
-                      Date: {new Date(blog.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="blog-status">
-                      Status: <strong>{blog.status}</strong>
-                    </span>
-                  </div>
-                  <div className="blog-actions">
-                    <MDBBtn
-                      color="primary"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBlog(blog);
-                        setModalDetailBlog(true);
-                      }}
-                    >
-                      View Detail
-                    </MDBBtn>
-                  </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              )
+            )}
           </div>
         </div>
       </div>
 
       <NewBlog
+        fetchBlog={fetchBlogs}
+        fetchPendingBlogs={fetchPendingBlogs}
         show={newModalBlog}
         onClose={() => setNewModalBlog(false)}
         accessToken={accessToken}
       />
       <DetailBlog
+        fetchBlog={fetchBlogs}
         show={modalDetailBlog}
         onClose={() => setModalDetailBlog(false)}
         blog={selectedBlog}
         accessToken={accessToken}
         onUpdate={(updatedBlog) => {
           setMyBlogs((prev) =>
-            prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
+            prev.map((blog) =>
+              blog._id === updatedBlog._id ? updatedBlog : blog
+            )
           );
         }}
       />

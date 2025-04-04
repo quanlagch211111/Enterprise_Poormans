@@ -96,9 +96,8 @@ export const Document = () => {
     try {
       const response = await axios.get(`/users/detailuser/${ownerId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
-
       });
-      return response.data.data.username;
+      return response.data.data?.username;
     } catch (error) {
       console.error("Error fetching username:", error);
       return "Unknown User"; // Trả về giá trị mặc định nếu lỗi
@@ -123,7 +122,9 @@ export const Document = () => {
         (doc) => doc.owner_id === selectedAssignment?.tutor_id?._id
       );
       const studentDocuments = allDocuments.filter((doc) =>
-        selectedAssignment?.student_id.some((student) => student._id === doc.owner_id)
+        selectedAssignment?.student_id.some(
+          (student) => student._id === doc.owner_id
+        )
       );
 
       setDocuments({ tutorDocuments, studentDocuments });
@@ -157,8 +158,9 @@ export const Document = () => {
         assignments.map((assignment) => (
           <span
             key={assignment._id}
-            className={`class-name ${selectedAssignment?._id === assignment._id ? "active" : ""
-              }`}
+            className={`class-name ${
+              selectedAssignment?._id === assignment._id ? "active" : ""
+            }`}
             onClick={() => {
               setSelectedAssignment(assignment);
               setSelectedFolder(null);
@@ -341,7 +343,9 @@ export const Document = () => {
                 <div className="wrapper">
                   {studentDocuments.length > 0 ? (
                     studentDocuments
-                      .filter((doc) => doc.owner_id === localStorage.getItem("userId")) // Lọc tài liệu của sinh viên đã nộp
+                      .filter(
+                        (doc) => doc.owner_id === localStorage.getItem("userId")
+                      ) // Lọc tài liệu của sinh viên đã nộp
                       .map((doc) => (
                         <div
                           key={doc._id}
@@ -369,7 +373,9 @@ export const Document = () => {
                         </div>
                       ))
                   ) : (
-                    <p className="text-muted">No assignments have been uploaded yet.</p>
+                    <p className="text-muted">
+                      No assignments have been uploaded yet.
+                    </p>
                   )}
                 </div>
                 <div className="d-flex justify-content-center w-100">
@@ -409,7 +415,7 @@ export const Document = () => {
                           </div>
                           <div className="assignment-meta d-flex flex-row gap-2">
                             <span className="assignment-size small text-muted">
-                              Submitted by: {doc.username || "Unknown User"}
+                              Submitted by: {doc?.username || "Unknown User"}
                             </span>
                           </div>
                         </div>

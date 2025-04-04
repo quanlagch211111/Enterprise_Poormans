@@ -25,7 +25,8 @@ setOptions({
 export const Schedule = () => {
   const socket = useSocket(); // Ensure socket is initialized correctly
   const navigate = useNavigate(); // Ensure useNavigate is called before usage
-  const role = localStorage.getItem("role");
+  // const role = localStorage.getItem("role");
+  const role = "TUTOR";
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId").toString();
   const [users, setUsers] = useState([]);
@@ -39,9 +40,8 @@ export const Schedule = () => {
   const toggleVisibility = () => setVisibility(!isVisibility);
   const [email, setEmail] = useState();
   const [room, setRoom] = useState();
-  // const {username, setUsername} = useState(); 
+  // const {username, setUsername} = useState();
   // const {roomId, SetRoomId} = useState();
-
 
   useEffect(() => {
     if (!accessToken) {
@@ -57,14 +57,20 @@ export const Schedule = () => {
         const formattedEvents = response.data.meetings.map((meeting) => ({
           id: meeting._id,
           title: meeting.title || "Event",
-          start: new Date(`${meeting.date.split("T")[0]}T${meeting.start_time}`),
+          start: new Date(
+            `${meeting.date.split("T")[0]}T${meeting.start_time}`
+          ),
           end: new Date(`${meeting.date.split("T")[0]}T${meeting.end_time}`),
           note: meeting.note,
           type: meeting.type,
           organizer_id: meeting.organizer_id._id,
           organizer_username: meeting.organizer_id.username,
-          participant_ids: meeting.participant_ids.map((participant) => participant._id),
-          participant_usernames: meeting.participant_ids.map((participant) => participant.username),
+          participant_ids: meeting.participant_ids.map(
+            (participant) => participant._id
+          ),
+          participant_usernames: meeting.participant_ids.map(
+            (participant) => participant.username
+          ),
           room_id: meeting.room_id,
           status: meeting.status,
         }));
@@ -99,7 +105,6 @@ export const Schedule = () => {
 
     fetchUsersWithRoles();
     fetchMeetings();
-
   }, [accessToken, navigate]);
 
   const timer = useRef(null);
@@ -117,7 +122,6 @@ export const Schedule = () => {
       status: "",
       note: "",
       color: "",
-
     },
   ]);
 
@@ -143,11 +147,11 @@ export const Schedule = () => {
   const myView = useMemo(
     () => ({
       calendar: {
-        type: 'month',
+        type: "month",
         labels: true,
         popover: true,
-        count: true
-      }
+        count: true,
+      },
     }),
     []
   );
@@ -159,9 +163,9 @@ export const Schedule = () => {
       id: event.id,
       title: event.title,
       date: event.start.toLocaleDateString([], {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
       }),
       room_id: event.room_id,
       note: event.note,
@@ -171,12 +175,12 @@ export const Schedule = () => {
       participant_ids: event.participant_ids,
       participant_usernames: event.participant_usernames.join(", "), // Hiển thị username của participants
       start_time: event.start.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
       }),
       end_time: event.end.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
       }),
     });
 
@@ -196,14 +200,19 @@ export const Schedule = () => {
     setToastOpen(false);
   }, []);
 
-  const handleEventClick = useCallback((args) => {
-    if (args.event) {
-      openTooltip(args);
-    }
-  }, [openTooltip]);
+  const handleEventClick = useCallback(
+    (args) => {
+      if (args.event) {
+        openTooltip(args);
+      }
+    },
+    [openTooltip]
+  );
   const handleCellDoubleClick = useCallback((args) => {
-    setArgDoubleClick(args);
-    setModelShowNewEvent(true);
+    if (role == "TUTOR") {
+      setArgDoubleClick(args);
+      setModelShowNewEvent(true);
+    }
   }, []);
 
   const handleTooltipClose = useCallback(() => {
@@ -312,22 +321,31 @@ export const Schedule = () => {
           </div>
           <div className="mbsc-padding">
             <div className="mds-tooltip-label mbsc-margin">
-              Teacher: <span className="mbsc-light">{detailTooltip.organizer_username}</span>
+              Teacher:{" "}
+              <span className="mbsc-light">
+                {detailTooltip.organizer_username}
+              </span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Students: <span className="mbsc-light">{detailTooltip.participant_usernames}</span>
+              Students:{" "}
+              <span className="mbsc-light">
+                {detailTooltip.participant_usernames}
+              </span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
               Date: <span className="mbsc-light">{detailTooltip.date}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              Start Time: <span className="mbsc-light">{detailTooltip.start_time}</span>
+              Start Time:{" "}
+              <span className="mbsc-light">{detailTooltip.start_time}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              End Time: <span className="mbsc-light">{detailTooltip.end_time}</span>
+              End Time:{" "}
+              <span className="mbsc-light">{detailTooltip.end_time}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
-              RoomID: <span className="mbsc-light">{detailTooltip.room_id}</span>
+              RoomID:{" "}
+              <span className="mbsc-light">{detailTooltip.room_id}</span>
             </div>
             <div className="mds-tooltip-label mbsc-margin">
               Type: <span className="mbsc-light">{detailTooltip.type}</span>
@@ -337,10 +355,7 @@ export const Schedule = () => {
             </div>
 
             <div className="action d-flex justify-content-center">
-              <MDBBtn
-                className="me-1"
-                color="danger"
-              >
+              <MDBBtn className="me-1" color="danger">
                 Join Meeting
               </MDBBtn>
             </div>

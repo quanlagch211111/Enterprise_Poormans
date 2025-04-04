@@ -25,34 +25,35 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
+import Chart from "react-apexcharts";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { RoleContext } from "../../services/RoleContext";
 import axios from "../../services/AxiosCustom";
 import { MDBInput, MDBModalBody, MDBBtn } from "mdb-react-ui-kit";
+import DashboardCharts from "../../components/DashboardChart";
 const localizer = momentLocalizer(moment);
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  // const role = "STUDENT";
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
   const [users, setUsers] = useState([]);
   const [studentCount, setStudentCount] = useState();
   const [tutorCount, setTutorCount] = useState();
-  const [userLists, setUserLists] = useState([]);
   const [blogList, setBlogList] = useState([]);
   const [pendingBlogs, setPendingBlogs] = useState([]);
   const [documentListCount, setDocumentList] = useState([]);
   const [notiform, setNotiform] = useState({
     user_id: [],
     from: "",
-    message: ""
+    message: "",
   });
-  const userList = users.map(user => user._id);
-
+  const userList = users.map((user) => user._id);
 
   useEffect(() => {
     if (!accessToken) {
@@ -84,10 +85,12 @@ export const Dashboard = () => {
         });
         setUsers(response.data);
         console.log("Users with roles:", response.data);
-        const studentCount = users.filter(user => user.role === "Student").length;
+        const studentCount = users.filter(
+          (user) => user.role === "Student"
+        ).length;
         setStudentCount(studentCount);
         console.log("Student Count:", studentCount);
-        const tutorCount = users.filter(user => user.role === "Tutor").length;
+        const tutorCount = users.filter((user) => user.role === "Tutor").length;
         setTutorCount(tutorCount);
         console.log("Tutor Count:", tutorCount);
       } catch (error) {
@@ -102,7 +105,9 @@ export const Dashboard = () => {
         });
         setBlogList(response.data);
         console.log("Blogs:", response.data);
-        const pendingBlogs = response.data.filter(blog => blog.status === "pending").length;
+        const pendingBlogs = response.data.filter(
+          (blog) => blog.status === "pending"
+        ).length;
         setPendingBlogs(pendingBlogs);
         console.log("Pending Blogs:", pendingBlogs);
       } catch (error) {
@@ -127,7 +132,6 @@ export const Dashboard = () => {
       fetchUsersWithRoles();
       fetchPendingBlogs();
       fetchDocumentList();
-
     }
   }, [userId, accessToken, navigate]);
 
@@ -139,23 +143,30 @@ export const Dashboard = () => {
         message: notiform.message,
       });
 
-      const response = await axios.post("/notifications", {
-        user_id: userList,
-        from: userId,
-        message: notiform.message,
-      }, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const response = await axios.post(
+        "/notifications",
+        {
+          user_id: userList,
+          from: userId,
+          message: notiform.message,
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
 
       console.log("Notification sent:", response.data);
 
       setNotiform({
         user_id: [],
         from: "",
-        message: ""
+        message: "",
       });
     } catch (error) {
-      console.error("Error sending notification:", error.response ? error.response.data : error.message);
+      console.error(
+        "Error sending notification:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
   // Show a loading spinner or message until userInfo is fetched
@@ -259,13 +270,20 @@ export const Dashboard = () => {
     ],
   };
 
+  // chart of staff?
+  const newStudentData = [5, 3, 8, 2, 4, 6, 7]; // New students per day for the last 7 days
+  const newTutorData = [2, 4, 3, 5, 2, 3, 4]; // New tutors per day for the last 7 days
+  const unassignedStudentData = [1, 2, 1, 3, 2, 1, 4]; // Unassigned students per day
+  const unassignedTutorData = [0, 1, 0, 2, 1, 1, 0]; // Unassigned tutors per day
+  const totalMessagesData = [10, 20, 15, 30, 40, 50, 60]; // Total messages per day for the last 7 days
+
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
   return (
     <>
-      {role === "TUTOR" && (
-        <div className="main-content">
-          <Container fluid>
+      {role === "STUDENT" && (
+        <Container fluid>
+          <div className="main-content">
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
@@ -309,158 +327,11 @@ export const Dashboard = () => {
                   </Card>
                 </Col>
               </Row>
-
-              {/* Charts Section */}
-              <Row className="mb-4">
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Tần suất tương tác</Card.Title>
-                      <BarChart
-                        width={500}
-                        height={300}
-                        data={interactionData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="value" fill="#8884d8" />
-                      </BarChart>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Phân loại tương tác</Card.Title>
-                      <PieChart width={500} height={300}>
-                        <Pie
-                          data={interactionData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          fill="#8884d8"
-                          label
-                        >
-                          {interactionData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* Students List */}
-              <Row className="mb-4">
-                <Col md={6}>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Danh sách sinh viên</Card.Title>
-                      <Table striped hover>
-                        <thead>
-                          <tr>
-                            <th>Tên</th>
-                            <th>Trạng thái</th>
-                            <th>Lần tương tác cuối</th>
-                            <th>Hành động</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {studentData.map((student) => (
-                            <tr
-                              key={student.id}
-                              className={
-                                student.status === "inactive"
-                                  ? "table-warning"
-                                  : ""
-                              }
-                            >
-                              <td>{student.name}</td>
-                              <td>{student.status}</td>
-                              <td>{student.lastInteraction}</td>
-                              <td>
-                                <Button variant="outline-primary" size="sm">
-                                  Chi tiết
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                {/* blog management */}
-                <Col md={6}>
-                  <Card>
-                    <Col>
-                      <Card className="h-100">
-                        <Card.Body>
-                          <Card.Title>Quản lý blog</Card.Title>
-                          <Table striped hover>
-                            <thead>
-                              <tr>
-                                <th>Tên Blog</th>
-                                <th>Trạng thái</th>
-                                <th>Ngày nộp</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {dashboardData.documentList.map((doc, index) => (
-                                <tr key={index}>
-                                  <td>{doc.name}</td>
-                                  <td>
-                                    <span
-                                      className={`badge ${doc.status === "Đã phê duyệt"
-                                        ? "bg-success"
-                                        : "bg-warning"
-                                        }`}
-                                    >
-                                      {doc.status}
-                                    </span>
-                                  </td>
-                                  <td>{doc.date}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* Calendar Section */}
-              <Card>
-                <Card.Body>
-                  <Card.Title>Lịch hẹn</Card.Title>
-                  <Calendar
-                    localizer={localizer}
-                    events={appointmentData}
-                    startAccessor="start"
-                    endAccessor="end"
-                    style={{ height: 500 }}
-                  />
-                </Card.Body>
-              </Card>
             </Col>
-          </Container>
-        </div>
+          </div>
+        </Container>
       )}
-      {role === "STUDENT" && (
+      {role === "TUTOR" && (
         <div className="main-content">
           <Container fluid>
             <Col md={9} lg={10} className="p-4 w-100">
@@ -592,10 +463,11 @@ export const Dashboard = () => {
                               <td>{doc.name}</td>
                               <td>
                                 <span
-                                  className={`badge ${doc.status === "Đã phê duyệt"
-                                    ? "bg-success"
-                                    : "bg-warning"
-                                    }`}
+                                  className={`badge ${
+                                    doc.status === "Đã phê duyệt"
+                                      ? "bg-success"
+                                      : "bg-warning"
+                                  }`}
                                 >
                                   {doc.status}
                                 </span>
@@ -630,8 +502,8 @@ export const Dashboard = () => {
         </div>
       )}
       {role === "STAFF" && (
-        <div className="main-content">
-          <Container fluid>
+        <Container fluid>
+          <div className="main-content">
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
@@ -639,10 +511,9 @@ export const Dashboard = () => {
                   <p className="text-muted">Có 3 thông báo mới</p>
                 </Col>
               </Row>
-
               {/* Overview Cards */}
               <Row className="mb-4">
-                <Col md={3}>
+                <Col md={3} sm={6} className="mb-4">
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{studentCount}</Card.Title>
@@ -650,7 +521,7 @@ export const Dashboard = () => {
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={3} sm={6} className="mb-4">
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{tutorCount}</Card.Title>
@@ -658,7 +529,7 @@ export const Dashboard = () => {
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={3} sm={6} className="mb-4">
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{pendingBlogs}</Card.Title>
@@ -666,7 +537,7 @@ export const Dashboard = () => {
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={3} sm={6} className="mb-4">
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{documentListCount}</Card.Title>
@@ -674,6 +545,16 @@ export const Dashboard = () => {
                     </Card.Body>
                   </Card>
                 </Col>
+              </Row>
+              {/* Chart? */}
+              <Row className="mb-4">
+                <DashboardCharts
+                  newStudentData={newStudentData}
+                  newTutorData={newTutorData}
+                  unassignedStudentData={unassignedStudentData}
+                  unassignedTutorData={unassignedTutorData}
+                  totalMessagesData={totalMessagesData}
+                />
               </Row>
 
               {/* Quản Lý Tài Khoản */}
@@ -699,9 +580,7 @@ export const Dashboard = () => {
                               <td>
                                 <Badge
                                   bg={
-                                    user.status === true
-                                      ? "success"
-                                      : "warning"
+                                    user.status === true ? "success" : "warning"
                                   }
                                 >
                                   {user.status ? "verified" : "not verified"}
@@ -726,7 +605,7 @@ export const Dashboard = () => {
                   <Card>
                     <Card.Body>
                       <Card.Title>Quản Lý Blog</Card.Title>
-                      <Table striped hover>
+                      <Table responsive="sm" striped hover>
                         <thead>
                           <tr>
                             <th>Title</th>
@@ -746,17 +625,16 @@ export const Dashboard = () => {
                                     blog.status === "published"
                                       ? "success"
                                       : blog.status === "pending"
-                                        ? "warning"
-                                        : "danger"
+                                      ? "warning"
+                                      : "danger"
                                   }
                                 >
                                   {blog.status === "published"
                                     ? "Published"
                                     : blog.status === "pending"
-                                      ? "Pending"
-                                      : "Canceled"}
+                                    ? "Pending"
+                                    : "Canceled"}
                                 </Badge>
-
                               </td>
                               <td>
                                 <Button variant="outline-primary" size="sm">
@@ -772,30 +650,6 @@ export const Dashboard = () => {
                 </Col>
               </Row>
 
-              {/* Báo Cáo & Thống Kê */}
-              <Row className="mb-4">
-                <Col>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Báo Cáo & Thống Kê</Card.Title>
-                      <BarChart
-                        width={500}
-                        height={300}
-                        data={interactionData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="value" fill="#8884d8" />
-                      </BarChart>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
-
               {/* Hệ Thống Thông Báo */}
               <Row className="mb-4">
                 <Col>
@@ -809,10 +663,13 @@ export const Dashboard = () => {
                           type="text"
                           value={notiform.message}
                           onChange={(e) =>
-                            setNotiform({ ...notiform, message: e.target.value })
+                            setNotiform({
+                              ...notiform,
+                              message: e.target.value,
+                            })
                           }
                         />
-                        <MDBBtn className="mt-3" onClick={SendNotification} >
+                        <MDBBtn className="mt-3" onClick={SendNotification}>
                           Send
                         </MDBBtn>
                       </MDBModalBody>
@@ -821,8 +678,8 @@ export const Dashboard = () => {
                 </Col>
               </Row>
             </Col>
-          </Container>
-        </div>
+          </div>
+        </Container>
       )}
     </>
   );

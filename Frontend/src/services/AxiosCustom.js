@@ -9,15 +9,22 @@ instance.interceptors.response.use(
   async (error) => {
     if (error.response && error.response.status === 401) {
       // Token hết hạn
-      const shouldExtend = window.confirm(
+      const shouldExtend = toast.info(
         "Your session has expired. Would you like to extend it?"
       );
 
       if (shouldExtend) {
         try {
-          const refreshResponse = await axios.post("users/token", {}, { withCredentials: true });
+          const refreshResponse = await axios.post(
+            "users/token",
+            {},
+            { withCredentials: true }
+          );
           if (refreshResponse.status === 200) {
-            localStorage.setItem("accessToken", refreshResponse.data.accessToken);
+            localStorage.setItem(
+              "accessToken",
+              refreshResponse.data.accessToken
+            );
             toast.success("Session extended successfully!");
             return instance.request(error.config); // Retry the original request
           }
