@@ -46,34 +46,70 @@ export const MeetingCall = () => {
   // Kết nối với peer mới
   const connectToNewUser = useCallback((peerId, localStream) => {
     if (!localStream || peers.current[peerId]) return;
-
+  
+    if (!peerService.current || !peerService.current.peer) {
+      console.error("PeerJS instance is not initialized.");
+      return;
+    }
+  
     const call = peerService.current.peer.call(peerId, localStream);
-    const video = document.createElement('video');
-
-    call.on('stream', userVideoStream => {
+    if (!call) {
+      console.error(`Failed to create a call with peerId: ${peerId}`);
+      return;
+    }
+    else {
+      console.log(`Calling peerId: ${peerId}`);
+    }
+  
+    const video = document.createElement("video");
+  
+    call.on("stream", (userVideoStream) => {
+      console.log(`Received stream from peerId: ${peerId}`);
       addVideoStream(video, userVideoStream);
     });
-
-    call.on('close', () => {
+  
+    call.on("close", () => {
+      console.log(`Call closed with peerId: ${peerId}`);
       video.remove();
       delete peers.current[peerId];
     });
-
+  
+    call.on("error", (error) => {
+      console.error(`Error in call with peerId: ${peerId}`, error);
+    });
+  
     peers.current[peerId] = call;
   }, [addVideoStream]);
 
   // Xử lý khi nhận call
   const setupCallAnswer = useCallback((localStream) => {
-    peerService.current.on('call', call => {
+    if (!peerService.current || !peerService.current.peer) {
+      console.error("PeerJS instance is not initialized.");
+      return;
+    }
+  
+    peerService.current.on("call", (call) => {
+      if (!call) {
+        console.error("Received an invalid call object.");
+        return;
+      }
+  
       call.answer(localStream);
-      const video = document.createElement('video');
-
-      call.on('stream', userVideoStream => {
+      console.log(`Answering call from peerId: ${call.peer}`);
+      const video = document.createElement("video");
+  
+      call.on("stream", (userVideoStream) => {
+        console.log(`Received stream from peerId: ${call.peer}`);
         addVideoStream(video, userVideoStream);
       });
-
-      call.on('close', () => {
+  
+      call.on("close", () => {
+        console.log(`Call closed with peerId: ${call.peer}`);
         video.remove();
+      });
+  
+      call.on("error", (error) => {
+        console.error(`Error in call with peerId: ${call.peer}`, error);
       });
     });
   }, [addVideoStream]);
@@ -107,61 +143,61 @@ export const MeetingCall = () => {
 
   // Thiết lập signaling và WebRTC
   useEffect(() => {
-    if (!accessToken) {
-      navigate("/login");
-      return;
-    }
-
+    console.log("Initializing PeerJS and Firebase Signaling...");
+    console.log("User ID:", userId);
+    console.log("Room ID:", roomId);
+  
     const initialize = async () => {
-      // Khởi tạo services
-      signaling.current = new FirebaseSignaling(roomId, userId);
-      await signaling.current.initialize(); // Wait for auth
-
-      peerService.current = new PeerService(userId);
-
-      const localStream = await initStream();
-      if (!localStream) return;
-
-      // Tham gia phòng
-      await signaling.current.joinRoom();
-
-      // Thiết lập nhận call
-      setupCallAnswer(localStream);
-
-      // Lắng nghe peer mới
-      signaling.current.onPeerJoined((peerId) => {
-        connectToNewUser(peerId, localStream);
-      });
-
-      // Xử lý signaling
-      peerService.current.on('signal', (data) => {
-        if (data.to) {
-          signaling.current.sendSignal(data.to, data);
+      try {
+        signaling.current = new FirebaseSignaling(roomId, userId);
+        await signaling.current.initialize();
+        console.log("Firebase signaling initialized.");
+  
+        peerService.current = new PeerService(userId);
+        console.log("PeerJS instance created.", peerService.current);
+  
+        const localStream = await initStream();
+        if (!localStream) {
+          console.error("Failed to initialize local stream.");
+          return;
         }
-      });
-
-      signaling.current.onSignalReceived((signal) => {
-        peerService.current.peer.signal(signal);
-      });
+  
+        await signaling.current.joinRoom();
+        console.log("Joined room:", roomId);
+  
+        setupCallAnswer(localStream);
+  
+        signaling.current.onPeerJoined((peerId) => {
+          console.log("New peer joined:", peerId);
+          connectToNewUser(peerId, localStream);
+        });
+  
+        signaling.current.onSignalReceived((signal) => {
+          console.log("Signal received:", signal);
+          peerService.current.peer.signal(signal);
+        });
+      } catch (error) {
+        console.error("Error during initialization:", error);
+      }
     };
-
+  
     initialize();
-
+  
     return () => {
-      // Dọn dẹp khi unmount
+      console.log("Cleaning up resources...");
       if (signaling.current) {
         signaling.current.cleanup();
         signaling.current.leaveRoom();
       }
-      
+  
       if (peerService.current) {
         peerService.current.destroy();
       }
-      
-      Object.values(peers.current).forEach(call => call.close());
-      
+  
+      Object.values(peers.current).forEach((call) => call.close());
+  
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, [accessToken, navigate, roomId, userId, initStream, setupCallAnswer, connectToNewUser]);
@@ -194,7 +230,6 @@ export const MeetingCall = () => {
         >
           <video 
             ref={myVideoRef} 
-            
             className="bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative transition-all"
             style={{
               width: `calc((100% / 4) - 16px)`,

@@ -10,14 +10,15 @@ class FirebaseSignaling {
     }
   
     async initialize() {
-      try {
-        await authenticate();
-        this.authenticated = true;
-      } catch (error) {
-        console.error("Authentication failed:", error);
-        throw error;
+        try {
+          await authenticate();
+          this.authenticated = true;
+          console.log("Firebase signaling initialized successfully.");
+        } catch (error) {
+          console.error("Firebase signaling initialization failed:", error);
+          throw error;
+        }
       }
-    }
   
     async joinRoom() {
       if (!this.authenticated) {
@@ -36,8 +37,9 @@ class FirebaseSignaling {
   onPeerJoined(callback) {
     this.peerListener = onValue(this.peersRef, (snapshot) => {
       const peers = snapshot.val() || {};
-      Object.keys(peers).forEach(peerId => {
+      Object.keys(peers).forEach((peerId) => {
         if (peerId !== this.userId) {
+          console.log(`Peer joined: ${peerId}`);
           callback(peerId);
         }
       });
@@ -50,12 +52,19 @@ class FirebaseSignaling {
       Object.keys(signals).forEach(signalId => {
         const signal = signals[signalId];
         if (signal.to === this.userId) {
-          callback(signal.data);
+          if (signal.data.type === "candidate") {
+            console.log("Received ICE candidate");
+            this.peer.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
+          } else {
+            console.log("Received SDP", signal.data);
+            callback(signal.data);
+          }
           set(ref(db, `rooms/${this.roomId}/signals/${signalId}`), null);
         }
       });
     });
   }
+  
 
   sendSignal(to, data) {
     const signalId = Date.now().toString();
