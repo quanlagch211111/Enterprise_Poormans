@@ -25,8 +25,8 @@ setOptions({
 export const Schedule = () => {
   const socket = useSocket(); // Ensure socket is initialized correctly
   const navigate = useNavigate(); // Ensure useNavigate is called before usage
-  // const role = localStorage.getItem("role");
-  const role = "TUTOR";
+  const role = localStorage.getItem("role");
+  console.log("Role:", role);
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId").toString();
   const [users, setUsers] = useState([]);
@@ -37,6 +37,7 @@ export const Schedule = () => {
   const [isVisibility, setVisibility] = useState(false);
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
+  const [assignments, setAssignments] = useState([]);
   const toggleVisibility = () => setVisibility(!isVisibility);
   const [email, setEmail] = useState();
   const [room, setRoom] = useState();
@@ -53,7 +54,7 @@ export const Schedule = () => {
         const response = await axios.get("/meetings", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-
+        console.log("Meetings:", response.data);
         const formattedEvents = response.data.meetings.map((meeting) => ({
           id: meeting._id,
           title: meeting.title || "Event",
@@ -74,36 +75,37 @@ export const Schedule = () => {
           room_id: meeting.room_id,
           status: meeting.status,
         }));
+        console.log("Formatted Events:", formattedEvents);
 
         const filteredEvents = formattedEvents.filter((event) => {
           if (role === "STAFF") {
-            return true; // Staff có thể xem tất cả sự kiện
+            return true;
           } else if (role === "TUTOR") {
-            return event.organizer_id === userId; // Tutor chỉ xem sự kiện do họ tổ chức
+            return event.organizer_id === userId; 
           } else if (role === "STUDENT") {
-            return event.participant_ids.includes(userId); // Student chỉ xem sự kiện mà họ tham gia
+            return event.participant_ids.includes(userId); 
           }
           return false;
         });
+        console.log("Fetched Events:", filteredEvents);
 
         setEvents(filteredEvents);
+
       } catch (error) {
         console.error("Error fetching meetings:", error);
       }
     };
-    const fetchUsersWithRoles = async () => {
+    const fetchAssignments = async () => {
       try {
-        const response = await axios.get("/users/getuserwithroles", {
+        const response = await axios.get("/assignments", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        setUsers(response.data);
-        console.log("Users with roles:", response.data);
+        setAssignments(response.data);
       } catch (error) {
-        console.error("Error fetching users with roles:", error);
+        console.error("Error fetching assignments:", error);
       }
     };
-
-    fetchUsersWithRoles();
+    fetchAssignments();
     fetchMeetings();
   }, [accessToken, navigate]);
 
@@ -209,7 +211,7 @@ export const Schedule = () => {
     [openTooltip]
   );
   const handleCellDoubleClick = useCallback((args) => {
-    if (role == "TUTOR") {
+    if (role == "STAFF") {
       setArgDoubleClick(args);
       setModelShowNewEvent(true);
     }
@@ -373,6 +375,7 @@ export const Schedule = () => {
         argDoubleClick={argDoubleClick}
         students={students}
         tutors={tutors}
+        assignments={assignments}
       />
       <UpdateEvent
         show={modalUpdateEvent}

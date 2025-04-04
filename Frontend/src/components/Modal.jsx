@@ -552,167 +552,9 @@ export const NewBlog = (props) => {
   );
 };
 
-export const DeleteBlog = (props) => {
-  const [isLoading, setLoading] = useState(false);
-  const { accessToken, blog, fetchBlogs } = props;
-  const handleClose = () => {
-    if (props.onClose) props.onClose();
-  };
-  const handleDeleteBlog = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`/blogs/${blog._id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      fetchBlogs();
-      toast.success("Blog deleted successfully.");
-      handleClose();
-    } catch (error) {
-      toast.error("Failed to delete blog.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  return (
-    <>
-      <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
-        <MDBModalDialog centered>
-          <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>Are you sure to delete this blog?</MDBModalTitle>
-              <MDBBtn
-                className="btn-close"
-                color="none"
-                onClick={handleClose}
-              ></MDBBtn>
-            </MDBModalHeader>
-            <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={handleClose}>
-                Close
-              </MDBBtn>
-              <MDBBtn
-                onClick={handleDeleteBlog}
-                color="danger"
-                disabled={isLoading}
-              >
-                {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
-              </MDBBtn>
-            </MDBModalFooter>
-          </MDBModalContent>
-        </MDBModalDialog>
-      </MDBModal>
-    </>
-  );
-};
-// export const DetailBlog = (props) => {
-//   const [isLoading, setLoading] = useState(false);
-//   const [isVisibility, setVisibility] = useState(false);
-//   const toggleVisibility = () => setVisibility(!isVisibility);
-//   const [modalDeleteBlog, setModalDeleteBlog] = useState(false);
-//   const [modalUpdateBlog, setModalUpdateBlog] = useState(false);
-//   const { accessToken } = props;
-//   const [data, setData] = useState({
-//     title: "Thằng Quân Nguuuuu",
-//     description: "Cực Ngu REAL.",
-//     createdAt: "25/03/2025",
-//     createdBy: "Tao Là Đức",
-//   });
-//   const handleClose = () => {
-//     if (props.onClose) props.onClose();
-//   };
-//   return (
-//     <>
-//       <MDBModal size="lg" tabIndex="-1" open={props.show} onClose={handleClose}>
-//         <MDBModalDialog centered size="lg">
-//           <MDBModalContent>
-//             <MDBModalHeader>
-//               <MDBModalTitle>{data.title}</MDBModalTitle>
-//               <MDBBtn
-//                 className="btn-close"
-//                 color="none"
-//                 onClick={handleClose}
-//               ></MDBBtn>
-//             </MDBModalHeader>
-//             <MDBModalBody>
-//               <div className="mb-2 d-flex justify-content-end">
-//                 <div className="dropdown ">
-//                   <div className="container-select d-flex justify-content-end">
-//                     <div
-//                       className="dropdown-select  d-flex align-items-center justify-content-center"
-//                       onClick={toggleVisibility}
-//                     >
-//                       <img src={require("../assets/images/more.png")} alt="" />
-//                     </div>
-//                   </div>
-//                   <ul
-//                     className={
-//                       "dropdown-list d-flex gap-2 flex-column " +
-//                       (isVisibility ? "active" : "")
-//                     }
-//                   >
-//                     <li
-//                       className="dropdown-item"
-//                       onClick={() => {
-//                         handleClose();
-//                         setModalDeleteBlog(true);
-//                       }}
-//                     >
-//                       Delete
-//                     </li>
-//                     <li
-//                       className="dropdown-item"
-//                       onClick={() => {
-//                         handleClose();
-//                         setModalUpdateBlog(true);
-//                       }}
-//                     >
-//                       Update
-//                     </li>
-//                   </ul>
-//                 </div>
-//               </div>
-//               <div className="blog-grid">
-//                 <article className="blog-card" onClick={handleClose}>
-//                   <div className="blog-image"></div>
-//                   <div className="blog-content">
-//                     <div className="blog-tags">
-//                       <span className="blog-tag">{data.createdAt}</span>
-//                       <span className="blog-tag">{data.createdBy}</span>
-//                     </div>
-//                     {/* <h4 className="blog-title">
-//                           </h4> */}
-//                     <p className="blog-excerpt">{data.description}</p>
-//                   </div>
-//                 </article>
-//               </div>
-//             </MDBModalBody>
-//             <MDBModalFooter>
-//               <MDBBtn color="secondary" onClick={handleClose}>
-//                 Close
-//               </MDBBtn>
-//             </MDBModalFooter>
-//           </MDBModalContent>
-//         </MDBModalDialog>
-//       </MDBModal>
-//       <EditBlog
-//         show={modalUpdateBlog}
-//         onClose={setModalUpdateBlog}
-//         blog={data}
-//         accessToken={accessToken}
-//       ></EditBlog>
-//       <DeleteBlog
-//         show={modalDeleteBlog}
-//         onClose={setModalDeleteBlog}
-//         blog={data}
-//         setBlog={setData}
-//         accessToken={accessToken}
-//       ></DeleteBlog>
-//     </>
-//   );
-// };
 
 export const DetailBlog = (props) => {
-  const { blog, accessToken, onClose, onUpdate, fetchBlogs } = props;
+  const { blog, accessToken, onClose, onUpdate,onDelete, fetchBlogs } = props;
   const [modalDeleteBlog, setModalDeleteBlog] = useState(false);
   const role = localStorage.getItem("role"); // Get the user's role
   const userId = localStorage.getItem("userId"); // Get the logged-in user's ID
@@ -738,15 +580,16 @@ export const DetailBlog = (props) => {
       const response = await axios.put(`/blogs/${blog._id}`, editBlog, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (response.status === 200) {
-        fetchBlogs(); // Fetch updated blogs
+      console.log(response);
+      if (response.status === 200 || response.status === 201) {
+        onUpdate(response.data.blog);
         toast.success("Blog updated successfully.");
-        onUpdate(response.data); // Notify parent component
         setIsEditing(false);
         onClose();
       }
     } catch (error) {
       toast.error("Failed to update blog.");
+      console.error("Error updating blog:", error);
     } finally {
       setLoading(false);
     }
@@ -781,15 +624,19 @@ export const DetailBlog = (props) => {
   const handleApprove = async () => {
     try {
       setLoading(true);
-      await axios.put(
+      const response = await axios.put(
         `/blogs/${blog._id}`,
         {
           status: "published",
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      toast.success("Blog approved successfully.");
-      onClose();
+      if (response.status === 200) {
+        onUpdate(response.data.blog);
+        toast.success("Blog approved successfully.");
+        onClose();
+      }
+      
     } catch (error) {
       toast.error("Failed to approve blog.");
     } finally {
@@ -800,21 +647,85 @@ export const DetailBlog = (props) => {
   const handleReject = async () => {
     try {
       setLoading(true);
-      await axios.put(
+
+      const response = await axios.put(
         `/blogs/${blog._id}/`,
         {
           status: "rejected",
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      fetchBlogs();
-      toast.success("Blog rejected successfully.");
-      onClose();
+      if (response.status === 200) {
+        console.log(response.data.blog);
+        onUpdate(response.data.blog);
+        toast.success("Blog rejected successfully.");
+        onClose();
+      }
+
+
     } catch (error) {
       toast.error("Failed to reject blog.");
+      console.error("Error rejecting blog:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const DeleteBlog = (props) => {
+    const [isLoading, setLoading] = useState(false);
+    const { accessToken, blog,  } = props;
+    const handleClose = () => {
+      if (props.onClose) props.onClose();
+    };
+    const handleDeleteBlog = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.delete(`/blogs/${blog._id}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (response.status === 200) {
+        toast.success("Blog deleted successfully.");
+        handleClose();
+        if (onDelete) {
+          onDelete(blog._id);
+        }
+        }
+      } catch (error) {
+        toast.error("Failed to delete blog.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    return (
+      <>
+        <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+          <MDBModalDialog centered>
+            <MDBModalContent>
+              <MDBModalHeader>
+                <MDBModalTitle>Are you sure to delete this blog?</MDBModalTitle>
+                <MDBBtn
+                  className="btn-close"
+                  color="none"
+                  onClick={handleClose}
+                ></MDBBtn>
+              </MDBModalHeader>
+              <MDBModalFooter>
+                <MDBBtn color="secondary" onClick={handleClose}>
+                  Close
+                </MDBBtn>
+                <MDBBtn
+                  onClick={handleDeleteBlog}
+                  color="danger"
+                  disabled={isLoading}
+                >
+                  {isLoading ? <ClipLoader color="#ffffff" size={15} /> : "Yes"}
+                </MDBBtn>
+              </MDBModalFooter>
+            </MDBModalContent>
+          </MDBModalDialog>
+        </MDBModal>
+      </>
+    );
   };
 
   return (
@@ -1111,11 +1022,11 @@ export const EditBlog = (props) => {
 // Event meeting
 //#region meeting
 export const NewEvent = (props) => {
-  const { accessToken, events, setEvents, students, tutors, onClose } = props;
+  const { accessToken, events, setEvents, assignments, onClose } = props;
 
   const [newMeeting, setNewMeeting] = useState({
-    organizer_id: "", // Chọn tutor (radio button)
-    participant_ids: [], // Chọn students (checkbox)
+    organizer_id: "",
+    participant_ids: [],
     date: "",
     start_time: "",
     end_time: "",
@@ -1123,22 +1034,21 @@ export const NewEvent = (props) => {
     note: "",
   });
 
-  const handleStudentSelection = (studentId) => {
-    setNewMeeting((prev) => ({
-      ...prev,
-      participant_ids: prev.participant_ids.includes(studentId)
-        ? prev.participant_ids.filter((id) => id !== studentId) // Bỏ chọn
-        : [...prev.participant_ids, studentId], // Thêm vào danh sách đã chọn
-    }));
-  };
+  const [selectedAssignment, setSelectedAssignment] = useState("");
 
-  const handleTutorSelection = (tutorId) => {
-    setNewMeeting((prev) => ({
-      ...prev,
-      organizer_id: tutorId, // Chỉ chọn 1 tutor
-    }));
+  const handleAssignmentSelection = (assignmentId) => {
+    const assignment = assignments.find((a) => a._id === assignmentId);
+    if (assignment) {
+      setNewMeeting({
+        ...newMeeting,
+        organizer_id: assignment.tutor_id._id, // Set tutor as organizer
+        participant_ids: assignment.student_id.map((student) => student._id), // Set students as participants
+      });
+      console.log(assignment.student_id.map((student) => student._id));
+      console.log(assignment.tutor_id._id);
+      setSelectedAssignment(assignmentId);
+    }
   };
-
   const handleCreateMeeting = async () => {
     if (
       !newMeeting.organizer_id ||
@@ -1151,6 +1061,12 @@ export const NewEvent = (props) => {
       toast.error("Please fill in all the required fields!");
       return;
     }
+
+    if (new Date(`${newMeeting.date}T${newMeeting.start_time}`) >= new Date(`${newMeeting.date}T${newMeeting.end_time}`)) {
+      toast.error("Start time must be earlier than end time!");
+      return;
+    }
+
     try {
       const response = await axios.post("/meetings/create", newMeeting, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -1175,15 +1091,37 @@ export const NewEvent = (props) => {
             ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
+            {/* Select Assignment */}
+            <div className="form-group">
+              <label htmlFor="assignment">Select Class</label>
+              <select
+                id="assignment"
+                className="form-control"
+                value={selectedAssignment}
+                onChange={(e) => handleAssignmentSelection(e.target.value)}
+              >
+                <option value="">Select a class</option>
+                {assignments.map((assignment) => (
+                  <option key={assignment._id} value={assignment._id}>
+                    {assignment.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date */}
             <MDBInput
               label="Date"
               type="date"
-              min={new Date().toISOString().split("T")[0]}
+              className="my-3"
+              min={new Date().toISOString().split("T")[0]} // Restrict to current or future dates
               value={newMeeting.date}
               onChange={(e) =>
                 setNewMeeting({ ...newMeeting, date: e.target.value })
               }
             />
+
+            {/* Start Time */}
             <MDBInput
               label="Start Time"
               className="my-3"
@@ -1193,6 +1131,8 @@ export const NewEvent = (props) => {
                 setNewMeeting({ ...newMeeting, start_time: e.target.value })
               }
             />
+
+            {/* End Time */}
             <MDBInput
               label="End Time"
               className="my-3"
@@ -1202,15 +1142,25 @@ export const NewEvent = (props) => {
                 setNewMeeting({ ...newMeeting, end_time: e.target.value })
               }
             />
-            <MDBInput
-              label="Type"
-              className="my-3"
-              type="text"
-              value={newMeeting.type}
-              onChange={(e) =>
-                setNewMeeting({ ...newMeeting, type: e.target.value })
-              }
-            />
+
+            {/* Type */}
+            <div className="form-group">
+              <label htmlFor="type">Type</label>
+              <select
+                id="type"
+                className="form-control"
+                value={newMeeting.type}
+                onChange={(e) =>
+                  setNewMeeting({ ...newMeeting, type: e.target.value })
+                }
+              >
+                <option value="">Select type</option>
+                <option value="Online">Online</option>
+                <option value="Offline">Offline</option>
+              </select>
+            </div>
+
+            {/* Note */}
             <MDBInput
               label="Note"
               className="my-3"
@@ -1220,55 +1170,6 @@ export const NewEvent = (props) => {
                 setNewMeeting({ ...newMeeting, note: e.target.value })
               }
             />
-
-            {/* Chọn Tutor (Organize) */}
-            <div className="form-group">
-              <label>
-                <strong>Select Organizer (Tutor)</strong>
-              </label>
-              {tutors.map((tutor) => (
-                <div key={tutor._id} className="form-check">
-                  <input
-                    type="radio"
-                    className="form-check-input"
-                    id={`tutor-${tutor._id}`}
-                    name="organizer"
-                    checked={newMeeting.organizer_id === tutor._id}
-                    onChange={() => handleTutorSelection(tutor._id)}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`tutor-${tutor._id}`}
-                  >
-                    {tutor.username}
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            {/* Chọn Students (Participants) */}
-            <div className="form-group mt-3">
-              <label>
-                <strong>Select Participants (Students)</strong>
-              </label>
-              {students.map((student) => (
-                <div key={student._id} className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id={`student-${student._id}`}
-                    checked={newMeeting.participant_ids.includes(student._id)}
-                    onChange={() => handleStudentSelection(student._id)}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`student-${student._id}`}
-                  >
-                    {student.username}
-                  </label>
-                </div>
-              ))}
-            </div>
           </MDBModalBody>
           <MDBModalFooter>
             <MDBBtn color="secondary" onClick={onClose}>
@@ -1281,6 +1182,7 @@ export const NewEvent = (props) => {
     </MDBModal>
   );
 };
+
 export const DeleteEvent = (props) => {
   const { accessToken, events, setEvents, id, onClose } = props;
 

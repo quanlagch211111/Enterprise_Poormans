@@ -48,6 +48,11 @@ export const Dashboard = () => {
   const [blogList, setBlogList] = useState([]);
   const [pendingBlogs, setPendingBlogs] = useState([]);
   const [documentListCount, setDocumentList] = useState([]);
+  const [newStudentData, setNewStudentData] = useState([]);
+  const [newTutorData, setNewTutorData] = useState([]);
+  const [unassignedStudent, setUnassignedStudentData] = useState([]);
+  const [unassignedTutor, setUnassignedTutorData] = useState([]);
+  const [totalMessagesData, setTotalMessagesData] = useState([]);
   const [notiform, setNotiform] = useState({
     user_id: [],
     from: "",
@@ -84,15 +89,10 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setUsers(response.data);
-        console.log("Users with roles:", response.data);
-        const studentCount = users.filter(
+        setStudentCount(users.filter(
           (user) => user.role === "Student"
-        ).length;
-        setStudentCount(studentCount);
-        console.log("Student Count:", studentCount);
-        const tutorCount = users.filter((user) => user.role === "Tutor").length;
-        setTutorCount(tutorCount);
-        console.log("Tutor Count:", tutorCount);
+        ).length);
+        setTutorCount(users.filter((user) => user.role === "Tutor").length);
       } catch (error) {
         console.error("Error fetching users with roles:", error);
       }
@@ -104,12 +104,9 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setBlogList(response.data);
-        console.log("Blogs:", response.data);
-        const pendingBlogs = response.data.filter(
+        setPendingBlogs(response.data.filter(
           (blog) => blog.status === "pending"
-        ).length;
-        setPendingBlogs(pendingBlogs);
-        console.log("Pending Blogs:", pendingBlogs);
+        ).length);
       } catch (error) {
         console.error("Error fetching pending blogs:", error);
       }
@@ -120,8 +117,7 @@ export const Dashboard = () => {
         const response = await axios.get("/documents/", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const documentListCount = response.data.length;
-        setDocumentList(documentListCount);
+        setDocumentList(response.data.length);
       } catch (error) {
         console.error("Error fetching pending documents:", error);
       }
@@ -132,8 +128,122 @@ export const Dashboard = () => {
       fetchUsersWithRoles();
       fetchPendingBlogs();
       fetchDocumentList();
+      fetchUnassignedUsers();
+      fetchMessages();
     }
   }, [userId, accessToken, navigate]);
+
+  useEffect(() => {
+    const calculateLast7DaysData = (users, role) => {
+      const today = new Date();
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        return date.toISOString().split("T")[0];
+      }).reverse();
+
+      return last7Days.map((day) =>
+        users.filter(
+          (user) =>
+            user.role === role &&
+            new Date(user.created_at).toISOString().split("T")[0] === day
+        ).length
+      );
+    };
+
+    if (users.length > 0) {
+      setNewStudentData(calculateLast7DaysData(users, "Student"));
+      setNewTutorData(calculateLast7DaysData(users, "Tutor"));
+    }
+  }, [users]);
+
+  const fetchUnassignedUsers = async () => {
+    try {
+      // Fetch all users
+      const usersResponse = await axios.get("/users/getuserwithroles", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const allUsers = usersResponse.data;
+  
+      // Fetch all assignments
+      const assignmentsResponse = await axios.get("/assignments", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const allAssignments = assignmentsResponse.data;
+  
+      // Calculate the last 7 days
+      const today = new Date();
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }).reverse();
+  
+      // Extract assigned student and tutor IDs
+      const assignedStudentIds = allAssignments.flatMap((assignment) =>
+        assignment.student_id.map((student) => student._id)
+      );
+      const assignedTutorIds = allAssignments.map(
+        (assignment) => assignment.tutor_id._id
+      );
+  
+      // Group unassigned users by day
+      const unassignedStudentData = last7Days.map((day) => {
+        return allUsers.filter(
+          (user) =>
+            user.role === "Student" &&
+            !assignedStudentIds.includes(user._id) &&
+            new Date(user.created_at).toISOString().split("T")[0] === day
+        ).length;
+      });
+  
+      const unassignedTutorData = last7Days.map((day) => {
+        return allUsers.filter(
+          (user) =>
+            user.role === "Tutor" &&
+            !assignedTutorIds.includes(user._id) &&
+            new Date(user.created_at).toISOString().split("T")[0] === day
+        ).length;
+      });
+  
+      // Update state
+      setUnassignedStudentData(unassignedStudentData);
+      setUnassignedTutorData(unassignedTutorData);
+    } catch (error) {
+      console.error("Error fetching unassigned users:", error);
+    }
+  };
+
+
+  const fetchMessages = async () => {
+    try {
+      // Fetch messages count for the last 7 days
+      const response = await axios.get("/messages/count-last-7-days", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    
+      // Extract and format the data
+      const messagesCount = response.data.data;
+  
+      // Ensure all 7 days are included, even if count is 0
+      const today = new Date();
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }).reverse();
+  
+      const messagesPerDay = last7Days.map((day) => {
+        const dayData = messagesCount.find((item) => item._id === day);
+        return dayData ? dayData.count : 0; // Default to 0 if no data for the day
+      });
+  
+      // Update state
+      setTotalMessagesData(messagesPerDay);
+      } catch (error) {
+      console.error("Error fetching messages count:", error);
+    }
+  };
 
   const SendNotification = async () => {
     try {
@@ -269,13 +379,6 @@ export const Dashboard = () => {
       },
     ],
   };
-
-  // chart of staff?
-  const newStudentData = [5, 3, 8, 2, 4, 6, 7]; // New students per day for the last 7 days
-  const newTutorData = [2, 4, 3, 5, 2, 3, 4]; // New tutors per day for the last 7 days
-  const unassignedStudentData = [1, 2, 1, 3, 2, 1, 4]; // Unassigned students per day
-  const unassignedTutorData = [0, 1, 0, 2, 1, 1, 0]; // Unassigned tutors per day
-  const totalMessagesData = [10, 20, 15, 30, 40, 50, 60]; // Total messages per day for the last 7 days
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -463,11 +566,10 @@ export const Dashboard = () => {
                               <td>{doc.name}</td>
                               <td>
                                 <span
-                                  className={`badge ${
-                                    doc.status === "Đã phê duyệt"
-                                      ? "bg-success"
-                                      : "bg-warning"
-                                  }`}
+                                  className={`badge ${doc.status === "Đã phê duyệt"
+                                    ? "bg-success"
+                                    : "bg-warning"
+                                    }`}
                                 >
                                   {doc.status}
                                 </span>
@@ -551,8 +653,8 @@ export const Dashboard = () => {
                 <DashboardCharts
                   newStudentData={newStudentData}
                   newTutorData={newTutorData}
-                  unassignedStudentData={unassignedStudentData}
-                  unassignedTutorData={unassignedTutorData}
+                  unassignedStudentData={unassignedStudent}
+                  unassignedTutorData={unassignedTutor}
                   totalMessagesData={totalMessagesData}
                 />
               </Row>
@@ -625,15 +727,15 @@ export const Dashboard = () => {
                                     blog.status === "published"
                                       ? "success"
                                       : blog.status === "pending"
-                                      ? "warning"
-                                      : "danger"
+                                        ? "warning"
+                                        : "danger"
                                   }
                                 >
                                   {blog.status === "published"
                                     ? "Published"
                                     : blog.status === "pending"
-                                    ? "Pending"
-                                    : "Canceled"}
+                                      ? "Pending"
+                                      : "Canceled"}
                                 </Badge>
                               </td>
                               <td>

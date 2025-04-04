@@ -70,6 +70,37 @@ export const Blog = () => {
     }
   };
 
+  const updateBlogState = (updatedBlog) => {
+    setMyBlogs((prev) =>
+      prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
+    );
+
+    setBlogs((prev) =>
+      prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
+    );
+
+    setPendingBlogsData((prev) =>
+      prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
+    );
+
+    if (selectedBlog && selectedBlog._id === updatedBlog._id) {
+      setSelectedBlog(updatedBlog);
+    }
+  };
+
+  const handleDeleteBlog = (deletedBlogId) => {
+    setMyBlogs((prev) => prev.filter((blog) => blog._id !== deletedBlogId));
+    setBlogs((prev) => prev.filter((blog) => blog._id !== deletedBlogId));
+    setPendingBlogsData((prev) =>
+      prev.filter((blog) => blog._id !== deletedBlogId)
+    );
+    if (selectedBlog && selectedBlog._id === deletedBlogId) {
+      setSelectedBlog(null);
+      setModalDetailBlog(false);
+    }
+  };
+
+
   // const handleUpdateBlog = (updatedBlog) => {
   //   setMyBlogs((prev) =>
   //     prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
@@ -89,8 +120,8 @@ export const Blog = () => {
               {isAllBlogs
                 ? "All Blogs"
                 : isPendingBlogs
-                ? "Pending Blogs"
-                : "My Blog"}
+                  ? "Pending Blogs"
+                  : "My Blog"}
             </h3>
             <div className="action d-flex">
               {!isAllBlogs && !isPendingBlogs && (
@@ -199,13 +230,8 @@ export const Blog = () => {
         onClose={() => setModalDetailBlog(false)}
         blog={selectedBlog}
         accessToken={accessToken}
-        onUpdate={(updatedBlog) => {
-          setMyBlogs((prev) =>
-            prev.map((blog) =>
-              blog._id === updatedBlog._id ? updatedBlog : blog
-            )
-          );
-        }}
+        onUpdate={updateBlogState}
+        onDelete={handleDeleteBlog}
       />
     </>
   );
