@@ -33,6 +33,8 @@ const Assignment = () => {
 
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
+  console.log("Students:", students);
+  console.log("Tutors:", tutors);
   const role = localStorage.getItem("role");
 
   useEffect(() => {

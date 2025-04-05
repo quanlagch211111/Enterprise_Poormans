@@ -61,8 +61,11 @@ export const Login = () => {
           refreshToken,
           isVerifiedToken,
           user,
+          objectId,
           ...userData
         } = response.data;
+
+        console.log("response.data:", response.data);
 
         // Kiểm tra trạng thái trả về từ backend
         if (response.data.status === "NEED_VERIFICATION") {
@@ -91,6 +94,9 @@ export const Login = () => {
         localStorage.setItem("username", user.username);
         localStorage.setItem("userId", decoded.payload.id);
         localStorage.setItem("role", decoded.payload.role);
+
+        localStorage.setItem("objectId",response.data.objectId);
+
         toast.success("Login successful!");
         setLoading(false);
         navigate("/");

@@ -35,7 +35,7 @@ export const Document = () => {
   const [documentFilePath, setDocumentFilePath] = useState(false);
   const [selectedAsmId, setSelectedAsmId] = useState(null);
   const [newDocument, setNewDocument] = useState({
-    owner_id: localStorage.getItem("userId"),
+    owner_id: localStorage.getItem("objectId"),
     folder_id: "",
     types: "",
     content: "",
@@ -53,11 +53,14 @@ export const Document = () => {
 
   const fetchAssignments = async () => {
     try {
-      const userId = localStorage.getItem("userId"); // Lấy userId từ localStorage
+      const userId = localStorage.getItem("userId");// Lấy userId từ localStorage
+      const objectId = localStorage.getItem("objectId"); // Lấy objectId từ localStorage
       const role = localStorage.getItem("role"); // Lấy role từ localStorage
       const response = await axios.get("/assignments", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+
+      console.log("Assignments:", response.data); // In ra danh sách assignments
 
       let filteredAssignments;
 
@@ -67,9 +70,9 @@ export const Document = () => {
       } else {
         // Lọc assignment dựa trên tutor_id hoặc student_id
         filteredAssignments = response.data.filter((assignment) => {
-          const isTutor = assignment.tutor_id?._id === userId; // Kiểm tra nếu user là tutor
+          const isTutor = assignment.tutor_id?._id === objectId; // Kiểm tra nếu user là tutor
           const isStudent = assignment.student_id.some(
-            (student) => student._id === userId // Kiểm tra nếu user là student
+            (student) => student._id === objectId // Kiểm tra nếu user là student
           );
           return isTutor || isStudent;
         });
@@ -112,13 +115,14 @@ export const Document = () => {
       const response = await axios.get(`/documents/folder/${folderId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-
+      console.log("Documents:", response.data); // In ra danh sách documents
       const allDocuments = await Promise.all(
         response.data.map(async (doc) => {
           const username = await fetchUsername(doc.owner_id); // Lấy `username` từ `owner_id`
           return { ...doc, username }; // Gắn `username` vào tài liệu
         })
       );
+
 
       // Lọc tài liệu của tutor và sinh viên
       const tutorDocuments = allDocuments.filter(
@@ -360,7 +364,7 @@ export const Document = () => {
                   {studentDocuments.length > 0 ? (
                     studentDocuments
                       .filter(
-                        (doc) => doc.owner_id === localStorage.getItem("userId")
+                        (doc) => doc.owner_id === localStorage.getItem("objectId")
                       ) // Lọc tài liệu của sinh viên đã nộp
                       .map((doc) => (
                         <div

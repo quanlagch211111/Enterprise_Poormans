@@ -246,15 +246,16 @@ export const Dashboard = () => {
   const SendNotification = async () => {
     try {
       console.log("Sending notification with data:", {
-        user_id: userList,
+        user_ids: userList,
         from: userId,
         message: notiform.message,
       });
 
       const response = await axios.post(
-        "/notifications",
+        "/notifications/multiple",
         {
-          user_id: userList,
+          user_ids: userList,
+          entityType: "Notification",
           from: userId,
           message: notiform.message,
         },

@@ -162,7 +162,7 @@ export const Message = () => {
       getContacts();
 
       // Lắng nghe sự kiện msg-recieve
-      socket.current.on("msg-recieve", (data) => {
+      socket.current.on("msg-receive", (data) => {
         console.log("Message received via socket:", data);
 
         // Chỉ thêm tin nhắn nếu thuộc về cuộc trò chuyện hiện tại

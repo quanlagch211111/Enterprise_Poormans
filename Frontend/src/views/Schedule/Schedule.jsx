@@ -37,6 +37,7 @@ export const Schedule = () => {
   const [modalUpdateEvent, setModalUpdateEvent] = useState(false);
   const [isVisibility, setVisibility] = useState(false);
   const students = users.filter((user) => user.role === "Student");
+  console.log("users:", users);
   const tutors = users.filter((user) => user.role === "Tutor");
   const [assignments, setAssignments] = useState([]);
   const toggleVisibility = () => setVisibility(!isVisibility);

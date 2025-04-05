@@ -152,17 +152,17 @@ export const NewAssignment = (props) => {
             <div className="form-group">
               <label>Students</label>
               {students.map((student) => (
-                <div key={student._id} className="form-check">
+                <div key={student.objectid} className="form-check">
                   <input
                     type="checkbox"
                     className="form-check-input"
-                    id={`student-${student._id}`}
-                    checked={newAssignment.student_id.includes(student._id)}
-                    onChange={() => handleCheckboxChange(student._id)}
+                    id={`student-${student.objectid}`}
+                    checked={newAssignment.student_id.includes(student.objectid)}
+                    onChange={() => handleCheckboxChange(student.objectid)}
                   />
                   <label
                     className="form-check-label"
-                    htmlFor={`student-${student._id}`}
+                    htmlFor={`student-${student.objectid}`}
                   >
                     {student.username}
                   </label>
@@ -172,18 +172,18 @@ export const NewAssignment = (props) => {
             <div className="form-group">
               <label htmlFor="tutor">Tutor</label>
               {tutors.map((tutor) => (
-                <div key={tutor._id} className="form-check">
+                <div key={tutor.objectid} className="form-check">
                   <input
                     type="radio"
                     className="form-check-input"
                     id={`tutor-${tutor._id}`}
                     name="tutor"
-                    checked={newAssignment.tutor_id === tutor._id}
-                    onChange={() => handleTutorSelect(tutor._id)}
+                    checked={newAssignment.tutor_id === tutor.objectid}
+                    onChange={() => handleTutorSelect(tutor.objectid)}
                   />
                   <label
                     className="form-check-label"
-                    htmlFor={`tutor-${tutor._id}`}
+                    htmlFor={`tutor-${tutor.objectid}`}
                   >
                     {tutor.username}
                   </label>
@@ -1509,7 +1509,7 @@ export const UploadAssignment = (props) => {
           handleClose();
           setSelectedFile(null);
           setNewDocument({
-            owner_id: localStorage.getItem("userId"),
+            owner_id: "",
             folder_id: selectedFolder?._id,
             types: "",
             content: "",
