@@ -130,7 +130,7 @@ const Account = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:3001/api/users/signup",
+        "/users/signup",
         requestData
       );
 
@@ -170,7 +170,7 @@ const Account = () => {
       console.log("Updating account:", newAccount);
       setIsLoading(true);
       const response = await axios.put(
-        `http://localhost:3001/api/users/update/${newAccount._id}`,
+        `/users/update/${newAccount._id}`,
         newAccount,
         {
           headers: { Authorization: `Bearer ${accessToken}` },

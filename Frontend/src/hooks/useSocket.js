@@ -6,7 +6,7 @@ const useSocket = (userId) => {
   useEffect(() => {
     if (!userId) return;
 
-    const socketInstance = io("http://localhost:3001", {
+    const socketInstance = io(process.env.REACT_APP_SOCKET_PORT, {
       withCredentials: true
     });
     socketInstance.emit("add-user", userId);

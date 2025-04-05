@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useSocket from "../../hooks/useSocket";
+import axios from "../../services/AxiosCustom";
 
 const NotificationPage = () => {
   const userId = localStorage.getItem("userId");
@@ -10,7 +11,7 @@ const NotificationPage = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/notifications/${userId}`);
+        const response = await axios.fetch(`/notifications/${userId}`);
         const data = await response.json();
         if (data.status === "success") {
           setNotifications(data.data); 

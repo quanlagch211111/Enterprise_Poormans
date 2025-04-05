@@ -389,6 +389,7 @@ export const Schedule = () => {
         setEvents={setEvents}
         students={students}
         tutors={tutors}
+        assignments={assignments}
       />
       <DeleteEvent
         show={modalDeleteEvent}

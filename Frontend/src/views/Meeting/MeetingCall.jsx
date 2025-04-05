@@ -18,11 +18,11 @@ export const MeetingCall = () => {
   const [remoteStream, setRemoteStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [participants, setParticipants] = useState([]);
   const [roomId, setRoomId] = useState("");
 
   const myVideoRef = useRef(null);
@@ -30,24 +30,23 @@ export const MeetingCall = () => {
   const peerInstance = useRef(null);
   const peersRef = useRef({});
   const socketRef = useRef();
+  const screenTrackRef = useRef(null);
 
-  // Initialize meeting
   useEffect(() => {
-    // Get room ID from URL
     const path = window.location.pathname.split('/');
     const id = path[path.length - 1];
     if (!id) {
-      navigate('/'); // Redirect if no room ID
+      navigate('/');
       return;
     }
     setRoomId(id);
+    console.log("env", process.env.REACT_APP_PEER_HOST);
 
-    // Initialize socket connection
-    socketRef.current = io("http://localhost:3001", {
+
+    socketRef.current = io(process.env.REACT_APP_SOCKET_PORT, {
       withCredentials: true
     });
 
-    // Initialize media stream
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
         setMyStream(stream);
@@ -55,7 +54,6 @@ export const MeetingCall = () => {
           myVideoRef.current.srcObject = stream;
         }
 
-        // Initialize PeerJS
         peerInstance.current = new Peer(undefined, {
           host: process.env.REACT_APP_PEER_HOST || 'localhost',
           port: process.env.REACT_APP_PEER_PORT || 3030,
@@ -74,12 +72,20 @@ export const MeetingCall = () => {
 
         peerInstance.current.on('call', (call) => {
           call.answer(stream);
-          call.on('stream', (remoteStream) => {
-            setRemoteStream(remoteStream);
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-            }
+
+          const remoteMediaStream = new MediaStream();
+
+          call.on('stream', () => {
+            // Không cần thiết vì stream này không update khi track thay đổi
           });
+
+          call.peerConnection.ontrack = (event) => {
+            remoteMediaStream.addTrack(event.track);
+            setRemoteStream(remoteMediaStream);
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.srcObject = remoteMediaStream;
+            }
+          };
         });
 
         socketRef.current.on('user-connected', (userId) => {
@@ -103,7 +109,6 @@ export const MeetingCall = () => {
           setRemoteStream(null);
         });
 
-        // Handle messages
         socketRef.current.on('createMessage', (message) => {
           setMessages(prev => [...prev, message]);
         });
@@ -128,16 +133,13 @@ export const MeetingCall = () => {
 
   const handleSendMessage = () => {
     if (message.trim() && socketRef.current) {
-      socketRef.current.emit('message', {
+      const newMessage = {
         text: message,
         sender: "You",
         time: new Date().toLocaleTimeString()
-      });
-      setMessages(prev => [...prev, {
-        text: message,
-        sender: "You",
-        time: new Date().toLocaleTimeString()
-      }]);
+      };
+      socketRef.current.emit('message', newMessage);
+      setMessages(prev => [...prev, newMessage]);
       setMessage("");
     }
   };
@@ -162,23 +164,81 @@ export const MeetingCall = () => {
     }
   };
 
+  const toggleScreenSharing = async () => {
+    if (!myStream || !peerInstance.current) return;
+
+    if (!isScreenSharing) {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        for (let peerId in peersRef.current) {
+          const sender = peersRef.current[peerId].peerConnection
+            .getSenders()
+            .find(s => s.track.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(screenTrack);
+          }
+        }
+
+        if (myVideoRef.current) {
+          myVideoRef.current.srcObject = new MediaStream([
+            screenTrack,
+            ...myStream.getAudioTracks(),
+          ]);
+        }
+
+        screenTrack.onended = () => {
+          stopScreenSharing();
+        };
+
+        screenTrackRef.current = screenTrack;
+        setIsScreenSharing(true);
+      } catch (err) {
+        console.error("Screen sharing failed", err);
+      }
+    } else {
+      stopScreenSharing();
+    }
+  };
+
+  const stopScreenSharing = () => {
+    if (!screenTrackRef.current) return;
+
+    for (let peerId in peersRef.current) {
+      const sender = peersRef.current[peerId].peerConnection
+        .getSenders()
+        .find(s => s.track.kind === 'video');
+      if (sender) {
+        const videoTrack = myStream.getVideoTracks()[0];
+        sender.replaceTrack(videoTrack);
+      }
+    }
+
+    if (myVideoRef.current) {
+      myVideoRef.current.srcObject = myStream;
+    }
+
+    screenTrackRef.current.stop();
+    screenTrackRef.current = null;
+    setIsScreenSharing(false);
+  };
+
   const leaveMeeting = () => {
     navigate('/');
   };
 
-  // Generate participant data for UI
   const users = [
     { id: 'me', name: 'You', isMe: true, isSpeaking: isMicOn },
     ...(remoteStream ? [{ id: 'remote', name: 'Participant', isMe: false, isSpeaking: true }] : [])
   ];
 
-  const visibleUsers = users.slice(0, 4); // Show max 4 videos
+  const visibleUsers = users.slice(0, 4);
   const extraUsersCount = users.length > 4 ? users.length - 4 : 0;
 
   return (
     <Container fluid className="bg-dark text-light vh-100 d-flex flex-column p-0">
       <Row className="flex-grow-1 g-0 position-relative">
-        {/* Main Video Grid */}
         <div className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2">
           {visibleUsers.map((user) => (
             <div
@@ -231,7 +291,6 @@ export const MeetingCall = () => {
           )}
         </div>
 
-        {/* Right Sidebar */}
         <Offcanvas
           show={showParticipants || showChat}
           onHide={() => {
@@ -321,7 +380,6 @@ export const MeetingCall = () => {
         </Offcanvas>
       </Row>
 
-      {/* Control Bar */}
       <div className="border-top border-secondary bg-dark bg-opacity-75 py-3">
         <div className="d-flex justify-content-between align-items-center px-4">
           <div className="d-flex gap-3">
@@ -341,6 +399,15 @@ export const MeetingCall = () => {
             >
               <i className={`fas ${isCamOn ? "fa-video" : "fa-video-slash"}`}></i>
               <span>{isCamOn ? "Stop Video" : "Start Video"}</span>
+            </Button>
+
+            <Button
+              variant={isScreenSharing ? "warning" : "outline-light"}
+              onClick={toggleScreenSharing}
+              className="rounded-pill px-4 d-flex align-items-center gap-2"
+            >
+              <i className="fas fa-desktop"></i>
+              <span>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</span>
             </Button>
           </div>
 

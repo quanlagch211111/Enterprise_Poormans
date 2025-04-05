@@ -102,7 +102,7 @@ export const Document = () => {
       return response.data.data?.username;
     } catch (error) {
       console.error("Error fetching username:", error);
-      return "Unknown User"; // Trả về giá trị mặc định nếu lỗi
+      return "Unknown User"; 
     }
   };
 
@@ -286,10 +286,10 @@ export const Document = () => {
 
   const renderFolderDetails = () => {
     if (!selectedFolder) return null;
-
+  
     const studentDocuments = documents?.studentDocuments || [];
     const tutorDocuments = documents?.tutorDocuments || [];
-
+  
     return (
       <>
         <div className="section-header">
@@ -337,11 +337,22 @@ export const Document = () => {
                 </div>
               ))}
             </div>
+  
+            {/* Nếu là tutor, hiển thị nút upload document */}
+            {role === "TUTOR" && (
+              <div className="d-flex justify-content-center w-100 mt-3">
+                <MDBBtn
+                  onClick={() => setModalCreateAssignment(true)} // Mở modal upload document
+                  color="primary"
+                >
+                  Upload Document
+                </MDBBtn>
+              </div>
+            )}
           </div>
         ) : (
           <>
             {role === "STUDENT" ? (
-              // Nếu role là "student", hiển thị form cho sinh viên
               <>
                 <div className="wrapper">
                   {studentDocuments.length > 0 ? (
@@ -392,7 +403,6 @@ export const Document = () => {
                 </div>
               </>
             ) : role === "TUTOR" || role === "STAFF" ? (
-              // Nếu role là "tutor" hoặc "staff", hiển thị danh sách Student Submissions
               <>
                 <div className="wrapper">
                   {studentDocuments.length > 0 ? (
@@ -436,7 +446,6 @@ export const Document = () => {
                 </div>
               </>
             ) : (
-              // Nếu role không phải "student", "tutor" hoặc "staff", hiển thị thông báo
               <p className="text-muted">
                 You do not have permission to view this content.
               </p>
@@ -446,6 +455,7 @@ export const Document = () => {
       </>
     );
   };
+  
   return (
     <>
       <div className="main-content">

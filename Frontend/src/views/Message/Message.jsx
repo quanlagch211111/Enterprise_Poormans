@@ -21,7 +21,7 @@ export const Message = () => {
   const [showPicker, setShowPicker] = useState(false);
   const scrollRef = useRef();
 
-  const APP_HOST = "http://localhost:3001";
+  const APP_HOST = process.env.REACT_APP_SOCKET_PORT;
 
   // Lấy thông tin người dùng hiện tại
   const getUser = async () => {

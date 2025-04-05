@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const instance = axios.create({
-  baseURL: "http://localhost:3001/api",
+  baseURL: process.env.REACT_APP_API_URL,
 });
 instance.interceptors.response.use(
   (response) => response,
