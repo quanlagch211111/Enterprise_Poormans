@@ -28,7 +28,7 @@ const peerServer = ExpressPeerServer(server, {
 
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.ORIGINAL_URL,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -64,7 +64,7 @@ const notificationRouter = require('./src/routes/notificationRoute');
 
 app.use(cors(
   {
-    origin: "http://localhost:3000",
+    origin: process.env.ORIGINAL_URL,
     credentials: true
   }
 ));

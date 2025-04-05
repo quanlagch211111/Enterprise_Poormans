@@ -49,3 +49,38 @@ exports.getMeetingById = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// Chỉnh sửa thông tin cuộc họp
+exports.updateMeetingById = async (req, res) => {
+  try {
+    const { id } = req.params; // Lấy ID của cuộc họp từ URL
+    const updateData = req.body; // Dữ liệu cần cập nhật
+
+    const updatedMeeting = await Meeting.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updatedMeeting) {
+      return res.status(404).json({ success: false, message: "Meeting not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Meeting updated successfully", meeting: updatedMeeting });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Xóa cuộc họp
+exports.deleteMeetingById = async (req, res) => {
+  try {
+    const { id } = req.params; // Lấy ID của cuộc họp từ URL
+
+    const deletedMeeting = await Meeting.findByIdAndDelete(id);
+
+    if (!deletedMeeting) {
+      return res.status(404).json({ success: false, message: "Meeting not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Meeting deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

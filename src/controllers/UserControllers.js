@@ -190,7 +190,7 @@ exports.detailUser = async (req, res) => {
 
 
 exports.reprovideToken = async (req, res) => {
-  console.log('Cookies:', req.cookies); // In ra toàn bộ cookie
+  console.log('Cookies:', req.cookies);
 
   try {
     const token = req.cookies.refreshtoken;
