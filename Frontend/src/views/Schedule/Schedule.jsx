@@ -7,7 +7,7 @@ import {
 } from "@mobiscroll/react";
 import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
-import {Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import * as React from "react";
 import { MDBBtn } from "mdb-react-ui-kit";
@@ -91,7 +91,6 @@ export const Schedule = () => {
         console.log("Fetched Events:", filteredEvents);
 
         setEvents(filteredEvents);
-
       } catch (error) {
         console.error("Error fetching meetings:", error);
       }
@@ -196,6 +195,7 @@ export const Schedule = () => {
   const toggleOpen = () => setCentredModal(!centredModal);
 
   const [isToastOpen, setToastOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const [toastText, setToastText] = useState("");
   const [isCreate, setIsCreate] = useState(false);
 
@@ -214,6 +214,7 @@ export const Schedule = () => {
   const handleCellDoubleClick = useCallback((args) => {
     if (role == "STAFF") {
       setArgDoubleClick(args);
+      console.log("args", args);
       setModelShowNewEvent(true);
     }
   }, []);

@@ -1206,7 +1206,11 @@ export const DeleteEvent = (props) => {
         <MDBModalContent>
           <MDBModalHeader>
             <MDBModalTitle>Delete Event</MDBModalTitle>
-            <MDBBtn className="btn-close" color="none" onClick={onClose}></MDBBtn>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={onClose}
+            ></MDBBtn>
           </MDBModalHeader>
           <MDBModalFooter>
             <MDBBtn color="secondary" onClick={onClose}>
@@ -1223,14 +1227,8 @@ export const DeleteEvent = (props) => {
 };
 
 export const UpdateEvent = (props) => {
-  const {
-    accessToken,
-    events,
-    setEvents,
-    eventUpdate,
-    assignments,
-    onClose,
-  } = props;
+  const { accessToken, events, setEvents, eventUpdate, assignments, onClose } =
+    props;
 
   const [updatedMeeting, setUpdatedMeeting] = useState({
     assignment_id: eventUpdate.assignment_id || "",
@@ -1444,8 +1442,15 @@ export const UpdateEvent = (props) => {
 
 //#region document
 export const UploadAssignment = (props) => {
-  const { accessToken, selectedFolder, newDocument, setNewDocument, role } =
-    props;
+  const {
+    accessToken,
+    selectedFolder,
+    newDocument,
+    setNewDocument,
+    role,
+    fetchAssignments,
+    fetchDocuments,
+  } = props;
   const [selectedFile, setSelectedFile] = useState(null);
 
   const [isLoading, setLoading] = useState(false);
@@ -1457,7 +1462,11 @@ export const UploadAssignment = (props) => {
     e.preventDefault();
 
     if (!selectedFile) {
-      alert("Please select a file to upload.");
+      toast.info("Please select a file to upload.");
+      return;
+    }
+    if (!newDocument.content.trim()) {
+      toast.error("Please enter content for the document.");
       return;
     }
 
@@ -1480,7 +1489,6 @@ export const UploadAssignment = (props) => {
 
       if (uploadResponse.status === 200) {
         const fileUrl = uploadResponse.data.fileUrl;
-
         // Prepare document data
         const documentData = {
           ...newDocument,
@@ -1507,6 +1515,10 @@ export const UploadAssignment = (props) => {
             content: "",
           });
           setLoading(false);
+          fetchAssignments();
+          if (role === "TUTOR") {
+            fetchDocuments();
+          }
           toast.success("Assignment has been uploaded successfully.");
         } else {
           toast.error("Failed to save document.");
@@ -1524,6 +1536,7 @@ export const UploadAssignment = (props) => {
       } else {
         setLoading(false);
         toast.error("Error setting up the request:", error.message);
+        console.log(error);
       }
       setLoading(false);
       toast.error("An error occurred while uploading the document.");
@@ -1933,6 +1946,11 @@ export const NewFolder = (props) => {
   };
 
   const handleAddNewFolder = async () => {
+    if (!newFolder.title.trim()) {
+      toast.error("Please enter a title for the folder!");
+      return;
+    }
+
     try {
       console.log("Form Data:", newFolder); // Debug log
       setLoading(true);
@@ -1943,9 +1961,7 @@ export const NewFolder = (props) => {
       setLoading(false);
       if (response.status === 201 || response.status === 200) {
         resetFields();
-        // fetchFolders();
         toast.success("Folder created successfully.");
-        // setNewFolder([...folders, response.data.folder]);
         handleClose();
       }
     } catch (error) {

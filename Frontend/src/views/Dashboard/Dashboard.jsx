@@ -89,9 +89,7 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setUsers(response.data);
-        setStudentCount(users.filter(
-          (user) => user.role === "Student"
-        ).length);
+        setStudentCount(users.filter((user) => user.role === "Student").length);
         setTutorCount(users.filter((user) => user.role === "Tutor").length);
       } catch (error) {
         console.error("Error fetching users with roles:", error);
@@ -104,9 +102,9 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setBlogList(response.data);
-        setPendingBlogs(response.data.filter(
-          (blog) => blog.status === "pending"
-        ).length);
+        setPendingBlogs(
+          response.data.filter((blog) => blog.status === "pending").length
+        );
       } catch (error) {
         console.error("Error fetching pending blogs:", error);
       }
@@ -142,12 +140,13 @@ export const Dashboard = () => {
         return date.toISOString().split("T")[0];
       }).reverse();
 
-      return last7Days.map((day) =>
-        users.filter(
-          (user) =>
-            user.role === role &&
-            new Date(user.created_at).toISOString().split("T")[0] === day
-        ).length
+      return last7Days.map(
+        (day) =>
+          users.filter(
+            (user) =>
+              user.role === role &&
+              new Date(user.created_at).toISOString().split("T")[0] === day
+          ).length
       );
     };
 
@@ -164,13 +163,13 @@ export const Dashboard = () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const allUsers = usersResponse.data;
-  
+
       // Fetch all assignments
       const assignmentsResponse = await axios.get("/assignments", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const allAssignments = assignmentsResponse.data;
-  
+
       // Calculate the last 7 days
       const today = new Date();
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -178,7 +177,7 @@ export const Dashboard = () => {
         date.setDate(today.getDate() - i);
         return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }).reverse();
-  
+
       // Extract assigned student and tutor IDs
       const assignedStudentIds = allAssignments.flatMap((assignment) =>
         assignment.student_id.map((student) => student._id)
@@ -186,7 +185,7 @@ export const Dashboard = () => {
       const assignedTutorIds = allAssignments.map(
         (assignment) => assignment.tutor_id._id
       );
-  
+
       // Group unassigned users by day
       const unassignedStudentData = last7Days.map((day) => {
         return allUsers.filter(
@@ -196,7 +195,7 @@ export const Dashboard = () => {
             new Date(user.created_at).toISOString().split("T")[0] === day
         ).length;
       });
-  
+
       const unassignedTutorData = last7Days.map((day) => {
         return allUsers.filter(
           (user) =>
@@ -205,7 +204,7 @@ export const Dashboard = () => {
             new Date(user.created_at).toISOString().split("T")[0] === day
         ).length;
       });
-  
+
       // Update state
       setUnassignedStudentData(unassignedStudentData);
       setUnassignedTutorData(unassignedTutorData);
@@ -214,17 +213,16 @@ export const Dashboard = () => {
     }
   };
 
-
   const fetchMessages = async () => {
     try {
       // Fetch messages count for the last 7 days
       const response = await axios.get("/messages/count-last-7-days", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-    
+
       // Extract and format the data
       const messagesCount = response.data.data;
-  
+
       // Ensure all 7 days are included, even if count is 0
       const today = new Date();
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -232,15 +230,15 @@ export const Dashboard = () => {
         date.setDate(today.getDate() - i);
         return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }).reverse();
-  
+
       const messagesPerDay = last7Days.map((day) => {
         const dayData = messagesCount.find((item) => item._id === day);
         return dayData ? dayData.count : 0; // Default to 0 if no data for the day
       });
-  
+
       // Update state
       setTotalMessagesData(messagesPerDay);
-      } catch (error) {
+    } catch (error) {
       console.error("Error fetching messages count:", error);
     }
   };
@@ -390,8 +388,7 @@ export const Dashboard = () => {
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng {userInfo.username}!</h2>
-                  <p className="text-muted">Có 3 thông báo mới</p>
+                  <h2>Welcome {userInfo.username}!</h2>
                 </Col>
               </Row>
 
@@ -401,7 +398,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>12</Card.Title>
-                      <Card.Text>Sinh viên</Card.Text>
+                      <Card.Text>Student</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -409,7 +406,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>5</Card.Title>
-                      <Card.Text>Cuộc hẹn</Card.Text>
+                      <Card.Text>Appointment</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -417,7 +414,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>3</Card.Title>
-                      <Card.Text>Tài liệu đã gửi</Card.Text>
+                      <Card.Text>Documents sent</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -425,7 +422,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>3</Card.Title>
-                      <Card.Text>Blog Chờ Phản Hồi</Card.Text>
+                      <Card.Text>Blog Waiting for Response</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -441,9 +438,9 @@ export const Dashboard = () => {
               {/* Phần tổng quan */}
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng {userInfo.username} </h2>
+                  <h2>Welcome {userInfo.username} </h2>
                   <p className="text-muted">
-                    Giảng viên hướng dẫn: {dashboardData.advisor}
+                    Instructor: {dashboardData.advisor}
                   </p>
                 </Col>
               </Row>
@@ -455,7 +452,7 @@ export const Dashboard = () => {
                       <Card.Title>
                         {dashboardData.meetings.completed}
                       </Card.Title>
-                      <Card.Text>Cuộc họp đã hoàn thành</Card.Text>
+                      <Card.Text>The meeting is over.</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -463,7 +460,7 @@ export const Dashboard = () => {
                   <Card className="text-center h-100">
                     <Card.Body>
                       <Card.Title>{dashboardData.meetings.upcoming}</Card.Title>
-                      <Card.Text>Cuộc họp sắp tới</Card.Text>
+                      <Card.Text>Upcoming meeting</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -473,7 +470,7 @@ export const Dashboard = () => {
                       <Card.Title>
                         {dashboardData.documents.submitted}
                       </Card.Title>
-                      <Card.Text>Tài liệu đã nộp</Card.Text>
+                      <Card.Text>Documents submitted</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -481,120 +478,7 @@ export const Dashboard = () => {
                   <Card className="text-center h-100">
                     <Card.Body>
                       <Card.Title>{dashboardData.documents.pending}</Card.Title>
-                      <Card.Text>Blog chờ phản hồi</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* Biểu đồ và thống kê */}
-              <Row className="mb-4">
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Thống kê tương tác</Card.Title>
-                      <BarChart
-                        width={500}
-                        height={300}
-                        data={dashboardData.interactionStats}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar
-                          dataKey="meetings"
-                          fill="#8884d8"
-                          name="Số cuộc họp"
-                        />
-                        <Bar
-                          dataKey="documents"
-                          fill="#82ca9d"
-                          name="Tài liệu"
-                        />
-                      </BarChart>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Lần tương tác gần nhất</Card.Title>
-                      <p className="h4">{dashboardData.lastInteraction}</p>
-                      <Card.Title className="mt-4">Tin nhắn mới</Card.Title>
-                      <div className="message-list">
-                        {dashboardData.messages.map((message) => (
-                          <div
-                            key={message.id}
-                            className="message-item mb-2 p-2 border rounded"
-                          >
-                            <div className="d-flex justify-content-between">
-                              <strong>{message.sender}</strong>
-                              <small>{message.date}</small>
-                            </div>
-                            <div>{message.content}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <Button variant="primary" className="mt-3">
-                        Gửi tin nhắn mới
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/*  tài liệu */}
-              <Row className="mb-4">
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Quản lý blog</Card.Title>
-                      <Table striped hover>
-                        <thead>
-                          <tr>
-                            <th>Tên Blog</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày nộp</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {dashboardData.documentList.map((doc, index) => (
-                            <tr key={index}>
-                              <td>{doc.name}</td>
-                              <td>
-                                <span
-                                  className={`badge ${doc.status === "Đã phê duyệt"
-                                    ? "bg-success"
-                                    : "bg-warning"
-                                    }`}
-                                >
-                                  {doc.status}
-                                </span>
-                              </td>
-                              <td>{doc.date}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                {/* Lịch và ghi chú */}
-                <Col md={6}>
-                  <Card className="h-100">
-                    <Card.Body>
-                      <Card.Title>Lịch hẹn</Card.Title>
-                      <Calendar
-                        localizer={localizer}
-                        events={dashboardData.appointments}
-                        startAccessor="start"
-                        endAccessor="end"
-                        style={{ height: 400 }}
-                      />
+                      <Card.Text>Blog awaiting response</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -609,8 +493,7 @@ export const Dashboard = () => {
             <Col md={9} lg={10} className="p-4 w-100">
               <Row className="mb-4">
                 <Col>
-                  <h2>Chào mừng {userInfo.username} !</h2>
-                  <p className="text-muted">Có 3 thông báo mới</p>
+                  <h2>Welcome {userInfo.username} !</h2>
                 </Col>
               </Row>
               {/* Overview Cards */}
@@ -619,7 +502,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{studentCount}</Card.Title>
-                      <Card.Text>Tổng số sinh viên</Card.Text>
+                      <Card.Text>Total number of lecturers</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -627,7 +510,7 @@ export const Dashboard = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title>{tutorCount}</Card.Title>
-                      <Card.Text>Tổng số giảng viên</Card.Text>
+                      <Card.Text>Total number of lecturers</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -658,106 +541,12 @@ export const Dashboard = () => {
                   totalMessagesData={totalMessagesData}
                 />
               </Row>
-
-              {/* Quản Lý Tài Khoản */}
-              <Row className="mb-4">
-                <Col>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Quản Lý Tài Khoản</Card.Title>
-                      <Table striped hover>
-                        <thead>
-                          <tr>
-                            <th>Tên</th>
-                            <th>Vai trò</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {users.map((user) => (
-                            <tr key={user._id}>
-                              <td>{user.username}</td>
-                              <td>Sinh viên</td>
-                              <td>
-                                <Badge
-                                  bg={
-                                    user.status === true ? "success" : "warning"
-                                  }
-                                >
-                                  {user.status ? "verified" : "not verified"}
-                                </Badge>
-                              </td>
-                              <td>
-                                <Button variant="outline-primary" size="sm">
-                                  Chi tiết
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-              {/* Quản Lý blog */}
-              <Row className="mb-4">
-                <Col>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Quản Lý Blog</Card.Title>
-                      <Table responsive="sm" striped hover>
-                        <thead>
-                          <tr>
-                            <th>Title</th>
-                            <th>Ngày</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {blogList.map((blog) => (
-                            <tr key={blog.id}>
-                              <td>{blog.title}</td>
-                              <td>10/2/2024</td>
-                              <td>
-                                <Badge
-                                  bg={
-                                    blog.status === "published"
-                                      ? "success"
-                                      : blog.status === "pending"
-                                        ? "warning"
-                                        : "danger"
-                                  }
-                                >
-                                  {blog.status === "published"
-                                    ? "Published"
-                                    : blog.status === "pending"
-                                      ? "Pending"
-                                      : "Canceled"}
-                                </Badge>
-                              </td>
-                              <td>
-                                <Button variant="outline-primary" size="sm">
-                                  Chi tiết
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-
               {/* Hệ Thống Thông Báo */}
               <Row className="mb-4">
                 <Col>
                   <Card>
                     <Card.Body>
-                      <Card.Title>Hệ Thống Thông Báo</Card.Title>
+                      <Card.Title>Notification System</Card.Title>
                       <MDBModalBody>
                         <MDBInput
                           label="Message"

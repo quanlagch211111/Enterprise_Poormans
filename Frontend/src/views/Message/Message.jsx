@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-import styled from "styled-components";
 import axios from "../../services/AxiosCustom";
 import { io } from "socket.io-client";
-import { MdOutlineEmojiEmotions } from "react-icons/md";
+import { MdOutlineEmojiEmotions, MdMenu, MdClose } from "react-icons/md";
 import { IoMdSend } from "react-icons/io";
+import { BsPersonCircle } from "react-icons/bs";
+import { FiSearch } from "react-icons/fi";
 import { v4 as uuidv4 } from "uuid";
 import Picker from "emoji-picker-react";
+import { SearchComponant } from "../../components/SearchComponent";
 
 export const Message = () => {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ export const Message = () => {
   const [incoming, setIncoming] = useState(null);
   const [msg, setMsg] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+  const [searchText, setSerchText] = useState("");
+  const [showSidebar, setShowSidebar] = useState(true);
   const scrollRef = useRef();
 
   const APP_HOST = process.env.REACT_APP_SOCKET_PORT;
@@ -32,11 +36,14 @@ export const Message = () => {
   // Lấy danh sách liên hệ
   const getContacts = async () => {
     try {
-      const response = await axios.get(`/users/getuserforchat/${currentUser._id}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await axios.get(
+        `/users/getuserforchat/${currentUser._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       setContacts(response.data || []);
     } catch (err) {
       console.error(err);
@@ -107,11 +114,27 @@ export const Message = () => {
 
         // Xóa nội dung tin nhắn sau khi gửi
         setMsg("");
+        setShowPicker(false);
       } else {
         console.error("Failed to add message:", response.data.msg);
       }
     } catch (error) {
       console.error("Error sending message:", error);
+    }
+  };
+
+  // Toggle sidebar khi ở chế độ mobile
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
+  // Chọn người dùng và đóng sidebar trên mobile
+  const handleSelectUser = (contact) => {
+    setSelectedUser(contact);
+
+    // Nếu đang ở chế độ mobile, đóng sidebar sau khi chọn người dùng
+    if (window.innerWidth <= 768) {
+      setShowSidebar(false);
     }
   };
 
@@ -141,11 +164,14 @@ export const Message = () => {
       // Lắng nghe sự kiện msg-recieve
       socket.current.on("msg-recieve", (data) => {
         console.log("Message received via socket:", data);
-        // console.log("Selected user:", data.data.from);
 
         // Chỉ thêm tin nhắn nếu thuộc về cuộc trò chuyện hiện tại
         if (data.from === selectedUser?._id || data.to === selectedUser?._id) {
-          setIncoming({ fromSelf: false, message: data.message, from: data.from });
+          setIncoming({
+            fromSelf: false,
+            message: data.message,
+            from: data.from,
+          });
         } else {
           console.log("Message does not belong to the current chat.");
         }
@@ -169,50 +195,117 @@ export const Message = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Lấy thời gian hiện tại
+  const getCurrentTime = () => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   return (
-    <Container>
-      <div className="sidebar">
-        <h3>Contacts</h3>
-        <ul>
-          {contacts.map((contact) => (
-            <li
-              key={contact._id}
-              onClick={() => setSelectedUser(contact)}
-              className={selectedUser?._id === contact._id ? "active" : ""}
-            >
-              {contact.username || contact.name}
-            </li>
-          ))}
-        </ul>
+    <div className={`message-container ${showSidebar ? "sidebar-active" : ""}`}>
+      <div className="menu-button">
+        {showSidebar ? (
+          <MdClose onClick={toggleSidebar} />
+        ) : (
+          <MdMenu onClick={toggleSidebar} />
+        )}
       </div>
+
+      <div className={`conversation-list ${showSidebar ? "active" : ""}`}>
+        <div className="conversation-header">
+          <h2>Conversation</h2>
+        </div>
+        <div className="search-container">
+          <SearchComponant
+            onSearch={setSerchText}
+            placeholder="Tìm kiếm người dùng..."
+          />
+        </div>
+        <div className="user-list">
+          {contacts
+            .filter(
+              (contact) =>
+                contact.username
+                  ?.toLowerCase()
+                  .includes(searchText.toLowerCase()) ||
+                contact.name?.toLowerCase().includes(searchText.toLowerCase())
+            )
+            .map((contact) => (
+              <div
+                key={contact._id}
+                onClick={() => handleSelectUser(contact)}
+                className={`user-item ${
+                  selectedUser?._id === contact._id ? "active" : ""
+                }`}
+              >
+                <div className="avatar">
+                  <BsPersonCircle />
+                </div>
+                <div className="user-info">
+                  <h4>{contact.username || contact.name}</h4>
+                  <p className="last-message">Click to start chatting</p>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+
       <div className="chat-container">
         {selectedUser ? (
           <>
             <div className="chat-header">
-              <h3>{selectedUser.username || selectedUser.name}</h3>
-            </div>
-            <div className="chat-messages">
-              {messages.map((message) => (
-                <div
-                  key={uuidv4()}
-                  className={`message ${message.fromSelf ? "sended" : "received"}`}
-                  ref={scrollRef}
-                >
-                  <p>{message.message}</p>
+              <div className="user-profile">
+                <div className="avatar">
+                  <BsPersonCircle />
                 </div>
-              ))}
+                <div className="user-info">
+                  <h3>{selectedUser.username || selectedUser.name}</h3>
+                  <span className="status">Online</span>
+                </div>
+              </div>
             </div>
+
+            <div className="chat-messages">
+              {messages.length > 0 ? (
+                messages.map((message, index) => (
+                  <div
+                    key={uuidv4()}
+                    className={`message-wrapper ${
+                      message.fromSelf ? "sended" : "received"
+                    }`}
+                    ref={scrollRef}
+                  >
+                    <div className="message-content">
+                      <p>{message.message}</p>
+                      <span className="message-time">{getCurrentTime()}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-messages">
+                  <p>
+                    Let's start the conversation with{" "}
+                    {selectedUser.username || selectedUser.name}
+                  </p>
+                </div>
+              )}
+            </div>
+
             {showPicker && (
-              <EmojiContainer>
+              <div className="emoji-container">
                 <Picker
                   onEmojiClick={(emojiObject) =>
                     setMsg((prevMsg) => prevMsg + emojiObject.emoji)
                   }
                 />
-              </EmojiContainer>
+              </div>
             )}
+
             <div className="input-container">
-              <div className="emoji">
+              <div className="emoji-button">
                 <MdOutlineEmojiEmotions
                   onClick={() => setShowPicker(!showPicker)}
                 />
@@ -222,7 +315,7 @@ export const Message = () => {
                   type="text"
                   value={msg}
                   onChange={(e) => setMsg(e.target.value)}
-                  placeholder="Type a message"
+                  placeholder="Nhập tin nhắn..."
                 />
                 <button type="submit">
                   <IoMdSend />
@@ -231,142 +324,17 @@ export const Message = () => {
             </div>
           </>
         ) : (
-          <div className="no-chat">
-            <h3>Select a user to start chatting</h3>
+          <div className="welcome-screen">
+            <div className="welcome-icon">
+              <BsPersonCircle />
+            </div>
+            <h2>Welcome to the messaging app</h2>
+            <p>Select a user to start chatting</p>
           </div>
         )}
       </div>
-    </Container>
+    </div>
   );
 };
 
-const Container = styled.div`
-  display: flex;
-  height: 100vh;
-
-  .sidebar {
-    width: 25%;
-    background-color: #f0f0f0;
-    padding: 1rem;
-    overflow-y: auto;
-
-    h3 {
-      margin-bottom: 1rem;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-
-      li {
-        padding: 0.5rem;
-        cursor: pointer;
-        border-radius: 0.5rem;
-
-        &:hover,
-        &.active {
-          background-color: #d1d1d1;
-        }
-      }
-    }
-  }
-
-  .chat-container {
-    width: 75%;
-    display: flex;
-    flex-direction: column;
-
-    .chat-header {
-      padding: 1rem;
-      background-color: #075e54;
-      color: white;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      background-color: #ece5dd;
-
-      .message {
-        margin-bottom: 1rem;
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-        max-width: 60%;
-        word-wrap: break-word;
-
-        &.sended {
-          background-color: #dcf8c6;
-          align-self: flex-end;
-          text-align: right;
-          margin-left: auto;
-        }
-
-        &.received {
-          background-color: white;
-          align-self: flex-start;
-          text-align: left;
-          margin-right: auto;
-        }
-      }
-    }
-
-    .input-container {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      background-color: #f0f0f0;
-
-      .emoji {
-        margin-right: 1rem;
-        cursor: pointer;
-
-        svg {
-          font-size: 1.5rem;
-          color: #888;
-        }
-      }
-
-      form {
-        display: flex;
-        flex: 1;
-
-        input {
-          flex: 1;
-          padding: 0.5rem;
-          border: 1px solid #ccc;
-          border-radius: 0.5rem;
-          margin-right: 1rem;
-        }
-
-        button {
-          background-color: #075e54;
-          color: white;
-          border: none;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          cursor: pointer;
-
-          svg {
-            font-size: 1.2rem;
-          }
-        }
-      }
-    }
-
-    .no-chat {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #888;
-    }
-  }
-`;
-
-const EmojiContainer = styled.div`
-  position: absolute;
-  bottom: 100px;
-  left: 20px;
-  z-index: 1000;
-`;
+export default Message;

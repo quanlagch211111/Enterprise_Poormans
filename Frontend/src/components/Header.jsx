@@ -25,10 +25,10 @@ export const Header = () => {
       <div className="header-left"></div>
       <div className="header-right d-flex gap-3 align-items-center">
         <NavLink to="/message">
-          <i className="fas fa-comment-alt"></i>
+          <i className="fas fa-comment-alt fs-5 black-color"></i>
         </NavLink>
         <NavLink to="/notification">
-          <i className="fas fa-bell"></i>
+          <i className="fas fa-bell fs-5 black-color"></i>
         </NavLink>
         <div className="profile position-relative" ref={profileRef}>
           <div

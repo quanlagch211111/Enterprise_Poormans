@@ -114,28 +114,77 @@ const Account = () => {
     setShowModalNewAccount(true);
   };
 
+  const validateAccount = (account) => {
+    const { username, email, password, address, phone, role, additionalInfo } =
+      account;
+
+    if (!username || !email || !password || !address || !phone || !role) {
+      toast.error("Please fill in all required fields!");
+      return false;
+    }
+
+    switch (role) {
+      case "Student":
+        if (!additionalInfo.grade) {
+          toast.error("Please enter grade for the student!");
+          return false;
+        }
+        if (!additionalInfo.major) {
+          toast.error("Please enter major for the student!");
+          return false;
+        }
+        break;
+      case "Teacher":
+        if (!additionalInfo.expertise || !additionalInfo.yearsOfExperience) {
+          toast.error(
+            "Please enter expertise and years of experience for the teacher!"
+          );
+          return false;
+        }
+        break;
+      case "Manager":
+        if (!additionalInfo.department || !additionalInfo.position) {
+          toast.error("Please enter department and position for the manager!");
+          return false;
+        }
+        break;
+      default:
+        break;
+    }
+
+    return true;
+  };
+
   const handleCreateAccount = async () => {
+    if (!validateAccount(newAccount)) return;
+
     try {
       setIsLoading(true);
 
-      // Chuẩn bị dữ liệu theo đúng định dạng yêu cầu
+      const {
+        username,
+        email,
+        password,
+        address,
+        phone,
+        role,
+        additionalInfo,
+      } = newAccount;
+
       const requestData = {
-        username: newAccount.username,
-        email: newAccount.email,
-        password: newAccount.password,
-        address: newAccount.address,
-        phone: newAccount.phone,
-        role: newAccount.role.toLowerCase(), // Chuyển role thành chữ thường
-        additionalInfo: newAccount.additionalInfo, // Bao gồm thông tin bổ sung tùy theo role
+        username,
+        email,
+        password,
+        address,
+        phone,
+        role: role.toLowerCase(),
+        additionalInfo,
       };
 
-      const response = await axios.post(
-        "/users/signup",
-        requestData
-      );
+      const response = await axios.post("/users/signup", requestData);
 
       if (response.status === 201) {
-        toast.success("Tạo tài khoản thành công!");
+        toast.success("Account created successfully!");
         fetchUsersWithRoles();
         setShowModalNewAccount(false);
         setNewAccount({
@@ -156,11 +205,10 @@ const Account = () => {
             yearsOfExperience: "",
           },
         });
-        setIsLoading(false);
       }
     } catch (error) {
-      console.error("Error creating account:", error);
-      toast.error("Không thể tạo tài khoản");
+      toast.error("Exists account with this username or email!");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -179,7 +227,7 @@ const Account = () => {
 
       if (response.status === 200) {
         fetchUsersWithRoles();
-        toast.success("Tài khoản đã được cập nhật!");
+        toast.success("Account has been updated!");
         setShowModalEditAccount(false);
         fetchUsersWithRoles(); // Fetch the updated list of users
         setIsLoading(false);
@@ -204,7 +252,7 @@ const Account = () => {
       }
     } catch (error) {
       console.error("Error updating account:", error);
-      toast.error("Không thể cập nhật tài khoản");
+      toast.error("Cannot update account! Because of lack of information!");
       setIsLoading(false);
     }
   };
@@ -251,7 +299,7 @@ const Account = () => {
       if (respone.status === 200) {
         setTimeout(() => {
           fetchUsersWithRoles();
-          toast.success("Xóa tài khoản thành công!");
+          toast.success("Account deleted successfully!");
           setShowModalDeleteAccount(false);
           setAccountToDelete(null);
           setIsLoading(false);
@@ -259,7 +307,7 @@ const Account = () => {
       }
     } catch (error) {
       console.error("Error deleting account:", error);
-      toast.error("Không thể xóa tài khoản");
+      toast.error("Unable to delete account");
       setIsLoading(false);
     }
   };

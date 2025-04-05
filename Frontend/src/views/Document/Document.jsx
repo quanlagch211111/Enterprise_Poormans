@@ -31,6 +31,7 @@ export const Document = () => {
   const [modalDeleteAssignment, setModalDeleteAssignment] = useState(false);
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
+  const [selectedFolederId, setSelectedFolderId] = useState(false);
   const [documentFilePath, setDocumentFilePath] = useState(false);
   const [selectedAsmId, setSelectedAsmId] = useState(null);
   const [newDocument, setNewDocument] = useState({
@@ -102,7 +103,7 @@ export const Document = () => {
       return response.data.data?.username;
     } catch (error) {
       console.error("Error fetching username:", error);
-      return "Unknown User"; 
+      return "Unknown User";
     }
   };
 
@@ -246,6 +247,7 @@ export const Document = () => {
               onClick={() => {
                 setSelectedFolder(folder);
                 fetchDocuments(folder._id);
+                setSelectedFolderId(folder._id);
               }}
               style={{ cursor: "pointer" }}
             >
@@ -286,10 +288,10 @@ export const Document = () => {
 
   const renderFolderDetails = () => {
     if (!selectedFolder) return null;
-  
+
     const studentDocuments = documents?.studentDocuments || [];
     const tutorDocuments = documents?.tutorDocuments || [];
-  
+
     return (
       <>
         <div className="section-header">
@@ -337,7 +339,7 @@ export const Document = () => {
                 </div>
               ))}
             </div>
-  
+
             {/* Nếu là tutor, hiển thị nút upload document */}
             {role === "TUTOR" && (
               <div className="d-flex justify-content-center w-100 mt-3">
@@ -455,7 +457,7 @@ export const Document = () => {
       </>
     );
   };
-  
+
   return (
     <>
       <div className="main-content">
@@ -472,6 +474,9 @@ export const Document = () => {
         </div>
       </div>
       <UploadAssignment
+        fetchAssignments={() => fetchAssignments()}
+        fetchFolders={() => fetchFolders(selectedAsmId)}
+        fetchDocuments={() => fetchDocuments(selectedFolederId)}
         show={modalCreateAssignment}
         onClose={() => setModalCreateAssignment(false)}
         accessToken={accessToken}
@@ -489,7 +494,7 @@ export const Document = () => {
         documentFilePath={documentFilePath}
       ></DeleteAssignment>
       <NewFolder
-        fetchFolders={fetchFolders(selectedAsmId)}
+        fetchFolders={() => fetchFolders(selectedAsmId)}
         show={modalNewFolder}
         onClose={() => setModalNewFolder(false)}
         assignmentId={selectedAssignment?._id}
