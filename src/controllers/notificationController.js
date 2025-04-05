@@ -11,7 +11,7 @@ exports.createNotification = async (req, res) => {
     try {
       const notification = await notificationService.createNotification(req.body);
 
-      const receiverSocketId = global.onlineUsers.get(user_id);
+      const receiverSocketId = global.onlineUsers.get(user_id.toString());
       
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('notification-receive', notification );
@@ -68,6 +68,8 @@ exports.createNotificationsForUsers = async (req, res) => {
 
       // Duyệt từng user_id để tạo notification riêng
       for (const user_id of user_ids) {
+
+        console.log("user_id: ", user_id);
           const notificationData = {
               user_id: user_id, 
               from,

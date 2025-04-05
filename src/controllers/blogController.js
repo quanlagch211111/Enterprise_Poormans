@@ -1,4 +1,7 @@
 const Blog = require('../models/Blog');
+const { sendEmailToAllAdmins, sendEmailByUserId } = require('../services/sentEmailService'); // Import the notification service
+const Staff = require('../models/Staff'); // Import the Staff model
+const { createNotification, createNotificationsForUsers } = require('./notificationController');
 
 exports.createBlog = async (req, res) => {
     try {
@@ -10,6 +13,24 @@ exports.createBlog = async (req, res) => {
 
         const newBlog = new Blog({ title, content, author_id, tags, status });
         await newBlog.save();
+
+
+
+        const staffs = await Staff.find({}, 'user_id');
+        const userIdsFromStaffs = staffs.map(staff => staff.user_id?.toString()).filter(Boolean);
+        await sendEmailToAllAdmins();
+        await createNotificationsForUsers({
+            body: {
+                user_ids: userIdsFromStaffs,
+                from: "User",
+                message: `New Blog To Accept, please check it`,
+                entityType: 'Blog',
+                entityId: newBlog._id
+            }
+        }, { status: () => ({ json: () => { } }) });
+
+
+
 
         res.status(201).json({ message: 'Blog created successfully', blog: newBlog });
     } catch (err) {
@@ -45,6 +66,23 @@ exports.updateBlogById = async (req, res) => {
         if (!updatedBlog) {
             return res.status(404).json({ message: 'Blog not found' });
         }
+        // Notify author about the update
+
+        console.log("updatedBlog: ", updatedBlog);
+
+        await sendEmailByUserId(updatedBlog.author_id)
+        await createNotification({
+            body: {
+                user_id: updatedBlog.author_id ,
+                from: "Admin",
+                message: `Your blog has been update, please check it`,
+                entityType: 'Blog',
+                entityId: updatedBlog._id
+            }
+        }, { status: () => ({ json: () => { } }) });
+
+
+
         res.status(200).json({ message: 'Blog updated successfully', blog: updatedBlog });
     } catch (err) {
         res.status(500).json({ message: err.message });

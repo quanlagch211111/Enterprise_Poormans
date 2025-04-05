@@ -95,6 +95,7 @@ exports.signinUser = async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
     });
 
+
     // Trả về thông tin người dùng
     return res.status(200).json(userData);
 
@@ -376,24 +377,26 @@ exports.getUsersWithRoles = async (req, res) => {
     const usersWithRoles = await Promise.all(
       users.map(async (user) => {
         let role = null;
+        let objectid = null;
 
         // Check if the user is a student
         const isStudent = await Student.findOne({ user_id: user._id });
-        if (isStudent) role = "Student";
+        if (isStudent) {role = "Student", objectid = isStudent._id;};
 
         // Check if the user is a tutor
         const isTutor = await Tutor.findOne({ user_id: user._id });
-        if (isTutor) role = "Tutor";
+        if (isTutor) {role = "Tutor", objectid = isTutor._id;};
 
         // Check if the user is a staff
         const isStaff = await Staff.findOne({ user_id: user._id });
-        if (isStaff) role = "Staff";
+        if (isStaff) {role = "Staff", objectid = isStaff._id;};
 
         return {
           _id: user._id,
           username: user.username,
           email: user.email,
           role: role || "Unknown",
+          objectid: objectid || null,
           address: user.address,
           phone: user.phone,
           status : user.isVerified,

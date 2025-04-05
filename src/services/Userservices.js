@@ -86,16 +86,20 @@ const signinUser = (userData) => {
       }
 
       let role = null;
+      let objectId = null;
 
     switch (true) {
       case await StudentService.isStudent(user._id):
         role = "STUDENT";
+        objectId = await StudentService.getStudentidByuserId(user._id);
         break;
       case await TutorService.isTutor(user._id):
         role = "TUTOR";
+        objectId = await TutorService.getTutoridByuserId(user._id);
         break;
       case await StaffService.isStaff(user._id):
         role = "STAFF";
+        objectId = await StaffService.getStaffidByuserId(user._id);
         break;
       default:
         role = "UNKNOWN";
@@ -117,7 +121,8 @@ const signinUser = (userData) => {
           message: 'Login successful',
           accesstoken,
           refreshtoken,
-          user
+          user,
+          objectId
         })
 
     }catch (err) {

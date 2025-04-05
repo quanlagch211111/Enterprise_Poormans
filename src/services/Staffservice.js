@@ -39,8 +39,12 @@ const StaffService = {
     }
   },
   
-  async isStaff (userId) {
-    return Boolean(await Staff.exists({ user_id: userId  }));
+  async isStaff(userId) {
+    return Boolean( await Staff.findOne({ user_id: userId }));
+  },
+  async getStaffidByuserId(userId) {
+    const staff = await Staff.findOne({ user_id: userId });
+    return staff ? staff._id : null;
   }
 };
 

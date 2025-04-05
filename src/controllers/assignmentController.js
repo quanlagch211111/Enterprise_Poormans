@@ -16,6 +16,7 @@ exports.createAssignment = async (req, res) => {
             return res.status(400).json({ message: 'Failed to create assignment' });
         }
 
+        console.log("student_id: ", student_id);
 
         await sendEmailByStudentIds(student_id, 'new_assignment', { assignmentTitle: title });
         await sendEmailByTutorId(tutor_id, 'new_assignment', { assignmentTitle: title });

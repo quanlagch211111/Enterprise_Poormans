@@ -39,10 +39,15 @@ const TutorService = {
     }
   },
 
-    async isTutor (userId) {
-      return Boolean(await Tutor.exists({user_id: userId }));
-    }
-  
+  async isTutor(userId) {
+    return Boolean( await Tutor.findOne({ user_id: userId }));
+    
+  },
+
+  async getTutoridByuserId(userId) {
+    const tutor = await Tutor.findOne({ user_id: userId });
+    return tutor ? tutor._id : null;
+  }
 
 };
 

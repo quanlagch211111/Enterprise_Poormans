@@ -98,6 +98,8 @@ io.on("connection", (socket) => {
   socket.on("add-user", (userId) => {
     if (userId) {
       global.onlineUsers.set(userId, socket.id);
+
+      console.log("Online Users Map:", [...global.onlineUsers]);
       console.log("User added:", userId);
     }
   });
@@ -110,6 +112,8 @@ io.on("connection", (socket) => {
         from: data.from,
         message: data.message,
       });
+
+      console.log(`Message sent to user ${data.from}, ${data.message}`);
     }
   });
 

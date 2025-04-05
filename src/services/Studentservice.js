@@ -39,8 +39,13 @@ const StudentService = {
     }
   },
 
-  async isStudent (userId) {
-    return Boolean(await Student.exists({user_id: userId }));
+  async isStudent(userId) {
+    return Boolean(await Student.findOne({ user_id: userId }));
+  },
+
+  async getStudentidByuserId(userId) {
+       const student = await Student.findOne({ user_id: userId });
+       return student ? student._id : null; 
   }
 
 };

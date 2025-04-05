@@ -16,12 +16,12 @@ exports.getAllAssignments = async () => {
     return await Assignment.find()
         .populate({
             path: 'student_id',
-            model: 'Users',
+            model: 'Student',
             select: 'username email'
         })
         .populate({
             path: 'tutor_id',
-            model: 'Users',
+            model: 'Tutor',
             select: 'username email'
         })
         .populate({

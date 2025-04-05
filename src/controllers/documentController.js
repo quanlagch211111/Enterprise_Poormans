@@ -1,5 +1,10 @@
 const documentService = require('../services/Documentservice');
 
+const SentNotificationfprDocumentService = require('../services/SentNotificationServiceforDocument');
+
+
+
+
 exports.getAllDocuments = async (req, res) => {
     try {
         const documents = await documentService.getAllDocuments();
@@ -12,6 +17,11 @@ exports.getAllDocuments = async (req, res) => {
 exports.createDocument = async (req, res) => {
     try {
         const document = await documentService.createDocument(req.body);
+        // notifi all member of class
+        await SentNotificationfprDocumentService.getStudentIdsByDocumentId(document._id);
+        await SentNotificationfprDocumentService.getUserIdByDocumentId(document._id);
+
+
         res.status(201).json(document);
     } catch (err) {
         res.status(400).json({ message: err.message });
