@@ -18,6 +18,14 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+const { ExpressPeerServer } = require('peer');
+const peerServer = ExpressPeerServer(server, {
+  debug: true,
+  path: '/peerjs',
+  concurrent_limit: 20, 
+  proxied: true
+});
+
 const io = socket(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -28,6 +36,7 @@ const io = socket(server, {
 });
 
 global.onlineUsers = new Map(); // To store users and their socket IDs
+const activeRooms = new Map();
 
 
 // Xuất đối tượng io để sử dụng trong các file khác
@@ -132,6 +141,48 @@ io.on("connection", (socket) => {
   socket.on("leave-room", ({ room_id, user_id }) => {
     socket.leave(room_id);
     socket.to(room_id).emit("user-left", { user_id });
+  });
+
+  socket.on('join-room', (roomId, userId) => {
+    socket.join(roomId);
+    
+    // Initialize room if not exists
+    if (!activeRooms.has(roomId)) {
+      activeRooms.set(roomId, new Set());
+    }
+    
+    // Add user to room
+    activeRooms.get(roomId).add(userId);
+    
+    // Notify others in the room
+    socket.to(roomId).emit('user-connected', userId);
+    console.log(`User ${userId} joined room ${roomId}`);
+
+    // Send list of existing users to the new participant
+    const users = Array.from(activeRooms.get(roomId)).filter(id => id !== userId);
+    socket.emit('existing-users', users);
+
+    // Message handling
+    socket.on('message', (message) => {
+      io.to(roomId).emit('createMessage', {
+        sender: userId,
+        text: message,
+        timestamp: new Date().toISOString()
+      });
+    });
+    socket.on('disconnect', () => {
+      console.log(`User ${userId} disconnected`);
+      socket.to(roomId).emit('user-disconnected', userId);
+      
+      if (activeRooms.has(roomId)) {
+        activeRooms.get(roomId).delete(userId);
+        
+        // Clean up empty rooms
+        if (activeRooms.get(roomId).size === 0) {
+          activeRooms.delete(roomId);
+        }
+      }
+    });
   });
 
   // Disconnect user
