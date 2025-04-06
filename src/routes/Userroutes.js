@@ -3,7 +3,7 @@ const { createUser, signinUser, updateUser, deleteUser,
   getallUser,getAllUserForChat,getUsersWithRoles, detailUser, reprovideToken, verifyOtp, logoutUser,
    requestPasswordReset, verifyPasswordResetOtp, resetPassword  } = require('../controllers/UserControllers');    
 const router = express.Router();
-const { authMiddleware, isStaff} = require('../middlewares/Authmiddlewares');
+const { authMiddleware, isStaff, isTeacher} = require('../middlewares/Authmiddlewares');
 
 
 router.get('/', (req, res) => {

@@ -5,7 +5,7 @@ const Student = require('../models/Student');
 
 exports.markAttendance = async (req, res) => {
     try {
-        const {tutor_id,  meeting_id, student_id, status } = req.body; // Lấy thông tin từ request
+        const { tutor_id, meeting_id, student_id, status } = req.body; // Lấy thông tin từ request
 
         // Kiểm tra xem status có hợp lệ không
         if (!['Present', 'Absent'].includes(status)) {
@@ -45,12 +45,13 @@ exports.markAttendance = async (req, res) => {
 
 exports.markMultipleAttendance = async (req, res) => {
     try {
-        const { tutor_id, meeting_id, students, status } = req.body;
-        console.log(req.body);
+        const { tutor_id, meeting_id, students } = req.body;
 
-        // Kiểm tra xem status có hợp lệ không
-        if (!['Present', 'Absent'].includes(status)) {
-            return res.status(400).json({ message: 'Status must be either Present or Absent' });
+        // Kiểm tra xem các status có hợp lệ không
+        const validStatuses = ['Present', 'Absent'];
+        const invalidStatus = students.find(student => !validStatuses.includes(student.status));
+        if (invalidStatus) {
+            return res.status(400).json({ message: 'Status must be either Present or Absent for all students' });
         }
 
         // Kiểm tra xem meeting_id có hợp lệ không
@@ -60,13 +61,15 @@ exports.markMultipleAttendance = async (req, res) => {
         }
 
         // Kiểm tra xem tutor có phải là người tổ chức cuộc họp không
-        const tutor = await Tutor.findOne({ _id: tutor_id }); // Giả sử bạn có user từ JWT
+        const tutor = await Tutor.findOne({ _id: tutor_id });
         if (!tutor || tutor._id.toString() !== meeting.organizer_id.toString()) {
             return res.status(403).json({ message: 'Only the tutor who organized the meeting can mark attendance' });
         }
 
         // Duyệt qua danh sách học sinh và cập nhật điểm danh
-        const attendancePromises = students.map(async (student_id) => {
+        const attendancePromises = students.map(async (student) => {
+            const { student_id, status } = student;
+
             // Kiểm tra nếu bản ghi attendance đã tồn tại cho học sinh này trong cuộc họp
             let attendance = await Attendance.findOne({ meeting_id, student_id });
 
@@ -99,16 +102,37 @@ exports.markMultipleAttendance = async (req, res) => {
     }
 };
 
+
 exports.getAttendanceByMeeting = async (req, res) => {
-  try {
-    const { meeting_id } = req.params;
+    try {
+        const { meeting_id } = req.params;
 
-    const attendanceRecords = await Attendance.find({ meeting_id })
-      .populate('student_id', 'user_id')
-      .populate('marked_by', 'user_id');
+        const attendanceRecords = await Attendance.find({ meeting_id })
+            .populate({
+                path: 'student_id',
+                populate: {
+                    path: 'user_id',
+                    model: 'Users',
+                    select: 'username  email address phone',
+                },
+            })
+            .populate({
+                path: 'marked_by',
+                populate: {
+                    path: 'user_id',
+                    model: 'Users',
+                    select: 'username',
+                },
+            })
+            .populate({
+                path: 'meeting_id', 
+                model: 'Meeting',
+                select: 'room_id date',
+            });
 
-    res.status(200).json({ attendance: attendanceRecords });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+
+        res.status(200).json({ attendance: attendanceRecords });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
