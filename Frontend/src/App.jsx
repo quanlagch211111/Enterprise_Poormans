@@ -18,6 +18,8 @@ import ResetPassword from "./views/ForgotPassword/ResetPassword";
 import { SocketProvider } from "./services/Socket";
 import NotificationPage from "./views/Notification/Notification";
 import { Container } from "react-bootstrap";
+import Attendance from "./views/Attendance/Attendance";
+import TakingAttendance from "./views/Attendance/TakingAttendance";
 
 function App() {
   const location = useLocation();
@@ -65,6 +67,11 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/notification" element={<NotificationPage />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route
+              path="/check-attendance/:date"
+              element={<TakingAttendance />}
+            />
           </Routes>
         </div>
       </div>

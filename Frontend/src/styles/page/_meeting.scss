@@ -29,3 +29,20 @@
   width: 400px;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
+// .video-box {
+//   background-color: #333; /* Màu nền cho video box */
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   position: relative;
+//   width: 50%; /* Chiếm toàn bộ chiều rộng */
+//   height: 100%; /* Chiếm toàn bộ chiều cao */
+//   overflow: hidden; /* Ẩn phần thừa nếu video vượt quá container */
+//   border-radius: 8px; /* Bo góc nếu cần */
+// }
+
+// .video-box video {
+//   width: 100%; /* Đảm bảo video chiếm toàn bộ chiều rộng */
+//   height: 100%; /* Đảm bảo video chiếm toàn bộ chiều cao */
+//   object-fit: cover; /* Đảm bảo video vừa khít mà không bị méo */
+// }

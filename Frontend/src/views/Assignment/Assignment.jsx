@@ -33,8 +33,6 @@ const Assignment = () => {
 
   const students = users.filter((user) => user.role === "Student");
   const tutors = users.filter((user) => user.role === "Tutor");
-  console.log("Students:", students);
-  console.log("Tutors:", tutors);
   const role = localStorage.getItem("role");
 
   useEffect(() => {
@@ -51,7 +49,6 @@ const Assignment = () => {
       const response = await axios.get("/assignments", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("Assignments:", response.data);
       setAssignments(response.data);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -64,7 +61,6 @@ const Assignment = () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setUsers(response.data);
-      console.log("Users with roles:", response.data);
     } catch (error) {
       console.error("Error fetching users with roles:", error);
     }
@@ -115,17 +111,17 @@ const Assignment = () => {
                     {/* Map over the student_id array to display all student names */}
                     <td>
                       {assignment.student_id
-                        .map((student) => student.username) // Extract each student's username
+                        .map((student) => student.user_id.username) // Extract each student's username
                         .join(", ")}{" "}
                       {/* Join the names with a comma */}
                     </td>
-                    <td>{assignment.tutor_id.username}</td>
+                    <td>{assignment.tutor_id.user_id.username}</td>
                     <td>
                       {new Date(assignment.assigned_at).toLocaleDateString()}
                     </td>
                     {role !== "STUDENT" && (
                       <td>
-                        <div className="dropdown-assignment">
+                        <div className="dropdown-assignment mb-9 d-flex justify-content-end align-items-center">
                           <div className="container-select d-flex justify-content-end">
                             <div
                               className="dropdown-select  d-flex align-items-center justify-content-center"

@@ -43,11 +43,10 @@ export const Dashboard = () => {
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
   const [users, setUsers] = useState([]);
-  const [studentCount, setStudentCount] = useState();
-  const [tutorCount, setTutorCount] = useState();
   const [blogList, setBlogList] = useState([]);
   const [pendingBlogs, setPendingBlogs] = useState([]);
-  const [documentListCount, setDocumentList] = useState([]);
+  const [documentListCount, setDocumentListCount] = useState([]);
+  const [documentList, setDocumentList] = useState([]);
   const [newStudentData, setNewStudentData] = useState([]);
   const [newTutorData, setNewTutorData] = useState([]);
   const [unassignedStudent, setUnassignedStudentData] = useState([]);
@@ -59,6 +58,9 @@ export const Dashboard = () => {
     message: "",
   });
   const userList = users.map((user) => user._id);
+  const studentCount = users.filter((user) => user.role === "Student").length;
+  const tutorCount = users.filter((user) => user.role === "Tutor").length;
+  const studentPendingBlogs = blogList.filter((blog => blog.status === "pending" && blog.author_id._id === userId)).length;
 
   useEffect(() => {
     if (!accessToken) {
@@ -89,8 +91,6 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setUsers(response.data);
-        setStudentCount(users.filter((user) => user.role === "Student").length);
-        setTutorCount(users.filter((user) => user.role === "Tutor").length);
       } catch (error) {
         console.error("Error fetching users with roles:", error);
       }
@@ -115,7 +115,9 @@ export const Dashboard = () => {
         const response = await axios.get("/documents/", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        setDocumentList(response.data.length);
+        setDocumentListCount(response.data.length);
+        setDocumentList(response.data);
+        console.log("Document List:", response.data);
       } catch (error) {
         console.error("Error fetching pending documents:", error);
       }
@@ -287,43 +289,6 @@ export const Dashboard = () => {
     );
   }
 
-  const studentData = [
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      status: "active",
-      lastInteraction: "2 ngày trước",
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      status: "inactive",
-      lastInteraction: "10 ngày trước",
-    },
-  ];
-  const blogData = [
-    {
-      id: 1,
-      name: "tại sao anh pakistan lại gọi cho ny bằng số điện thoại",
-      status: "active",
-      lastInteraction: "2 ngày trước",
-    },
-    {
-      id: 2,
-      name: "tại sao anh pakistan lại gọi cho ny bằng số điện thoại",
-      status: "inactive",
-      lastInteraction: "10 ngày trước",
-    },
-  ];
-
-  const appointmentData = [
-    { title: "Meeting với SV A", start: new Date(), end: new Date() },
-  ];
-
-  const interactionData = [
-    { name: "Cuộc hẹn", value: 12 },
-    { name: "Tài liệu", value: 8 },
-  ];
 
   // STUDENT
   // Dummy data
@@ -398,7 +363,7 @@ export const Dashboard = () => {
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>12</Card.Title>
+                      <Card.Title>{studentCount}</Card.Title>
                       <Card.Text>Student</Card.Text>
                     </Card.Body>
                   </Card>
@@ -422,7 +387,7 @@ export const Dashboard = () => {
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>3</Card.Title>
+                      <Card.Title>{studentPendingBlogs}</Card.Title>
                       <Card.Text>Blog Waiting for Response</Card.Text>
                     </Card.Body>
                   </Card>

@@ -53,7 +53,7 @@ export const Document = () => {
 
   const fetchAssignments = async () => {
     try {
-      const userId = localStorage.getItem("userId");// Lấy userId từ localStorage
+      const userId = localStorage.getItem("userId"); // Lấy userId từ localStorage
       const objectId = localStorage.getItem("objectId"); // Lấy objectId từ localStorage
       const role = localStorage.getItem("role"); // Lấy role từ localStorage
       const response = await axios.get("/assignments", {
@@ -122,7 +122,6 @@ export const Document = () => {
           return { ...doc, username }; // Gắn `username` vào tài liệu
         })
       );
-
 
       // Lọc tài liệu của tutor và sinh viên
       const tutorDocuments = allDocuments.filter(
@@ -364,7 +363,8 @@ export const Document = () => {
                   {studentDocuments.length > 0 ? (
                     studentDocuments
                       .filter(
-                        (doc) => doc.owner_id === localStorage.getItem("objectId")
+                        (doc) =>
+                          doc.owner_id === localStorage.getItem("objectId")
                       ) // Lọc tài liệu của sinh viên đã nộp
                       .map((doc) => (
                         <div

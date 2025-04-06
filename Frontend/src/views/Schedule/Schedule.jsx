@@ -27,7 +27,6 @@ export const Schedule = () => {
   const socket = useSocket(); // Ensure socket is initialized correctly
   const navigate = useNavigate(); // Ensure useNavigate is called before usage
   const role = localStorage.getItem("role");
-  console.log("Role:", role);
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId").toString();
   const [users, setUsers] = useState([]);
@@ -37,7 +36,6 @@ export const Schedule = () => {
   const [modalUpdateEvent, setModalUpdateEvent] = useState(false);
   const [isVisibility, setVisibility] = useState(false);
   const students = users.filter((user) => user.role === "Student");
-  console.log("users:", users);
   const tutors = users.filter((user) => user.role === "Tutor");
   const [assignments, setAssignments] = useState([]);
   const toggleVisibility = () => setVisibility(!isVisibility);
@@ -56,7 +54,6 @@ export const Schedule = () => {
         const response = await axios.get("/meetings", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        console.log("Meetings:", response.data);
         const formattedEvents = response.data.meetings.map((meeting) => ({
           id: meeting._id,
           title: meeting.title || "Event",
@@ -67,17 +64,16 @@ export const Schedule = () => {
           note: meeting.note,
           type: meeting.type,
           organizer_id: meeting.organizer_id._id,
-          organizer_username: meeting.organizer_id.username,
+          organizer_username: meeting.organizer_id.user_id.username,
           participant_ids: meeting.participant_ids.map(
             (participant) => participant._id
           ),
           participant_usernames: meeting.participant_ids.map(
-            (participant) => participant.username
+            (participant) => participant.user_id.username
           ),
           room_id: meeting.room_id,
           status: meeting.status,
         }));
-        console.log("Formatted Events:", formattedEvents);
 
         const filteredEvents = formattedEvents.filter((event) => {
           if (role === "STAFF") {
@@ -89,7 +85,6 @@ export const Schedule = () => {
           }
           return false;
         });
-        console.log("Fetched Events:", filteredEvents);
 
         setEvents(filteredEvents);
       } catch (error) {
@@ -215,7 +210,6 @@ export const Schedule = () => {
   const handleCellDoubleClick = useCallback((args) => {
     if (role == "STAFF") {
       setArgDoubleClick(args);
-      console.log("args", args);
       setModelShowNewEvent(true);
     }
   }, []);
@@ -365,6 +359,13 @@ export const Schedule = () => {
                   Join Meeting
                 </MDBBtn>
               </Link>
+              {role !== "STUDENT" && (
+                <Link to={`/check-attendance/${detailTooltip}`}>
+                  <MDBBtn className="me-1" color="info">
+                    Take Attendance
+                  </MDBBtn>
+                </Link>
+              )}
             </div>
           </div>
         </div>
