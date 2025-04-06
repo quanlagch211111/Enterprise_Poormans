@@ -114,9 +114,14 @@ export const NewAssignment = (props) => {
       const response = await axios.post("/assignments", newAssignment, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      setAssignments([...assignments, response.data.assignment]);
-      setLoading(false);
-      handleClose();
+      if (response.status === 201) {
+        setAssignments([...assignments, response.data.assignment]);
+        toast.success("Assignment created successfully!");
+        setLoading(false);
+        handleClose();
+      } else {
+        toast.error("Failed to create assignment.");
+      }
     } catch (error) {
       console.error("Error adding assignment:", error);
       setLoading(false);
@@ -263,6 +268,8 @@ export const EditAssignment = (props) => {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
+      
+      console.log("response", response.data);
       if (response.status === 200) {
         setAssignments((prev) =>
           prev.map((assignment) =>
@@ -309,17 +316,17 @@ export const EditAssignment = (props) => {
             <div className="form-group">
               <label>Students</label>
               {students.map((student) => (
-                <div key={student._id} className="form-check">
+                <div key={student.objectid} className="form-check">
                   <input
                     type="checkbox"
                     className="form-check-input"
-                    id={`student-${student._id}`}
-                    checked={formState.student_id.includes(student._id)}
-                    onChange={() => handleCheckboxChange(student._id)}
+                    id={`student-${student.objectid}`}
+                    checked={formState.student_id.includes(student.objectid)}
+                    onChange={() => handleCheckboxChange(student.objectid)}
                   />
                   <label
                     className="form-check-label"
-                    htmlFor={`student-${student._id}`}
+                    htmlFor={`student-${student.objectid}`}
                   >
                     {student.username}
                   </label>
@@ -337,7 +344,7 @@ export const EditAssignment = (props) => {
               >
                 <option value="">Select a tutor</option>
                 {tutors.map((tutor) => (
-                  <option key={tutor._id} value={tutor._id}>
+                  <option key={tutor.objectid} value={tutor.objectid}>
                     {tutor.username}
                   </option>
                 ))}
@@ -1017,6 +1024,171 @@ export const EditBlog = (props) => {
 
 // Event meeting
 //#region meeting
+// export const NewEvent = (props) => {
+//   const { accessToken, events, setEvents, assignments, onClose } = props;
+
+//   const [newMeeting, setNewMeeting] = useState({
+//     organizer_id: "",
+//     participant_ids: [],
+//     date: "",
+//     start_time: "",
+//     end_time: "",
+//     type: "",
+//     note: "",
+//   });
+
+//   const [selectedAssignment, setSelectedAssignment] = useState("");
+
+//   const handleAssignmentSelection = (assignmentId) => {
+//     const assignment = assignments.find((a) => a._id === assignmentId);
+//     if (assignment) {
+//       setNewMeeting({
+//         ...newMeeting,
+//         organizer_id: assignment.tutor_id._id, // Set tutor as organizer
+//         participant_ids: assignment.student_id.map((student) => student._id), // Set students as participants
+//       });
+//       console.log(assignment.student_id.map((student) => student._id));
+//       console.log(assignment.tutor_id._id);
+//       setSelectedAssignment(assignmentId);
+//     }
+//   };
+//   const handleCreateMeeting = async () => {
+//     if (
+//       !newMeeting.organizer_id ||
+//       newMeeting.participant_ids.length === 0 ||
+//       !newMeeting.date ||
+//       !newMeeting.start_time ||
+//       !newMeeting.end_time ||
+//       !newMeeting.type
+//     ) {
+//       toast.error("Please fill in all the required fields!");
+//       return;
+//     }
+
+//     if (
+//       new Date(`${newMeeting.date}T${newMeeting.start_time}`) >=
+//       new Date(`${newMeeting.date}T${newMeeting.end_time}`)
+//     ) {
+//       toast.error("Start time must be earlier than end time!");
+//       return;
+//     }
+
+//     try {
+//       const response = await axios.post("/meetings/create", newMeeting, {
+//         headers: { Authorization: `Bearer ${accessToken}` },
+//       });
+//       setEvents([...events, response.data.meeting]);
+//       onClose();
+//     } catch (error) {
+//       toast.error("Error creating meeting:", error);
+//     }
+//   };
+
+//   return (
+//     <MDBModal tabIndex="-1" open={props.show} onClose={onClose}>
+//       <MDBModalDialog centered>
+//         <MDBModalContent>
+//           <MDBModalHeader>
+//             <MDBModalTitle>Create New Meeting</MDBModalTitle>
+//             <MDBBtn
+//               className="btn-close"
+//               color="none"
+//               onClick={onClose}
+//             ></MDBBtn>
+//           </MDBModalHeader>
+//           <MDBModalBody>
+//             {/* Select Assignment */}
+//             <div className="form-group">
+//               <label htmlFor="assignment">Select Class</label>
+//               <select
+//                 id="assignment"
+//                 className="form-control"
+//                 value={selectedAssignment}
+//                 onChange={(e) => handleAssignmentSelection(e.target.value)}
+//               >
+//                 <option value="">Select a class</option>
+//                 {assignments.map((assignment) => (
+//                   <option key={assignment._id} value={assignment._id}>
+//                     {assignment.title}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             {/* Date */}
+//             <MDBInput
+//               label="Date"
+//               type="date"
+//               className="my-3"
+//               min={new Date().toISOString().split("T")[0]} // Restrict to current or future dates
+//               value={newMeeting.date}
+//               onChange={(e) =>
+//                 setNewMeeting({ ...newMeeting, date: e.target.value })
+//               }
+//             />
+
+//             {/* Start Time */}
+//             <MDBInput
+//               label="Start Time"
+//               className="my-3"
+//               type="time"
+//               value={newMeeting.start_time}
+//               onChange={(e) =>
+//                 setNewMeeting({ ...newMeeting, start_time: e.target.value })
+//               }
+//             />
+
+//             {/* End Time */}
+//             <MDBInput
+//               label="End Time"
+//               className="my-3"
+//               type="time"
+//               value={newMeeting.end_time}
+//               onChange={(e) =>
+//                 setNewMeeting({ ...newMeeting, end_time: e.target.value })
+//               }
+//             />
+
+//             {/* Type */}
+//             <div className="form-group">
+//               <label htmlFor="type">Type</label>
+//               <select
+//                 id="type"
+//                 className="form-control"
+//                 value={newMeeting.type}
+//                 onChange={(e) =>
+//                   setNewMeeting({ ...newMeeting, type: e.target.value })
+//                 }
+//               >
+//                 <option value="">Select type</option>
+//                 <option value="Online">Online</option>
+//                 <option value="Offline">Offline</option>
+//               </select>
+//             </div>
+
+//             {/* Note */}
+//             <MDBInput
+//               label="Note"
+//               className="my-3"
+//               type="text"
+//               value={newMeeting.note}
+//               onChange={(e) =>
+//                 setNewMeeting({ ...newMeeting, note: e.target.value })
+//               }
+//             />
+//           </MDBModalBody>
+//           <MDBModalFooter>
+//             <MDBBtn color="secondary" onClick={onClose}>
+//               Close
+//             </MDBBtn>
+//             <MDBBtn onClick={handleCreateMeeting}>Save</MDBBtn>
+//           </MDBModalFooter>
+//         </MDBModalContent>
+//       </MDBModalDialog>
+//     </MDBModal>
+//   );
+// };
+
 export const NewEvent = (props) => {
   const { accessToken, events, setEvents, assignments, onClose } = props;
 
@@ -1040,11 +1212,10 @@ export const NewEvent = (props) => {
         organizer_id: assignment.tutor_id._id, // Set tutor as organizer
         participant_ids: assignment.student_id.map((student) => student._id), // Set students as participants
       });
-      console.log(assignment.student_id.map((student) => student._id));
-      console.log(assignment.tutor_id._id);
       setSelectedAssignment(assignmentId);
     }
   };
+
   const handleCreateMeeting = async () => {
     if (
       !newMeeting.organizer_id ||
@@ -1070,10 +1241,43 @@ export const NewEvent = (props) => {
       const response = await axios.post("/meetings/create", newMeeting, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      setEvents([...events, response.data.meeting]);
-      onClose();
+
+      if (response.status === 201) {
+        const createdEvent = response.data.meeting;
+
+        // Add the new event to the `events` state for real-time update
+        setEvents((prevEvents) => [
+          ...prevEvents,
+          {
+            id: createdEvent._id,
+            title: createdEvent.title || "Event",
+            start: new Date(
+              `${createdEvent.date.split("T")[0]}T${createdEvent.start_time}`
+            ),
+            end: new Date(
+              `${createdEvent.date.split("T")[0]}T${createdEvent.end_time}`
+            ),
+            note: createdEvent.note,
+            type: createdEvent.type,
+            organizer_id: createdEvent.organizer_id._id,
+            organizer_username: createdEvent.organizer_id.user_id.username,
+            participant_ids: createdEvent.participant_ids.map(
+              (participant) => participant._id
+            ),
+            participant_usernames: createdEvent.participant_ids.map(
+              (participant) => participant.user_id.username
+            ),
+            room_id: createdEvent.room_id,
+            status: createdEvent.status,
+          },
+        ]);
+
+        toast.success("Meeting created successfully!");
+        onClose(); // Close the modal
+      }
     } catch (error) {
-      toast.error("Error creating meeting:", error);
+      console.error("Error creating meeting:", error);
+      toast.error("Failed to create meeting.");
     }
   };
 
@@ -1181,7 +1385,6 @@ export const NewEvent = (props) => {
     </MDBModal>
   );
 };
-
 export const DeleteEvent = (props) => {
   const { accessToken, events, setEvents, id, onClose } = props;
 
@@ -1242,7 +1445,6 @@ export const UpdateEvent = (props) => {
   const [students, setStudents] = useState([]);
   const [tutor, setTutor] = useState(null);
 
-  // Fetch students and tutor when the assignment (class) changes
   useEffect(() => {
     if (updatedMeeting.assignment_id) {
       const selectedAssignment = assignments.find(
@@ -1285,18 +1487,41 @@ export const UpdateEvent = (props) => {
         }
       );
 
-      // Update the events list with the updated meeting
-      setEvents(
-        events.map((event) =>
-          event.id === eventUpdate.id ? response.data.meeting : event
+      const updatedEventData = response.data.meeting;
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === updatedEventData._id
+            ? {
+                id: updatedEventData._id,
+                title: updatedEventData.title || "Event",
+                start: new Date(
+                  `${updatedEventData.date.split("T")[0]}T${updatedEventData.start_time}`
+                ),
+                end: new Date(
+                  `${updatedEventData.date.split("T")[0]}T${updatedEventData.end_time}`
+                ),
+                note: updatedEventData.note,
+                type: updatedEventData.type,
+                organizer_id: updatedEventData.organizer_id._id,
+                organizer_username: updatedEventData.organizer_id.user_id.username,
+                participant_ids: updatedEventData.participant_ids.map(
+                  (participant) => participant._id
+                ),
+                participant_usernames: updatedEventData.participant_ids.map(
+                  (participant) => participant.user_id.username
+                ),
+                room_id: updatedEventData.room_id,
+                status: updatedEventData.status,
+              }
+            : event
         )
       );
 
       toast.success("Meeting updated successfully!");
-      onClose(); // Close the modal
+      onClose();
     } catch (error) {
       console.error("Error updating meeting:", error);
-      toast.error("Error updating meeting.");
+      toast.error("Failed to update meeting.");
     }
   };
 
@@ -1313,7 +1538,6 @@ export const UpdateEvent = (props) => {
             ></MDBBtn>
           </MDBModalHeader>
           <MDBModalBody>
-            {/* Select Class */}
             <div className="form-group">
               <label htmlFor="assignment">Select Class</label>
               <select
@@ -1336,7 +1560,6 @@ export const UpdateEvent = (props) => {
               </select>
             </div>
 
-            {/* Display Tutor */}
             {tutor && (
               <div className="form-group mt-3">
                 <label>Tutor</label>
@@ -1344,7 +1567,6 @@ export const UpdateEvent = (props) => {
               </div>
             )}
 
-            {/* Display Students */}
             {students.length > 0 && (
               <div className="form-group mt-3">
                 <label>Students</label>
@@ -1358,19 +1580,17 @@ export const UpdateEvent = (props) => {
               </div>
             )}
 
-            {/* Date */}
             <MDBInput
               label="Date"
               type="date"
               className="my-3"
-              min={new Date().toISOString().split("T")[0]} // Restrict to current or future dates
+              min={new Date().toISOString().split("T")[0]}
               value={updatedMeeting.date}
               onChange={(e) =>
                 setUpdatedMeeting({ ...updatedMeeting, date: e.target.value })
               }
             />
 
-            {/* Start Time */}
             <MDBInput
               label="Start Time"
               className="my-3"
@@ -1384,7 +1604,6 @@ export const UpdateEvent = (props) => {
               }
             />
 
-            {/* End Time */}
             <MDBInput
               label="End Time"
               className="my-3"
@@ -1398,7 +1617,6 @@ export const UpdateEvent = (props) => {
               }
             />
 
-            {/* Type */}
             <div className="form-group">
               <label htmlFor="type">Type</label>
               <select
@@ -1415,7 +1633,6 @@ export const UpdateEvent = (props) => {
               </select>
             </div>
 
-            {/* Note */}
             <MDBInput
               label="Note"
               className="my-3"

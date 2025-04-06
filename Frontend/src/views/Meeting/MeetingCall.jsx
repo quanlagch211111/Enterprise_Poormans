@@ -24,6 +24,8 @@ export const MeetingCall = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [roomId, setRoomId] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
 
   const myVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -31,7 +33,19 @@ export const MeetingCall = () => {
   const peersRef = useRef({});
   const socketRef = useRef();
   const screenTrackRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
+  // Format time for recording display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Initialize meeting
   useEffect(() => {
     const path = window.location.pathname.split('/');
     const id = path[path.length - 1];
@@ -40,8 +54,6 @@ export const MeetingCall = () => {
       return;
     }
     setRoomId(id);
-    console.log("env", process.env.REACT_APP_PEER_HOST);
-
 
     socketRef.current = io(process.env.REACT_APP_SOCKET_PORT, {
       withCredentials: true
@@ -72,11 +84,10 @@ export const MeetingCall = () => {
 
         peerInstance.current.on('call', (call) => {
           call.answer(stream);
-
           const remoteMediaStream = new MediaStream();
 
           call.on('stream', () => {
-            // Không cần thiết vì stream này không update khi track thay đổi
+            // Handle stream if needed
           });
 
           call.peerConnection.ontrack = (event) => {
@@ -109,16 +120,42 @@ export const MeetingCall = () => {
           setRemoteStream(null);
         });
 
-        socketRef.current.on('createMessage', (message) => {
-          setMessages(prev => [...prev, message]);
-        });
+        const handleNewMessage = (message) => {
+          const formattedMessage = {
+            text: message.text,
+            sender: message.sender === peerInstance.current?.id ? "You" : "Participant",
+            time: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
 
+          setMessages(prev => {
+            const messageExists = prev.some(
+              msg => msg.text === formattedMessage.text &&
+                msg.sender === formattedMessage.sender &&
+                msg.time === formattedMessage.time
+            );
+            return messageExists ? prev : [...prev, formattedMessage];
+          });
+        };
+
+        socketRef.current.on('new-message', handleNewMessage);
+
+        socketRef.current.on('message-history', (history) => {
+          setMessages(history.map(msg => ({
+            text: msg.text,
+            sender: msg.sender === peerInstance.current?.id ? "You" : "Participant",
+            time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          })));
+        });
       })
       .catch(err => {
         console.error("Failed to get media devices", err);
       });
 
     return () => {
+      if (isRecording) {
+        // stopRecording();
+        stopScreenRecording();
+      }
       if (myStream) {
         myStream.getTracks().forEach(track => track.stop());
       }
@@ -128,22 +165,30 @@ export const MeetingCall = () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
     };
   }, [roomId, navigate]);
 
+  // Scroll to bottom of chat
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Chat functions
   const handleSendMessage = () => {
-    if (message.trim() && socketRef.current) {
-      const newMessage = {
-        text: message,
-        sender: "You",
-        time: new Date().toLocaleTimeString()
-      };
-      socketRef.current.emit('message', newMessage);
-      setMessages(prev => [...prev, newMessage]);
+    if (message.trim() && socketRef.current && peerInstance.current?.id) {
+      socketRef.current.emit('send-message', {
+        roomId,
+        userId: peerInstance.current.id,
+        text: message
+      });
       setMessage("");
     }
   };
 
+  // Media control functions
   const toggleMic = () => {
     if (myStream) {
       const audioTrack = myStream.getAudioTracks()[0];
@@ -164,6 +209,7 @@ export const MeetingCall = () => {
     }
   };
 
+  // Screen sharing functions
   const toggleScreenSharing = async () => {
     if (!myStream || !peerInstance.current) return;
 
@@ -224,10 +270,97 @@ export const MeetingCall = () => {
     setIsScreenSharing(false);
   };
 
+
+  const startScreenRecording = async () => {
+    try {
+      // Yêu cầu quyền truy cập vào màn hình (desktop hoặc cửa sổ ứng dụng)
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+        video: true, 
+        audio: true // Có thể ghi lại cả âm thanh từ hệ thống nếu cần
+      });
+  
+      if (!screenStream) {
+        console.error("No screen stream available for recording");
+        return;
+      }
+  
+      recordedChunksRef.current = [];
+  
+      // Tạo MediaRecorder để ghi lại video từ màn hình
+      const options = {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 2500000, // Cài đặt băng thông video
+      };
+  
+      mediaRecorderRef.current = new MediaRecorder(screenStream, options);
+  
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+  
+      mediaRecorderRef.current.onstop = () => {
+        // Khi ghi xong, tạo URL và tải video xuống
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `screen-recording-${new Date().toISOString()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Dọn dẹp sau khi tải xong
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      };
+  
+      // Bắt đầu ghi
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+  
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error starting screen recording:", err);
+    }
+  };
+  
+  const stopScreenRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      clearInterval(recordingTimerRef.current);
+    }
+  };
+  
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      // stopRecording();
+      stopScreenRecording();
+    } else {
+      // startRecording();
+      startScreenRecording();
+    }
+  };
+
+  // Meeting control
   const leaveMeeting = () => {
+    if (isRecording) {
+      // stopRecording();
+      stopScreenRecording();
+    }
     navigate('/');
   };
 
+  // Participants data
   const users = [
     { id: 'me', name: 'You', isMe: true, isSpeaking: isMicOn },
     ...(remoteStream ? [{ id: 'remote', name: 'Participant', isMe: false, isSpeaking: true }] : [])
@@ -238,6 +371,18 @@ export const MeetingCall = () => {
 
   return (
     <Container fluid className="bg-dark text-light vh-100 d-flex flex-column p-0">
+      {/* Simple Recording Indicator */}
+      {isRecording && (
+        <div className="position-absolute top-0 start-50 translate-middle-x mt-3 z-3">
+          <div className="d-flex align-items-center bg-danger bg-opacity-75 rounded-pill px-3 py-1">
+            <div className="pulsating-recording-indicator me-2"></div>
+            <span className="me-2">REC</span>
+            <span>{formatTime(recordingTime)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Meeting Area */}
       <Row className="flex-grow-1 g-0 position-relative">
         <div className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2">
           {visibleUsers.map((user) => (
@@ -246,8 +391,8 @@ export const MeetingCall = () => {
               className="video-box bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative"
               style={{
                 width: `calc((100% / ${Math.min(users.length, 2)}) - 16px)`,
-                height: "200px",
-                minWidth: "240px",
+                height: "100",
+                minWidth: "100",
               }}
             >
               {user.id === 'me' ? (
@@ -291,6 +436,7 @@ export const MeetingCall = () => {
           )}
         </div>
 
+        {/* Sidebar for Participants/Chat */}
         <Offcanvas
           show={showParticipants || showChat}
           onHide={() => {
@@ -352,6 +498,7 @@ export const MeetingCall = () => {
                       </div>
                     </div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 <div className="border-top border-secondary p-3">
@@ -380,6 +527,7 @@ export const MeetingCall = () => {
         </Offcanvas>
       </Row>
 
+      {/* Control Bar */}
       <div className="border-top border-secondary bg-dark bg-opacity-75 py-3">
         <div className="d-flex justify-content-between align-items-center px-4">
           <div className="d-flex gap-3">
@@ -408,6 +556,15 @@ export const MeetingCall = () => {
             >
               <i className="fas fa-desktop"></i>
               <span>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</span>
+            </Button>
+
+            <Button
+              variant={isRecording ? "danger" : "outline-light"}
+              onClick={toggleRecording}
+              className="rounded-pill px-4 d-flex align-items-center gap-2"
+            >
+              <i className={`fas ${isRecording ? "fa-stop" : "fa-circle"}`}></i>
+              <span>{isRecording ? `Stop (${formatTime(recordingTime)})` : "Record"}</span>
             </Button>
           </div>
 
@@ -441,6 +598,34 @@ export const MeetingCall = () => {
           </Button>
         </div>
       </div>
+
+      {/* CSS for recording indicator */}
+      <style>
+        {`
+          .pulsating-recording-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+          }
+
+          @keyframes pulse {
+            0% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+            }
+            70% {
+              transform: scale(1);
+              box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+            }
+            100% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+            }
+          }
+        `}
+      </style>
     </Container>
   );
 };
