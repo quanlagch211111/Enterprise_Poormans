@@ -2,9 +2,9 @@ const User = require('../models/Users');
 const bcrypt = require('bcrypt');
 const  { generalAccessToken, generalRefreshToken, generalIsNotVerifyToken } = require('../services/Jwtservices');
 const {sendOtp} = require('../services/Otpservices');
-const StudentService = require('../services/studentService');
-const TutorService = require('../services/tutorService');
-const StaffService = require('../services/staffService');
+const StudentService = require('../services/Studentservice');
+const TutorService = require('../services/Tutorservice');
+const StaffService = require('../services/Staffservice');
 const { verify } = require('jsonwebtoken');
 
 const createUser = (userData) => {

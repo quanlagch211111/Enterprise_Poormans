@@ -61,6 +61,8 @@ const AssignmentRouter = require('./src/routes/assignmentRoute');
 const MeetingRouter = require('./src/routes/meetingRoute');
 const blogRouter = require('./src/routes/blogRoute');
 const notificationRouter = require('./src/routes/notificationRoute');
+const attendanceRouter = require('./src/routes/attendanceRoute');
+
 
 app.use(cors(
   {
@@ -81,6 +83,7 @@ app.use('/api/google-drive', GoogleDriveRouter);
 app.use('/api/meetings', MeetingRouter);
 app.use('/api/blogs', blogRouter);
 app.use('/api/notifications', notificationRouter );
+app.use('/api/attendances', attendanceRouter);
 
 // Thay app.listen bằng server.listen
 server.listen(port, () => {
@@ -135,18 +138,6 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  // Join room
-  socket.on("join-room", ({ room_id, user_id }) => {
-    socket.join(room_id);
-    socket.to(room_id).emit("user-joined", { user_id });
-  });
-
-  // Leave room
-  socket.on("leave-room", ({ room_id, user_id }) => {
-    socket.leave(room_id);
-    socket.to(room_id).emit("user-left", { user_id });
-  });
-
   socket.on('join-room', (roomId, userId) => {
     socket.join(roomId);
     
@@ -165,15 +156,17 @@ io.on("connection", (socket) => {
     // Send list of existing users to the new participant
     const users = Array.from(activeRooms.get(roomId)).filter(id => id !== userId);
     socket.emit('existing-users', users);
+    socket.emit('message-history', []);
 
-    // Message handling
-    socket.on('message', (message) => {
-      io.to(roomId).emit('createMessage', {
-        sender: userId,
-        text: message,
-        timestamp: new Date().toISOString()
-      });
-    });
+
+    // // Message handling
+    // socket.on('message', (message) => {
+    //   io.to(roomId).emit('createMessage', {
+    //     sender: userId,
+    //     text: message,
+    //     timestamp: new Date().toISOString()
+    //   });
+    // });
     socket.on('disconnect', () => {
       console.log(`User ${userId} disconnected`);
       socket.to(roomId).emit('user-disconnected', userId);
@@ -187,6 +180,20 @@ io.on("connection", (socket) => {
         }
       }
     });
+  });
+
+  socket.on('send-message', ({ roomId, userId, text }) => {
+    const message = {
+      sender: userId,
+      text,
+      timestamp: new Date().toISOString()
+    };
+    console.log(`Message`, message);
+    
+    // Save to database if needed
+    // Then broadcast to room
+    io.to(roomId).emit('new-message', message);
+    
   });
 
   // Disconnect user

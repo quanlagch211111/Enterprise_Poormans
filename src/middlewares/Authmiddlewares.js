@@ -54,7 +54,7 @@ const isStaff = (req, res, next) => {
 
 
 const isTeacher = (req, res, next) => {
-  if (!req.user || req.user.payload.role !== "TEACHER") {
+  if (!req.user || req.user.payload.role !== "TUTOR") {
     return res.status(403).json({ message: "Access denied. Only TEACHERS can access this." });
   }
   next();

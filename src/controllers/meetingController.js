@@ -1,5 +1,6 @@
 const Meeting = require("../models/Meeting");
-// const { nanoid } = require("nanoid");
+const Attendance = require("../models/Attendance");
+const { nanoid } = require("nanoid");
 
 
 // Tạo một cuộc họp mới
@@ -20,23 +21,83 @@ exports.createMeeting = async (req, res) => {
     });
 
     await newMeeting.save();
-    res.status(201).json({ success: true, meeting: newMeeting });
+
+    const attendanceRecords = participant_ids.map(student_id => ({
+      meeting_id: newMeeting._id,
+      student_id,
+      marked_by: organizer_id // The tutor is the one who can mark attendance
+    }));
+
+    await Attendance.insertMany(attendanceRecords);
+
+    // Populate sau khi save
+    const populatedMeeting = await Meeting.findById(newMeeting._id)
+      .populate({
+        path: 'organizer_id',
+        model: 'Tutor',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username email'
+        }
+      })
+      .populate({
+        path: 'participant_ids',
+        model: 'Student',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username email'
+        }
+      });
+
+    res.status(201).json({ success: true, meeting: populatedMeeting });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+
 // Lấy danh sách cuộc họp
+// exports.getMeetings = async (req, res) => {
+//   try {
+//     const meetings = await Meeting.find()
+//     .populate("organizer_id", "username") // Lấy username của organizer
+//     .populate("participant_ids", "username"); // Lấy username của participants
+//     res.status(200).json({ success: true, meetings });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
 exports.getMeetings = async (req, res) => {
   try {
     const meetings = await Meeting.find()
-    .populate("organizer_id", "username") // Lấy username của organizer
-    .populate("participant_ids", "username"); // Lấy username của participants
+      .populate({
+        path: 'organizer_id',
+        model: 'Tutor',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username'
+        }
+      })
+      .populate({
+        path: 'participant_ids',
+        model: 'Student',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username'
+        }
+      });
+
     res.status(200).json({ success: true, meetings });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Lấy chi tiết cuộc họp theo ID
 exports.getMeetingById = async (req, res) => {
@@ -50,19 +111,44 @@ exports.getMeetingById = async (req, res) => {
   }
 };
 
-// Chỉnh sửa thông tin cuộc họp
+// Chỉnh sửa thông tin cuộc họp và trả về dữ liệu đã populate giống API getMeetings
 exports.updateMeetingById = async (req, res) => {
   try {
-    const { id } = req.params; // Lấy ID của cuộc họp từ URL
-    const updateData = req.body; // Dữ liệu cần cập nhật
+    const { id } = req.params;
+    const updateData = req.body;
 
-    const updatedMeeting = await Meeting.findByIdAndUpdate(id, updateData, { new: true });
+    let updatedMeeting = await Meeting.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!updatedMeeting) {
       return res.status(404).json({ success: false, message: "Meeting not found" });
     }
 
-    res.status(200).json({ success: true, message: "Meeting updated successfully", meeting: updatedMeeting });
+    // Populate thông qua Tutor / Student → Users
+    updatedMeeting = await Meeting.findById(updatedMeeting._id)
+      .populate({
+        path: 'organizer_id',
+        model: 'Tutor',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username email'
+        }
+      })
+      .populate({
+        path: 'participant_ids',
+        model: 'Student',
+        populate: {
+          path: 'user_id',
+          model: 'Users',
+          select: 'username email'
+        }
+      });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Meeting updated successfully", 
+      meeting: updatedMeeting 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
