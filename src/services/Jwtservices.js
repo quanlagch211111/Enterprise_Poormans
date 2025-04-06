@@ -7,7 +7,7 @@ dotenv.config();
 const generalAccessToken = async (payload) => {
   const accessToken = jwt.sign({
     payload 
-  }, process.env.ACCESS_TOKEN , { expiresIn: '30m' });
+  }, process.env.ACCESS_TOKEN , { expiresIn: '10m' });
 
   return accessToken;
 }
@@ -49,15 +49,20 @@ const generalRefreshToken = async (payload) => {
           if (err) {
             return resolve({
               status: 'ERROR',
-              message: "Invalid refresh token"
+              message: 'Invalid refresh token',
             });
           }
 
+          const { id, role } = user.payload;
+  
 
-          const newAccessToken = await generalAccessToken({
-            id: user.id,
-            isAdmin: user.isAdmin
-          });
+          // const newAccessToken = await generalAccessToken({
+          //   id: user.id,
+          //   role: role
+          // });
+
+            const newAccessToken = await generalAccessToken({ id, role });
+
   
           resolve({
             status: 'Success',
