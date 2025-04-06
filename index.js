@@ -83,7 +83,7 @@ app.use('/api/google-drive', GoogleDriveRouter);
 app.use('/api/meetings', MeetingRouter);
 app.use('/api/blogs', blogRouter);
 app.use('/api/notifications', notificationRouter );
-
+app.use('/api/attendances', attendanceRouter);
 
 // Thay app.listen bằng server.listen
 server.listen(port, () => {
