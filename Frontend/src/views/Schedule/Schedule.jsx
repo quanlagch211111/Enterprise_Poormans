@@ -359,6 +359,13 @@ export const Schedule = () => {
                   Join Meeting
                 </MDBBtn>
               </Link>
+              {role !== "STUDENT" && (
+                <Link to={`/check-attendance/${detailTooltip}`}>
+                  <MDBBtn className="me-1" color="info">
+                    Take Attendance
+                  </MDBBtn>
+                </Link>
+              )}
             </div>
           </div>
         </div>

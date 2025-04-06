@@ -162,7 +162,9 @@ export const NewAssignment = (props) => {
                     type="checkbox"
                     className="form-check-input"
                     id={`student-${student.objectid}`}
-                    checked={newAssignment.student_id.includes(student.objectid)}
+                    checked={newAssignment.student_id.includes(
+                      student.objectid
+                    )}
                     onChange={() => handleCheckboxChange(student.objectid)}
                   />
                   <label
@@ -268,7 +270,7 @@ export const EditAssignment = (props) => {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
-      
+
       console.log("response", response.data);
       if (response.status === 200) {
         setAssignments((prev) =>
@@ -1495,15 +1497,20 @@ export const UpdateEvent = (props) => {
                 id: updatedEventData._id,
                 title: updatedEventData.title || "Event",
                 start: new Date(
-                  `${updatedEventData.date.split("T")[0]}T${updatedEventData.start_time}`
+                  `${updatedEventData.date.split("T")[0]}T${
+                    updatedEventData.start_time
+                  }`
                 ),
                 end: new Date(
-                  `${updatedEventData.date.split("T")[0]}T${updatedEventData.end_time}`
+                  `${updatedEventData.date.split("T")[0]}T${
+                    updatedEventData.end_time
+                  }`
                 ),
                 note: updatedEventData.note,
                 type: updatedEventData.type,
                 organizer_id: updatedEventData.organizer_id._id,
-                organizer_username: updatedEventData.organizer_id.user_id.username,
+                organizer_username:
+                  updatedEventData.organizer_id.user_id.username,
                 participant_ids: updatedEventData.participant_ids.map(
                   (participant) => participant._id
                 ),
@@ -1732,10 +1739,7 @@ export const UploadAssignment = (props) => {
             content: "",
           });
           setLoading(false);
-          fetchAssignments();
-          if (role === "TUTOR") {
-            fetchDocuments();
-          }
+          fetchDocuments();
           toast.success("Assignment has been uploaded successfully.");
         } else {
           toast.error("Failed to save document.");
@@ -2178,6 +2182,7 @@ export const NewFolder = (props) => {
       setLoading(false);
       if (response.status === 201 || response.status === 200) {
         resetFields();
+        fetchFolders();
         toast.success("Folder created successfully.");
         handleClose();
       }
