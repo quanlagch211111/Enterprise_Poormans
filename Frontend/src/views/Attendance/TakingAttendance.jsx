@@ -1,70 +1,100 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "../../services/AxiosCustom";
 import {
-  MDBBadge,
-  MDBBtn,
   MDBTable,
   MDBTableHead,
   MDBTableBody,
-  MDBCheckbox,
+  MDBBtn,
 } from "mdb-react-ui-kit";
-import { Card, Col, Container, Row } from "react-bootstrap";
-import { useParams } from "react-router";
+import { Container } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const TakingAttendance = () => {
-  const { date } = useParams();
+  const accessToken = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId");
+  const objectId = localStorage.getItem("objectId");
+  const { date: meetingId } = useParams(); // Extract meetingId from URL params
+  const navigate = useNavigate();
+  const [students, setStudents] = useState([]);
 
-  const [students, setStudents] = useState([
-    {
-      name: "Nguyễn Văn A",
-      date: "2025-04-01",
-      address: "123 Lý Thường Kiệt, Hà Nội",
-      contact: "0901234567",
-      attended: false,
-    },
-    {
-      name: "Trần Thị B",
-      date: "2025-04-02",
-      address: "45 Nguyễn Huệ, TP.HCM",
-      contact: "0912345678",
-      attended: false,
-    },
-    {
-      name: "Lê Văn C",
-      date: "2025-04-03",
-      address: "67 Phan Bội Châu, Đà Nẵng",
-      contact: "0987654321",
-      attended: false,
-    },
-    {
-      name: "Phạm Thị D",
-      date: "2025-04-04",
-      address: "89 Trần Hưng Đạo, Cần Thơ",
-      contact: "0932123456",
-      attended: false,
-    },
-    {
-      name: "Hoàng Văn E",
-      date: "2025-04-05",
-      address: "22 Nguyễn Trãi, Hải Phòng",
-      contact: "0945678901",
-      attended: false,
-    },
-  ]);
-  const handleAttendanceChange = (index) => {
+  useEffect(() => {
+    if (!accessToken) {
+      navigate("/login");
+    }
+    fetchUserInMeeting();
+  }, [navigate, accessToken]);
+
+  const fetchUserInMeeting = async () => {
+    try {
+      const response = await axios.get(`/attendances/meeting/${meetingId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (response.status === 200) {
+        console.log("Users fetched successfully:", response.data);
+      }
+      const updatedStudents = response.data.attendance.map((student) => ({
+        id: student.student_id._id, // Add student ID for backend reference
+        name: student.student_id.user_id.username,
+        email: student.student_id.user_id.email,
+        address: student.student_id.user_id.address,
+        contact: student.student_id.user_id.phone,
+        attended: student.status || "Absent",
+      }));
+      setStudents(updatedStudents);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const handleTakeAttendance = async () => {
+    try {
+      const attendanceData = {
+        tutor_id: objectId, 
+        meeting_id: meetingId,
+        students: students.map((student) => ({
+          student_id: student.id,
+          status: student.attended,
+        })),
+      };
+
+      const response = await axios.put("/attendances/mark-multiple", attendanceData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.status === 200) {
+        console.log("Attendance marked successfully:", response.data);
+        toast.success(response.data.message || "Attendance saved successfully");
+
+      }
+    } catch (error) {
+      console.error("Error saving attendance:", error);
+      toast.success("Failed to save attendance");
+    }
+  };
+
+  const handleAttendanceChange = (index, value) => {
     const updated = [...students];
-    updated[index].attended = !updated[index].attended;
+    updated[index].attended = value;
     setStudents(updated);
   };
+
   return (
     <Container>
       <MDBTable align="middle">
         <MDBTableHead>
           <tr>
             <th scope="col">Name</th>
-            <th scope="col">Date</th>
+            <th scope="col">Email</th>
             <th scope="col">Address</th>
             <th scope="col">Contact</th>
-            <th scope="col">Status</th>
+            <th scope="col">Attendance</th>
           </tr>
         </MDBTableHead>
         <MDBTableBody>
@@ -83,23 +113,53 @@ const TakingAttendance = () => {
                   </div>
                 </div>
               </td>
-              <td>{student.date}</td>
+              <td>{student.email}</td>
               <td>{student.address}</td>
               <td>{student.contact}</td>
               <td>
-                <MDBCheckbox
-                  name={`attendance-${index}`}
-                  checked={student.attended}
-                  onChange={() => handleAttendanceChange(index)}
-                  label={student.attended ? "Present" : "Absent"}
-                />
+                <div className="d-flex gap-3">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name={`attendance-${index}`}
+                      id={`present-${index}`}
+                      value="Present"
+                      checked={student.attended === "Present"}
+                      onChange={() => handleAttendanceChange(index, "Present")}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`present-${index}`}
+                    >
+                      Present
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name={`attendance-${index}`}
+                      id={`absent-${index}`}
+                      value="Absent"
+                      checked={student.attended === "Absent"}
+                      onChange={() => handleAttendanceChange(index, "Absent")}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`absent-${index}`}
+                    >
+                      Absent
+                    </label>
+                  </div>
+                </div>
               </td>
             </tr>
           ))}
         </MDBTableBody>
       </MDBTable>
-      <div className="d-flex justify-content-end">
-        <MDBBtn>Save</MDBBtn>
+      <div className="d-flex justify-content-end mt-3">
+        <MDBBtn onClick={handleTakeAttendance}>Save Attendance</MDBBtn>
       </div>
     </Container>
   );

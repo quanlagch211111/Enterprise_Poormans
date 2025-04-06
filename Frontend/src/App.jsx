@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom"; // Ensure Routes is imported
+import { Routes, Route, useLocation, Switch } from "react-router-dom"; // Ensure Routes is imported
 import { Dashboard } from "./views/Dashboard/Dashboard";
 import { Message } from "./views/Message/Message";
 import { Blog } from "./views/Blog/Blog";
@@ -20,6 +20,8 @@ import NotificationPage from "./views/Notification/Notification";
 import { Container } from "react-bootstrap";
 import Attendance from "./views/Attendance/Attendance";
 import TakingAttendance from "./views/Attendance/TakingAttendance";
+import AttendanceDetail from "./views/Attendance/AttendanceDetail";
+import ViewAttendance from "./views/Attendance/ViewAttendance";
 
 function App() {
   const location = useLocation();
@@ -67,10 +69,15 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/notification" element={<NotificationPage />} />
-            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/classes" element={<Attendance />} />
+            <Route path="/classes/:classId" element={<AttendanceDetail />}/>        
             <Route
               path="/check-attendance/:date"
               element={<TakingAttendance />}
+            />
+             <Route
+              path="/view-attendance/:date"
+              element={<ViewAttendance />}
             />
           </Routes>
         </div>

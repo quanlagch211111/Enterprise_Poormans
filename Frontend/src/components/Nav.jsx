@@ -74,12 +74,12 @@ export const Sidebar = () => {
             Account
           </NavLink>
         )}
-        {role === "TUTOR" && (
-          <NavLink to="/attendance" className="nav-item">
+        {/* {role === "STAFF" && (
+          <NavLink to="/classes" className="nav-item">
             <i class="fa-solid fa-clipboard-user"></i>
             Attendance
           </NavLink>
-        )}
+        )} */}
 
         <a
           href="#"

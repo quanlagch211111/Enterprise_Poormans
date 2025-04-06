@@ -29,6 +29,7 @@ export const Schedule = () => {
   const role = localStorage.getItem("role");
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId").toString();
+  const objectId = localStorage.getItem("objectId");
   const [users, setUsers] = useState([]);
   const accessToken = localStorage.getItem("accessToken");
   const [modelShowNewEvent, setModelShowNewEvent] = useState(false);
@@ -79,9 +80,9 @@ export const Schedule = () => {
           if (role === "STAFF") {
             return true;
           } else if (role === "TUTOR") {
-            return event.organizer_id === userId;
+            return event.organizer_id === objectId;
           } else if (role === "STUDENT") {
-            return event.participant_ids.includes(userId);
+            return event.participant_ids.includes(objectId);
           }
           return false;
         });
@@ -359,14 +360,25 @@ export const Schedule = () => {
                   Join Meeting
                 </MDBBtn>
               </Link>
-              {role !== "STUDENT" && (
-                <Link to={`/check-attendance/${detailTooltip}`}>
-                  <MDBBtn className="me-1" color="info">
-                    Take Attendance
-                  </MDBBtn>
-                </Link>
+              {role === "STUDENT" ? (
+                <>
+                  <Link to={`/view-attendance/${detailTooltip.id}`}>
+                    <MDBBtn className="me-1" color="info">
+                      View Attendance
+                    </MDBBtn>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to={`/check-attendance/${detailTooltip.id}`}>
+                    <MDBBtn className="me-1" color="info">
+                      Take Attendance
+                    </MDBBtn>
+                  </Link>
+                </>
               )}
             </div>
+
           </div>
         </div>
       </Popup>
