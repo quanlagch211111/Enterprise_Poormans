@@ -12,5 +12,3 @@ node_modules/
 # Bỏ qua các file log
 *.log
 
-# Bỏ qua các file tạm
-uploads/
