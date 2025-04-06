@@ -3,44 +3,42 @@ import { toast } from "react-toastify";
 
 const instance = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
+  withCredentials: true, // Gửi cookie cho tất cả request
 });
+
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response && error.response.status === 401) {
-      // Token hết hạn
-      const shouldExtend = toast.info(
-        "Your session has expired. Would you like to extend it?"
-      );
+      toast.info("Session expired. Trying to extend...");
 
-      if (shouldExtend) {
-        try {
-          const refreshResponse = await axios.post(
-            "users/token",
-            {},
-            { withCredentials: true }
-          );
-          if (refreshResponse.status === 200) {
-            localStorage.setItem(
-              "accessToken",
-              refreshResponse.data.accessToken
-            );
-            toast.success("Session extended successfully!");
-            return instance.request(error.config); // Retry the original request
-          }
-        } catch (refreshError) {
-          toast.error("Failed to extend session. Please log in again.");
-          localStorage.clear();
-          window.location.href = "/login"; // Redirect to login page
+      try {
+        const refreshResponse = await axios.post(
+          `${process.env.REACT_APP_API_URL}/users/token`,
+          {},
+          { withCredentials: true }
+        );
+
+        if (refreshResponse.status === 200) {
+          const newAccessToken = refreshResponse.data.accessToken;
+          localStorage.setItem("accessToken", newAccessToken);
+
+          toast.success("Session extended successfully!");
+
+          // Gắn accessToken mới vào header trước khi retry
+          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
+
+          return instance.request(error.config);
         }
-      } else {
-        // Người dùng chọn đăng xuất
+      } catch (refreshError) {
+        toast.error("Failed to extend session. Please log in again.");
         localStorage.clear();
-        window.location.href = "/login"; // Redirect to login page
+        window.location.href = "/login";
       }
     }
 
     return Promise.reject(error);
   }
 );
+
 export default instance;
