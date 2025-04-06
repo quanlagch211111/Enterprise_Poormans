@@ -195,6 +195,7 @@ exports.reprovideToken = async (req, res) => {
 
   try {
     const token = req.cookies.refreshtoken;
+    console.log('Token:', token);
 
     if (!token) {
       return res.status(401).send('Refresh Token is required');
@@ -202,7 +203,7 @@ exports.reprovideToken = async (req, res) => {
 
     // Kiểm tra xem refresh token có bị blacklist không
     const isBlacklisted = await TokenService.isTokenBlacklisted(
-      refreshToken
+      token
     );
     if (isBlacklisted) {
       return res.status(403).send("Refresh Token is blacklisted");
@@ -304,7 +305,7 @@ exports.verifyPasswordResetOtp = async (req, res, next) => {
 
     console.log("Received OTP:", otp);
 
-    const otpRecord = await OtpUserawait.findOne({ email });
+    const otpRecord = await OtpUser.findOne({ email });
     if (!otpRecord) {
       return res
         .status(400)
