@@ -9,6 +9,7 @@ import {
   DeleteAssignment,
   NewAssignment,
   NewFolder,
+  ReadComment,
   UploadAssignment,
 } from "../../components/Modal";
 import { plPL } from "@mui/x-date-pickers/locales";
@@ -35,8 +36,12 @@ export const Document = () => {
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
   const [selectedFolederId, setSelectedFolderId] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(false);
   const [documentFilePath, setDocumentFilePath] = useState(false);
   const [selectedAsmId, setSelectedAsmId] = useState(null);
+  const [modalReadComment, setModalReadComment] = useState(false);
+  const [selectedComment, setSelectedComment] = useState(null);
+  console.log("selectedComment", selectedComment);
   const [newDocument, setNewDocument] = useState({
     owner_id: localStorage.getItem("objectId"),
     folder_id: "",
@@ -144,6 +149,19 @@ export const Document = () => {
     }
   };
 
+  const fetchComments = async (documentId) => {
+    try {
+      const response = await axios.get(`/comments/document/${documentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.status === 200) {
+        setSelectedComment(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
   const handleUnsubmit = async (documentId) => {
     try {
       const response = await axios.delete(`/documents/${documentId}`, {
@@ -186,6 +204,45 @@ export const Document = () => {
       )}
     </>
   );
+  const renderDocuments = () => {
+    const tutorDocuments = documents?.tutorDocuments || []; // Gán giá trị mặc định là []
+
+    if (tutorDocuments.length === 0) {
+      return <p className="text-muted">No documents available</p>;
+    }
+
+    return (
+      <div className="document-list d-flex flex-wrap gap-3">
+        {tutorDocuments.map((doc) => (
+          <div key={doc._id} className="document-card p-3 border rounded">
+            <div className="d-flex align-items-center gap-2">
+              {doc.types.toLowerCase() === "pdf" ? (
+                <i className="fas fa-file-pdf text-danger fa-2x"></i>
+              ) : doc.types.toLowerCase() === "ppt" ||
+                doc.types.toLowerCase() === "pptx" ? (
+                <i className="fas fa-file-powerpoint text-warning fa-2x"></i>
+              ) : (
+                <i className="fas fa-file-alt text-primary fa-2x"></i>
+              )}
+              <div>
+                <h5 className="mb-1">{doc.content}</h5>
+                <p className="text-muted">{doc.types.toUpperCase()}</p>
+              </div>
+            </div>
+            <a
+              href={doc.file_path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-link mt-2"
+            >
+              View Document
+            </a>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderFolders = () => (
     <>
       <div className="folder-header d-flex justify-content-between align-items-center mb-3">
@@ -252,44 +309,6 @@ export const Document = () => {
       )}
     </>
   );
-  const renderDocuments = () => {
-    const tutorDocuments = documents?.tutorDocuments || []; // Gán giá trị mặc định là []
-
-    if (tutorDocuments.length === 0) {
-      return <p className="text-muted">No documents available</p>;
-    }
-
-    return (
-      <div className="document-list d-flex flex-wrap gap-3">
-        {tutorDocuments.map((doc) => (
-          <div key={doc._id} className="document-card p-3 border rounded">
-            <div className="d-flex align-items-center gap-2">
-              {doc.types.toLowerCase() === "pdf" ? (
-                <i className="fas fa-file-pdf text-danger fa-2x"></i>
-              ) : doc.types.toLowerCase() === "ppt" ||
-                doc.types.toLowerCase() === "pptx" ? (
-                <i className="fas fa-file-powerpoint text-warning fa-2x"></i>
-              ) : (
-                <i className="fas fa-file-alt text-primary fa-2x"></i>
-              )}
-              <div>
-                <h5 className="mb-1">{doc.content}</h5>
-                <p className="text-muted">{doc.types.toUpperCase()}</p>
-              </div>
-            </div>
-            <a
-              href={doc.file_path}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-link mt-2"
-            >
-              View Document
-            </a>
-          </div>
-        ))}
-      </div>
-    );
-  };
   const renderFolderDetails = () => {
     if (!selectedFolder) return null;
 
@@ -381,9 +400,21 @@ export const Document = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="action-assignment">
+                          <div className="action-assignment mb-2 d-flex flex-row align-items-center gap-2">
+                            <MDBBtn
+                              size="sm"
+                              color="info"
+                              onClick={() => {
+                                setSelectedDocumentId(doc._id);
+                                fetchComments(doc._id);
+                                setModalReadComment(true);
+                              }}
+                            >
+                              Read Comment
+                            </MDBBtn>
+                            |
                             <i
-                              className="fa-solid fa-trash assignment-delete"
+                              className="fa-solid fa-trash assignment-delete ml-3"
                               onClick={() => {
                                 setDocumentDeleteId(doc._id);
                                 setDocumentFilePath(doc.file_path);
@@ -424,6 +455,8 @@ export const Document = () => {
                             className="assignment-card  d-flex flex-row align-items-center gap-2"
                             onClick={() => {
                               role === "TUTOR" && setModalCreateComment(true);
+                              setSelectedDocumentId(doc._id);
+                              fetchComments(doc._id);
                             }}
                           >
                             {doc.types.toLowerCase() === "pdf" ? (
@@ -456,7 +489,7 @@ export const Document = () => {
                           </div>
                         </div>
                         <AddComment
-                          assignment={doc}
+                          docId={selectedDocumentId}
                           show={modalCreateComment}
                           onClose={() => setModalCreateComment(false)}
                           accessToken={accessToken}
@@ -522,6 +555,12 @@ export const Document = () => {
         accessToken={accessToken}
         folders={folders}
         setFolders={setFolders}
+      />
+      <ReadComment
+        show={modalReadComment}
+        onClose={() => setModalReadComment(false)}
+        assignment={selectedComment}
+        accessToken={accessToken}
       />
     </>
   );
