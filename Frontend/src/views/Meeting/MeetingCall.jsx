@@ -455,14 +455,14 @@ export const MeetingCall = () => {
         <div className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2">
           {visibleUsers.map((user) => (
             <div
-              key={user.id}
-              className="video-box bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative"
-              style={{
-                width: `calc((100% / ${Math.min(Math.max(users.length, 2), 4}) - 16px)`,
-                height: "200px",
-                minWidth: "200px",
-              }}
-            >
+                key={user.id}
+                className="video-box bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative"
+                style={{
+                  width: `calc((100% / ${Math.min(Math.max(users.length, 2), 4)}) - 16px)`,
+                  height: "200px",
+                  minWidth: "200px"
+                }}
+              >
               {user.id === 'me' ? (
                 <video
                   ref={myVideoRef}
