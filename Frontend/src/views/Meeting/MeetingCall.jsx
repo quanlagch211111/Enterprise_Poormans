@@ -67,11 +67,9 @@ export const MeetingCall = () => {
         }
 
         peerInstance.current = new Peer(undefined, {
-          // host: process.env.REACT_APP_PEER_HOST || 'localhost',
-          // port: process.env.REACT_APP_PEER_PORT || 3030,
+          path: "/peerjs",
           host: "/",
-          port: port: window.location.protocol === "https:" ? 443 : 80, 
-          path: '/peerjs',
+          port: window.location.protocol === "https:" ? 443 : 80, 
           config: {
             iceServers: [
               { urls: 'stun:stun.l.google.com:19302' },
