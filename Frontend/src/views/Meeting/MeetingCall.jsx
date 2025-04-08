@@ -67,24 +67,24 @@ export const MeetingCall = () => {
           myVideoRef.current.srcObject = stream;
         }
 
-        peerInstance.current = new Peer(undefined, {
-          host: '0.peerjs.com',
-          port: 443,
-          path: '/',
-          secure: true,
-          config: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:stun1.l.google.com:19302' },
-              { urls: 'stun:stun2.l.google.com:19302' },
-              { urls: 'stun:global.stun.twilio.com:3478' }
+    peerInstance.current = new Peer(undefined, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' },
+          ],
+          iceTransportPolicy: 'all',
+          iceCandidatePoolSize: 9,
+        },
+        debug: 0,
+    });
 
-            ],
-            iceTransportPolicy: 'all',
-            iceCandidatePoolSize: 9
-          },
-          debug: 3
-        });
 
         peerInstance.current.on('open', (id) => {
           setConnectionStatus('connected');
