@@ -26,6 +26,8 @@ export const MeetingCall = () => {
   const [roomId, setRoomId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const accessToken = localStorage.getItem("accessToken");
+
 
   const myVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -47,7 +49,6 @@ export const MeetingCall = () => {
 
   useEffect(() =>
     { 
-      const accessToken = localStorage.getItem("accessToken");
       if(!accessToken) {
       navigate('/login');
       return;
