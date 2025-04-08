@@ -1494,32 +1494,30 @@ export const UpdateEvent = (props) => {
         prevEvents.map((event) =>
           event.id === updatedEventData._id
             ? {
-                id: updatedEventData._id,
-                title: updatedEventData.title || "Event",
-                start: new Date(
-                  `${updatedEventData.date.split("T")[0]}T${
-                    updatedEventData.start_time
-                  }`
-                ),
-                end: new Date(
-                  `${updatedEventData.date.split("T")[0]}T${
-                    updatedEventData.end_time
-                  }`
-                ),
-                note: updatedEventData.note,
-                type: updatedEventData.type,
-                organizer_id: updatedEventData.organizer_id._id,
-                organizer_username:
-                  updatedEventData.organizer_id.user_id.username,
-                participant_ids: updatedEventData.participant_ids.map(
-                  (participant) => participant._id
-                ),
-                participant_usernames: updatedEventData.participant_ids.map(
-                  (participant) => participant.user_id.username
-                ),
-                room_id: updatedEventData.room_id,
-                status: updatedEventData.status,
-              }
+              id: updatedEventData._id,
+              title: updatedEventData.title || "Event",
+              start: new Date(
+                `${updatedEventData.date.split("T")[0]}T${updatedEventData.start_time
+                }`
+              ),
+              end: new Date(
+                `${updatedEventData.date.split("T")[0]}T${updatedEventData.end_time
+                }`
+              ),
+              note: updatedEventData.note,
+              type: updatedEventData.type,
+              organizer_id: updatedEventData.organizer_id._id,
+              organizer_username:
+                updatedEventData.organizer_id.user_id.username,
+              participant_ids: updatedEventData.participant_ids.map(
+                (participant) => participant._id
+              ),
+              participant_usernames: updatedEventData.participant_ids.map(
+                (participant) => participant.user_id.username
+              ),
+              room_id: updatedEventData.room_id,
+              status: updatedEventData.status,
+            }
             : event
         )
       );
@@ -2254,39 +2252,42 @@ export const NewFolder = (props) => {
 // Comment
 // add comment
 export const AddComment = (props) => {
-  const { assignment, accessToken } = props;
-
+  const { docId, accessToken } = props;
+  const userId = localStorage.getItem("userId");
   const [newComment, setNewComment] = useState({
     comment: "",
   });
-  useEffect(() => {
-    console.log("Assignment:", assignment); // Debug log
-  }, [assignment]);
   const [isLoading, setLoading] = useState(false);
 
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
-
   const handleAddComment = async () => {
     try {
       setLoading(true);
-      // const response = await axios.post("/assignments", newAssignment, {
-      //   headers: { Authorization: `Bearer ${accessToken}` },
-      // });
-      // if (response.status === 201) {
-      //   setAssignments([...assignments, response.data.assignment]);
-      //   toast.success("Comment created successfully!");
-      //   setLoading(false);
-      //   handleClose();
-      // } else {
-      //   toast.error("Failed to create comment.");
-      // }
+      const body = {
+        document_id: docId,
+        author_id: userId,
+        content: newComment.comment,
+      };
+      const response = await axios.post(
+        "comments/",
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      toast.success("Comment added successfully.");
+      handleClose();
+      setLoading(false);
     } catch (error) {
       console.error("Error adding comment:", error);
       setLoading(false);
     }
   };
+
 
   return (
     <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
@@ -2327,7 +2328,6 @@ export const AddComment = (props) => {
 };
 export const ReadComment = (props) => {
   const { assignment, accessToken } = props;
-
   const handleClose = () => {
     if (props.onClose) props.onClose();
   };
@@ -2346,12 +2346,24 @@ export const ReadComment = (props) => {
           </MDBModalHeader>
           <MDBModalBody>
             <div className="form-group">
+              <div>Feedback by: {assignment?.[0]?.author_id.username}</div>
+              <div>
+                Created at:{" "}
+                {assignment?.[0]?.created_at
+                  ? new Date(assignment[0].created_at).toLocaleString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                  : "Unknown"}
+              </div>
               <label htmlFor="Feedback"></label>
               <MDBTextArea
                 label="Feedback"
                 id="textAreaExample"
                 rows="4"
-                value={assignment.comment}
+                value={assignment?.[0]?.content
+                  || "No feedback available"}
                 disabled={true}
               />
             </div>

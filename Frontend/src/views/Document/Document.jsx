@@ -9,6 +9,7 @@ import {
   DeleteAssignment,
   NewAssignment,
   NewFolder,
+  ReadComment,
   UploadAssignment,
 } from "../../components/Modal";
 import { plPL } from "@mui/x-date-pickers/locales";
@@ -35,8 +36,12 @@ export const Document = () => {
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
   const [selectedFolederId, setSelectedFolderId] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(false);
   const [documentFilePath, setDocumentFilePath] = useState(false);
   const [selectedAsmId, setSelectedAsmId] = useState(null);
+  const [modalReadComment, setModalReadComment] = useState(false);
+  const [selectedComment, setSelectedComment] = useState(null);
+  console.log("selectedComment", selectedComment);
   const [newDocument, setNewDocument] = useState({
     owner_id: localStorage.getItem("objectId"),
     folder_id: "",
@@ -114,6 +119,7 @@ export const Document = () => {
     }
   };
 
+
   const fetchDocuments = async (folderId) => {
     try {
       const response = await axios.get(`/documents/folder/${folderId}`, {
@@ -144,6 +150,19 @@ export const Document = () => {
     }
   };
 
+  const fetchComments = async (documentId) => {
+    try {
+      const response = await axios.get(`/comments/document/${documentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.status === 200) {
+        setSelectedComment(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
   const handleUnsubmit = async (documentId) => {
     try {
       const response = await axios.delete(`/documents/${documentId}`, {
@@ -161,6 +180,8 @@ export const Document = () => {
     }
   };
 
+
+
   const renderAssignments = () => (
     <>
       <h3>Classes</h3>
@@ -168,9 +189,8 @@ export const Document = () => {
         assignments.map((assignment) => (
           <span
             key={assignment._id}
-            className={`class-name ${
-              selectedAssignment?._id === assignment._id ? "active" : ""
-            }`}
+            className={`class-name ${selectedAssignment?._id === assignment._id ? "active" : ""
+              }`}
             onClick={() => {
               setSelectedAssignment(assignment);
               setSelectedFolder(null);
@@ -197,7 +217,8 @@ export const Document = () => {
     return (
       <div className="document-list d-flex flex-wrap gap-3">
         {tutorDocuments.map((doc) => (
-          <div key={doc._id} className="document-card p-3 border rounded">
+          <div key={doc._id}
+            className="document-card p-3 border rounded">
             <div className="d-flex align-items-center gap-2">
               {doc.types.toLowerCase() === "pdf" ? (
                 <i className="fas fa-file-pdf text-danger fa-2x"></i>
@@ -384,9 +405,21 @@ export const Document = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="action-assignment">
+                          <div className="action-assignment mb-2 d-flex flex-row align-items-center gap-2">
+                          <MDBBtn
+                              size="sm"
+                              color="info"
+                              onClick={() => {
+                                setSelectedDocumentId(doc._id);
+                                fetchComments(doc._id);
+                                setModalReadComment(true);
+                              }}
+                            >
+                              Read Comment
+                            </MDBBtn>
+                             | 
                             <i
-                              className="fa-solid fa-trash assignment-delete"
+                              className="fa-solid fa-trash assignment-delete ml-3"
                               onClick={() => {
                                 setDocumentDeleteId(doc._id);
                                 setDocumentFilePath(doc.file_path);
@@ -421,12 +454,14 @@ export const Document = () => {
                         <div
                           key={doc._id}
                           className="assignment-container d-flex flex-row align-items-center justify-content-between"
-                          // onclick Modal comment
+                        // onclick Modal comment
                         >
                           <div
                             className="assignment-card  d-flex flex-row align-items-center gap-2"
                             onClick={() => {
                               role === "TUTOR" && setModalCreateComment(true);
+                              setSelectedDocumentId(doc._id);
+                              fetchComments(doc._id);
                             }}
                           >
                             {doc.types.toLowerCase() === "pdf" ? (
@@ -459,7 +494,7 @@ export const Document = () => {
                           </div>
                         </div>
                         <AddComment
-                          assignment={doc}
+                          docId={selectedDocumentId}
                           show={modalCreateComment}
                           onClose={() => setModalCreateComment(false)}
                           accessToken={accessToken}
@@ -525,6 +560,12 @@ export const Document = () => {
         accessToken={accessToken}
         folders={folders}
         setFolders={setFolders}
+      />
+      <ReadComment
+        show={modalReadComment}
+        onClose={() => setModalReadComment(false)}
+        assignment={selectedComment }
+        accessToken={accessToken}
       />
     </>
   );
