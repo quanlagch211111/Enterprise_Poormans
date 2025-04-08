@@ -133,3 +133,127 @@
     display: block;
   }
 }
+
+.notification-icon {
+  i {
+    font-size: 17px;
+    padding: 10px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+  &:hover {
+    i {
+      background-color: #091e4224;
+    }
+  }
+  &.active {
+    i {
+      background-color: #eaf3fa;
+      color: #355ab5;
+    }
+  }
+}
+
+.noti-wrap {
+  .status-noti {
+    position: relative;
+    padding: 10px;
+
+    /* Chấm tròn nhỏ mặc định */
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      background: var(--purple);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    /* Vòng tròn bên ngoài */
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+
+    /* Hiệu ứng hover */
+  }
+  &:hover {
+    .status-noti {
+      &::after {
+        border-color: var(--purple); /* Màu viền khi hover */
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+.notifications {
+  .card {
+    .list {
+      overflow-y: auto;
+      overflow-y: scroll;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      height: 330px;
+      overflow-y: auto;
+    }
+  }
+}
+.header-right {
+  overflow: visible;
+  i {
+    padding: 10px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+  a {
+    // float: left;
+    color: var(--text-primary);
+    text-align: center;
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 5px;
+    &:hover {
+      i {
+        background-color: #091e4224;
+      }
+    }
+  }
+  a.active {
+    i {
+      background-color: #eaf3fa;
+      color: #355ab5;
+    }
+  }
+}
+
+.content-noti {
+  align-items: start;
+}
+.list-unstyled {
+  padding-left: 0;
+  list-style: none;
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.noti-container {
+  -webkit-user-select: none; /* cho Chrome, Safari */
+  -moz-user-select: none; /* cho Firefox */
+  -ms-user-select: none; /* cho Internet Explorer/Edge */
+  user-select: none; /* chuẩn mới cho các trình duyệt hiện đại */
+}

@@ -1,6 +1,7 @@
 body {
   display: flex;
   height: 100%;
+  font-size: 14px;
   background: var(--light);
   font-family: Roboto, Helvetica, Arial, sans-serif;
 }
@@ -68,4 +69,35 @@ html {
 
 .mds-tooltip-button.mbsc-material {
   font-size: 12px;
+}
+.w-380 {
+  width: 380px !important;
+}
+.w-30 {
+  width: 30px !important;
+}
+.h-30 {
+  height: 30px !important;
+}
+
+.border-bottom {
+  border-bottom: #f0f0f0;
+}
+.avatar {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+}
+.rounded-circle {
+  border-radius: 50% !important;
+}
+.dropdown-toggle::after {
+  display: none !important;
+}
+.dropdown {
+  width: none !important;
+}
+
+.ta-left {
+  text-align: left !important;
 }

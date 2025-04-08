@@ -186,46 +186,6 @@ export const Document = () => {
       )}
     </>
   );
-
-  const renderDocuments = () => {
-    const tutorDocuments = documents?.tutorDocuments || []; // Gán giá trị mặc định là []
-
-    if (tutorDocuments.length === 0) {
-      return <p className="text-muted">No documents available</p>;
-    }
-
-    return (
-      <div className="document-list d-flex flex-wrap gap-3">
-        {tutorDocuments.map((doc) => (
-          <div key={doc._id} className="document-card p-3 border rounded">
-            <div className="d-flex align-items-center gap-2">
-              {doc.types.toLowerCase() === "pdf" ? (
-                <i className="fas fa-file-pdf text-danger fa-2x"></i>
-              ) : doc.types.toLowerCase() === "ppt" ||
-                doc.types.toLowerCase() === "pptx" ? (
-                <i className="fas fa-file-powerpoint text-warning fa-2x"></i>
-              ) : (
-                <i className="fas fa-file-alt text-primary fa-2x"></i>
-              )}
-              <div>
-                <h5 className="mb-1">{doc.content}</h5>
-                <p className="text-muted">{doc.types.toUpperCase()}</p>
-              </div>
-            </div>
-            <a
-              href={doc.file_path}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-link mt-2"
-            >
-              View Document
-            </a>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   const renderFolders = () => (
     <>
       <div className="folder-header d-flex justify-content-between align-items-center mb-3">
@@ -292,7 +252,44 @@ export const Document = () => {
       )}
     </>
   );
+  const renderDocuments = () => {
+    const tutorDocuments = documents?.tutorDocuments || []; // Gán giá trị mặc định là []
 
+    if (tutorDocuments.length === 0) {
+      return <p className="text-muted">No documents available</p>;
+    }
+
+    return (
+      <div className="document-list d-flex flex-wrap gap-3">
+        {tutorDocuments.map((doc) => (
+          <div key={doc._id} className="document-card p-3 border rounded">
+            <div className="d-flex align-items-center gap-2">
+              {doc.types.toLowerCase() === "pdf" ? (
+                <i className="fas fa-file-pdf text-danger fa-2x"></i>
+              ) : doc.types.toLowerCase() === "ppt" ||
+                doc.types.toLowerCase() === "pptx" ? (
+                <i className="fas fa-file-powerpoint text-warning fa-2x"></i>
+              ) : (
+                <i className="fas fa-file-alt text-primary fa-2x"></i>
+              )}
+              <div>
+                <h5 className="mb-1">{doc.content}</h5>
+                <p className="text-muted">{doc.types.toUpperCase()}</p>
+              </div>
+            </div>
+            <a
+              href={doc.file_path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-link mt-2"
+            >
+              View Document
+            </a>
+          </div>
+        ))}
+      </div>
+    );
+  };
   const renderFolderDetails = () => {
     if (!selectedFolder) return null;
 
