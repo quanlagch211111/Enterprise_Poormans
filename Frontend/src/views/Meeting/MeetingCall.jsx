@@ -13,9 +13,8 @@ import {
 
 export const MeetingCall = () => {
   const navigate = useNavigate();
-  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  const [remoteStreams, setRemoteStreams] = useState([]);
   const [myStream, setMyStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -26,9 +25,11 @@ export const MeetingCall = () => {
   const [roomId, setRoomId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [roomFull, setRoomFull] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const myVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
+  const remoteVideoRefs = useRef({});
   const peerInstance = useRef(null);
   const peersRef = useRef({});
   const socketRef = useRef();
@@ -38,14 +39,14 @@ export const MeetingCall = () => {
   const recordingTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Format time for recording display
+  const MAX_PARTICIPANTS = 10;
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Initialize meeting
   useEffect(() => {
     const path = window.location.pathname.split('/');
     const id = path[path.length - 1];
@@ -66,65 +67,107 @@ export const MeetingCall = () => {
           myVideoRef.current.srcObject = stream;
         }
 
-     peerInstance.current = new Peer(undefined, {
-        host: '0.peerjs.com', // Public PeerServer
-        port: 443,
-        path: '/',
-        secure: true,
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
-        }
-      });
+        peerInstance.current = new Peer(undefined, {
+          host: '0.peerjs.com',
+          port: 443,
+          path: '/',
+          secure: true,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+
+            ],
+            iceTransportPolicy: 'all',
+            iceCandidatePoolSize: 9
+          },
+          debug: 3
+        });
 
         peerInstance.current.on('open', (id) => {
+          setConnectionStatus('connected');
           socketRef.current.emit('join-room', roomId, id);
         });
 
         peerInstance.current.on('call', (call) => {
           call.answer(stream);
-          const remoteMediaStream = new MediaStream();
-
-          call.on('stream', () => {
-            // Handle stream if needed
+          
+          call.on('stream', (remoteStream) => {
+            setRemoteStreams(prev => {
+              if (!prev.some(s => s.id === call.peer)) {
+                return [...prev, { id: call.peer, stream: remoteStream }];
+              }
+              return prev;
+            });
           });
+          
+          call.on('close', () => {
+            setRemoteStreams(prev => prev.filter(s => s.id !== call.peer));
+          });
+          
+          peersRef.current[call.peer] = call;
+        });
 
-          call.peerConnection.ontrack = (event) => {
-            remoteMediaStream.addTrack(event.track);
-            setRemoteStream(remoteMediaStream);
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteMediaStream;
+        peerInstance.current.on('disconnected', () => {
+          setConnectionStatus('disconnected');
+          setTimeout(() => {
+            if (peerInstance.current && peerInstance.current.disconnected) {
+              peerInstance.current.reconnect();
             }
-          };
+          }, 2000);
+        });
+
+        peerInstance.current.on('error', (err) => {
+          console.error('PeerJS error:', err);
+          setConnectionStatus('error');
         });
 
         socketRef.current.on('user-connected', (userId) => {
-          const call = peerInstance.current.call(userId, stream);
-          call.on('stream', (remoteStream) => {
-            setRemoteStream(remoteStream);
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-            }
-          });
-          call.on('close', () => {
-            setRemoteStream(null);
-          });
-          peersRef.current[userId] = call;
+          if (Object.keys(peersRef.current).length >= MAX_PARTICIPANTS) {
+            setRoomFull(true);
+            return;
+          }
+          
+          if (!peersRef.current[userId]) {
+            const call = peerInstance.current.call(userId, stream);
+            
+            call.on('stream', (remoteStream) => {
+              setRemoteStreams(prev => {
+                if (!prev.some(s => s.id === userId)) {
+                  return [...prev, { id: userId, stream: remoteStream }];
+                }
+                return prev;
+              });
+            });
+            
+            call.on('close', () => {
+              setRemoteStreams(prev => prev.filter(s => s.id !== userId));
+              delete peersRef.current[userId];
+            });
+            
+            peersRef.current[userId] = call;
+          }
         });
 
         socketRef.current.on('user-disconnected', (userId) => {
           if (peersRef.current[userId]) {
             peersRef.current[userId].close();
           }
-          setRemoteStream(null);
+          setRemoteStreams(prev => prev.filter(s => s.id !== userId));
+          delete peersRef.current[userId];
+          setRoomFull(false);
+        });
+
+        socketRef.current.on('room-full', () => {
+          setRoomFull(true);
         });
 
         const handleNewMessage = (message) => {
           const formattedMessage = {
             text: message.text,
-            sender: message.sender === peerInstance.current?.id ? "You" : "Participant",
+            sender: message.sender === peerInstance.current?.id ? "You" : `Participant ${remoteStreams.findIndex(s => s.id === message.sender) + 1}`,
             time: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
 
@@ -143,7 +186,7 @@ export const MeetingCall = () => {
         socketRef.current.on('message-history', (history) => {
           setMessages(history.map(msg => ({
             text: msg.text,
-            sender: msg.sender === peerInstance.current?.id ? "You" : "Participant",
+            sender: msg.sender === peerInstance.current?.id ? "You" : `Participant ${remoteStreams.findIndex(s => s.id === msg.sender) + 1}`,
             time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           })));
         });
@@ -154,12 +197,12 @@ export const MeetingCall = () => {
 
     return () => {
       if (isRecording) {
-        // stopRecording();
         stopScreenRecording();
       }
       if (myStream) {
         myStream.getTracks().forEach(track => track.stop());
       }
+      Object.values(peersRef.current).forEach(call => call.close());
       if (peerInstance.current) {
         peerInstance.current.destroy();
       }
@@ -172,12 +215,10 @@ export const MeetingCall = () => {
     };
   }, [roomId, navigate]);
 
-  // Scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Chat functions
   const handleSendMessage = () => {
     if (message.trim() && socketRef.current && peerInstance.current?.id) {
       socketRef.current.emit('send-message', {
@@ -189,7 +230,6 @@ export const MeetingCall = () => {
     }
   };
 
-  // Media control functions
   const toggleMic = () => {
     if (myStream) {
       const audioTrack = myStream.getAudioTracks()[0];
@@ -210,36 +250,46 @@ export const MeetingCall = () => {
     }
   };
 
-  // Screen sharing functions
   const toggleScreenSharing = async () => {
     if (!myStream || !peerInstance.current) return;
 
     if (!isScreenSharing) {
       try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const screenTrack = screenStream.getVideoTracks()[0];
-
-        for (let peerId in peersRef.current) {
-          const sender = peersRef.current[peerId].peerConnection
-            .getSenders()
-            .find(s => s.track.kind === 'video');
-          if (sender) {
-            sender.replaceTrack(screenTrack);
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+          video: true, 
+          audio: true 
+        });
+        
+        const screenVideoTrack = screenStream.getVideoTracks()[0];
+        const screenAudioTrack = screenStream.getAudioTracks()[0];
+        
+        Object.values(peersRef.current).forEach(call => {
+          const pc = call.peerConnection;
+          
+          const videoSender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (videoSender) videoSender.replaceTrack(screenVideoTrack);
+          
+          if (screenAudioTrack) {
+            const audioSender = pc.getSenders().find(s => s.track?.kind === 'audio');
+            if (audioSender) audioSender.replaceTrack(screenAudioTrack);
           }
-        }
+        });
 
         if (myVideoRef.current) {
           myVideoRef.current.srcObject = new MediaStream([
-            screenTrack,
-            ...myStream.getAudioTracks(),
+            screenVideoTrack,
+            screenAudioTrack || myStream.getAudioTracks()[0]
           ]);
         }
 
-        screenTrack.onended = () => {
-          stopScreenSharing();
+        screenTrackRef.current = {
+          video: screenVideoTrack,
+          audio: screenAudioTrack
         };
 
-        screenTrackRef.current = screenTrack;
+        screenVideoTrack.onended = stopScreenSharing;
+        if (screenAudioTrack) screenAudioTrack.onended = stopScreenSharing;
+        
         setIsScreenSharing(true);
       } catch (err) {
         console.error("Screen sharing failed", err);
@@ -252,32 +302,36 @@ export const MeetingCall = () => {
   const stopScreenSharing = () => {
     if (!screenTrackRef.current) return;
 
-    for (let peerId in peersRef.current) {
-      const sender = peersRef.current[peerId].peerConnection
-        .getSenders()
-        .find(s => s.track.kind === 'video');
-      if (sender) {
-        const videoTrack = myStream.getVideoTracks()[0];
-        sender.replaceTrack(videoTrack);
+    screenTrackRef.current.video.stop();
+    if (screenTrackRef.current.audio) screenTrackRef.current.audio.stop();
+    
+    Object.values(peersRef.current).forEach(call => {
+      const pc = call.peerConnection;
+      
+      const videoSender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (videoSender && myStream.getVideoTracks()[0]) {
+        videoSender.replaceTrack(myStream.getVideoTracks()[0]);
       }
-    }
+      
+      const audioSender = pc.getSenders().find(s => s.track?.kind === 'audio');
+      if (audioSender && myStream.getAudioTracks()[0]) {
+        audioSender.replaceTrack(myStream.getAudioTracks()[0]);
+      }
+    });
 
     if (myVideoRef.current) {
       myVideoRef.current.srcObject = myStream;
     }
 
-    screenTrackRef.current.stop();
     screenTrackRef.current = null;
     setIsScreenSharing(false);
   };
 
-
   const startScreenRecording = async () => {
     try {
-      // Yêu cầu quyền truy cập vào màn hình (desktop hoặc cửa sổ ứng dụng)
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
         video: true, 
-        audio: true // Có thể ghi lại cả âm thanh từ hệ thống nếu cần
+        audio: true
       });
   
       if (!screenStream) {
@@ -287,10 +341,9 @@ export const MeetingCall = () => {
   
       recordedChunksRef.current = [];
   
-      // Tạo MediaRecorder để ghi lại video từ màn hình
       const options = {
         mimeType: 'video/webm;codecs=vp9',
-        videoBitsPerSecond: 2500000, // Cài đặt băng thông video
+        videoBitsPerSecond: 2500000,
       };
   
       mediaRecorderRef.current = new MediaRecorder(screenStream, options);
@@ -302,7 +355,6 @@ export const MeetingCall = () => {
       };
   
       mediaRecorderRef.current.onstop = () => {
-        // Khi ghi xong, tạo URL và tải video xuống
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         
@@ -313,14 +365,12 @@ export const MeetingCall = () => {
         document.body.appendChild(a);
         a.click();
         
-        // Dọn dẹp sau khi tải xong
         setTimeout(() => {
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }, 100);
       };
   
-      // Bắt đầu ghi
       setRecordingTime(0);
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
@@ -341,30 +391,29 @@ export const MeetingCall = () => {
     }
   };
   
-
   const toggleRecording = () => {
     if (isRecording) {
-      // stopRecording();
       stopScreenRecording();
     } else {
-      // startRecording();
       startScreenRecording();
     }
   };
 
-  // Meeting control
   const leaveMeeting = () => {
     if (isRecording) {
-      // stopRecording();
       stopScreenRecording();
     }
     navigate('/');
   };
 
-  // Participants data
   const users = [
     { id: 'me', name: 'You', isMe: true, isSpeaking: isMicOn },
-    ...(remoteStream ? [{ id: 'remote', name: 'Participant', isMe: false, isSpeaking: true }] : [])
+    ...remoteStreams.map((remote, index) => ({ 
+      id: remote.id, 
+      name: `Participant ${index + 1}`, 
+      isMe: false, 
+      isSpeaking: true 
+    }))
   ];
 
   const visibleUsers = users.slice(0, 4);
@@ -372,7 +421,6 @@ export const MeetingCall = () => {
 
   return (
     <Container fluid className="bg-dark text-light vh-100 d-flex flex-column p-0">
-      {/* Simple Recording Indicator */}
       {isRecording && (
         <div className="position-absolute top-0 start-50 translate-middle-x mt-3 z-3">
           <div className="d-flex align-items-center bg-danger bg-opacity-75 rounded-pill px-3 py-1">
@@ -383,7 +431,26 @@ export const MeetingCall = () => {
         </div>
       )}
 
-      {/* Main Meeting Area */}
+      {connectionStatus !== 'connected' && (
+        <div className="position-absolute top-0 start-0 m-2">
+          <span className={`badge ${
+            connectionStatus === 'connected' ? 'bg-success' : 
+            connectionStatus === 'connecting' ? 'bg-warning' : 'bg-danger'
+          }`}>
+            {connectionStatus === 'connected' ? 'Connected' : 
+             connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+          </span>
+        </div>
+      )}
+
+      {roomFull && (
+        <div className="position-absolute top-0 start-50 translate-middle-x mt-5 z-3">
+          <div className="alert alert-warning">
+            Room is full. Maximum participants reached.
+          </div>
+        </div>
+      )}
+
       <Row className="flex-grow-1 g-0 position-relative">
         <div className="d-flex flex-wrap justify-content-center align-items-center p-2 gap-2">
           {visibleUsers.map((user) => (
@@ -391,9 +458,9 @@ export const MeetingCall = () => {
               key={user.id}
               className="video-box bg-secondary bg-opacity-25 d-flex justify-content-center align-items-center rounded-3 overflow-hidden position-relative"
               style={{
-                width: `calc((100% / ${Math.min(users.length, 2)}) - 16px)`,
-                height: "100",
-                minWidth: "100",
+                width: `calc((100% / ${Math.min(Math.max(users.length, 2), 4}) - 16px)`,
+                height: "200px",
+                minWidth: "200px",
               }}
             >
               {user.id === 'me' ? (
@@ -405,9 +472,15 @@ export const MeetingCall = () => {
                 />
               ) : (
                 <video
-                  ref={remoteVideoRef}
+                  ref={el => remoteVideoRefs.current[user.id] = el}
                   autoPlay
                   className="h-100 w-100 object-fit-cover"
+                  onCanPlay={() => {
+                    if (remoteVideoRefs.current[user.id]) {
+                      remoteVideoRefs.current[user.id].srcObject = 
+                        remoteStreams.find(s => s.id === user.id)?.stream || null;
+                    }
+                  }}
                 />
               )}
 
@@ -437,7 +510,6 @@ export const MeetingCall = () => {
           )}
         </div>
 
-        {/* Sidebar for Participants/Chat */}
         <Offcanvas
           show={showParticipants || showChat}
           onHide={() => {
@@ -528,7 +600,6 @@ export const MeetingCall = () => {
         </Offcanvas>
       </Row>
 
-      {/* Control Bar */}
       <div className="border-top border-secondary bg-dark bg-opacity-75 py-3">
         <div className="d-flex justify-content-between align-items-center px-4">
           <div className="d-flex gap-3">
@@ -600,7 +671,6 @@ export const MeetingCall = () => {
         </div>
       </div>
 
-      {/* CSS for recording indicator */}
       <style>
         {`
           .pulsating-recording-indicator {
