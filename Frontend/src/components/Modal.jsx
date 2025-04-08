@@ -2250,3 +2250,119 @@ export const NewFolder = (props) => {
   );
 };
 //#endregion
+
+// Comment
+// add comment
+export const AddComment = (props) => {
+  const { assignment, accessToken } = props;
+
+  const [newComment, setNewComment] = useState({
+    comment: "",
+  });
+  useEffect(() => {
+    console.log("Assignment:", assignment); // Debug log
+  }, [assignment]);
+  const [isLoading, setLoading] = useState(false);
+
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+
+  const handleAddComment = async () => {
+    try {
+      setLoading(true);
+      // const response = await axios.post("/assignments", newAssignment, {
+      //   headers: { Authorization: `Bearer ${accessToken}` },
+      // });
+      // if (response.status === 201) {
+      //   setAssignments([...assignments, response.data.assignment]);
+      //   toast.success("Comment created successfully!");
+      //   setLoading(false);
+      //   handleClose();
+      // } else {
+      //   toast.error("Failed to create comment.");
+      // }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+      <MDBModalDialog centered>
+        <MDBModalContent>
+          <MDBModalHeader>
+            <MDBModalTitle>Create New Comment</MDBModalTitle>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleClose}
+            ></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            <div className="form-group">
+              <label htmlFor="Feedback"></label>
+              <MDBTextArea
+                label="Feedback"
+                id="textAreaExample"
+                rows="4"
+                value={newComment.comment}
+                onChange={(e) => setNewComment({ comment: e.target.value })}
+              />
+            </div>
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn color="secondary" onClick={handleClose}>
+              Close
+            </MDBBtn>
+            <MDBBtn onClick={handleAddComment} disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create"}
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalContent>
+      </MDBModalDialog>
+    </MDBModal>
+  );
+};
+export const ReadComment = (props) => {
+  const { assignment, accessToken } = props;
+
+  const handleClose = () => {
+    if (props.onClose) props.onClose();
+  };
+
+  return (
+    <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
+      <MDBModalDialog centered>
+        <MDBModalContent>
+          <MDBModalHeader>
+            <MDBModalTitle>Read Feedback</MDBModalTitle>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleClose}
+            ></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            <div className="form-group">
+              <label htmlFor="Feedback"></label>
+              <MDBTextArea
+                label="Feedback"
+                id="textAreaExample"
+                rows="4"
+                value={assignment.comment}
+                disabled={true}
+              />
+            </div>
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn color="secondary" onClick={handleClose}>
+              Close
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalContent>
+      </MDBModalDialog>
+    </MDBModal>
+  );
+};

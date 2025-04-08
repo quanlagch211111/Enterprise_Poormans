@@ -70,15 +70,12 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/notification" element={<NotificationPage />} />
             <Route path="/classes" element={<Attendance />} />
-            <Route path="/classes/:classId" element={<AttendanceDetail />}/>        
+            <Route path="/classes/:classId" element={<AttendanceDetail />} />
             <Route
               path="/check-attendance/:date"
               element={<TakingAttendance />}
             />
-             <Route
-              path="/view-attendance/:date"
-              element={<ViewAttendance />}
-            />
+            <Route path="/view-attendance/:date" element={<ViewAttendance />} />
           </Routes>
         </div>
       </div>

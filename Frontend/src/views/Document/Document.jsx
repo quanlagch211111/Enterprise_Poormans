@@ -5,11 +5,13 @@ import { Col } from "react-bootstrap";
 import { useNavigate } from "react-router";
 import Modal from "react-modal";
 import {
+  AddComment,
   DeleteAssignment,
   NewAssignment,
   NewFolder,
   UploadAssignment,
 } from "../../components/Modal";
+import { plPL } from "@mui/x-date-pickers/locales";
 
 Modal.setAppElement("#root"); // Đặt root element cho modal
 
@@ -29,6 +31,7 @@ export const Document = () => {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [modalCreateAssignment, setModalCreateAssignment] = useState(false);
   const [modalDeleteAssignment, setModalDeleteAssignment] = useState(false);
+  const [modalCreateComment, setModalCreateComment] = useState(false);
   const [modalNewFolder, setModalNewFolder] = useState(false);
   const [documentDeleteId, setDocumentDeleteId] = useState(false);
   const [selectedFolederId, setSelectedFolderId] = useState(false);
@@ -103,6 +106,7 @@ export const Document = () => {
       const response = await axios.get(`/users/detailuser/${ownerId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      console.log("Username:", response.data); // In ra thông tin người dùng
       return response.data.data?.username;
     } catch (error) {
       console.error("Error fetching username:", error);
@@ -413,38 +417,54 @@ export const Document = () => {
                 <div className="wrapper">
                   {studentDocuments.length > 0 ? (
                     studentDocuments.map((doc) => (
-                      <div
-                        key={doc._id}
-                        className="assignment-container d-flex flex-row align-items-center justify-content-between"
-                      >
-                        <div className="assignment-card  d-flex flex-row align-items-center gap-2">
-                          {doc.types.toLowerCase() === "pdf" ? (
-                            <i className="fas fa-file-pdf text-danger"></i>
-                          ) : doc.types.toLowerCase() === "ppt" ||
-                            doc.types.toLowerCase() === "pptx" ? (
-                            <i className="fas fa-file-powerpoint text-warning"></i>
-                          ) : (
-                            <i className="fas fa-file-alt text-primary"></i>
-                          )}
-                          <div className="assignment-name ">{doc.content}</div>
-                          <div className="assignment-meta d-flex flex-row gap-2">
-                            <span className="assignment-size small text-muted">
-                              {doc.types.toUpperCase()}
-                            </span>
+                      <>
+                        <div
+                          key={doc._id}
+                          className="assignment-container d-flex flex-row align-items-center justify-content-between"
+                          // onclick Modal comment
+                        >
+                          <div
+                            className="assignment-card  d-flex flex-row align-items-center gap-2"
+                            onClick={() => {
+                              role === "TUTOR" && setModalCreateComment(true);
+                            }}
+                          >
+                            {doc.types.toLowerCase() === "pdf" ? (
+                              <i className="fas fa-file-pdf text-danger"></i>
+                            ) : doc.types.toLowerCase() === "ppt" ||
+                              doc.types.toLowerCase() === "pptx" ? (
+                              <i className="fas fa-file-powerpoint text-warning"></i>
+                            ) : (
+                              <i className="fas fa-file-alt text-primary"></i>
+                            )}
+                            <div className="assignment-name ">
+                              {doc.content}
+                            </div>
+                            <div className="assignment-meta d-flex flex-row gap-2">
+                              <span className="assignment-size small text-muted">
+                                {doc.types.toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="assignment-meta d-flex flex-row gap-2">
+                              <span className="assignment-size small text-muted">
+                                Submitted by: {doc?.username || "Unknown User"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="assignment-meta d-flex flex-row gap-2">
-                            <span className="assignment-size small text-muted">
-                              Submitted by: {doc?.username || "Unknown User"}
-                            </span>
+                          <div className="action-assignment">
+                            <i
+                              class="fa-solid fa-cloud-arrow-down assignment-download "
+                              href={doc.file_path}
+                            ></i>
                           </div>
                         </div>
-                        <div className="action-assignment">
-                          <i
-                            class="fa-solid fa-cloud-arrow-down assignment-download "
-                            href={doc.file_path}
-                          ></i>
-                        </div>
-                      </div>
+                        <AddComment
+                          assignment={doc}
+                          show={modalCreateComment}
+                          onClose={() => setModalCreateComment(false)}
+                          accessToken={accessToken}
+                        />
+                      </>
                     ))
                   ) : (
                     <p className="text-muted">No submissions available</p>

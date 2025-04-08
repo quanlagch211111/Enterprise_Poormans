@@ -41,6 +41,8 @@ export const Dashboard = () => {
   // const role = "STUDENT";
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("userId");
+  const objectId = localStorage.getItem("objectId");
+
   const accessToken = localStorage.getItem("accessToken");
   const [users, setUsers] = useState([]);
   const [blogList, setBlogList] = useState([]);
@@ -48,7 +50,10 @@ export const Dashboard = () => {
   const [documentListCount, setDocumentListCount] = useState([]);
   const [documentList, setDocumentList] = useState([]);
   const [newStudentData, setNewStudentData] = useState([]);
+  const [pendingUserBlogs, setPendingUserBlogs] = useState([]);
   const [newTutorData, setNewTutorData] = useState([]);
+  const [meetingLength, setMeetingLenth] = useState("");
+  const [meetingLengthTutor, setMeetingLenthTutor] = useState("");
   const [unassignedStudent, setUnassignedStudentData] = useState([]);
   const [unassignedTutor, setUnassignedTutorData] = useState([]);
   const [totalMessagesData, setTotalMessagesData] = useState([]);
@@ -60,13 +65,38 @@ export const Dashboard = () => {
   const userList = users.map((user) => user._id);
   const studentCount = users.filter((user) => user.role === "Student").length;
   const tutorCount = users.filter((user) => user.role === "Tutor").length;
-  const studentPendingBlogs = blogList.filter((blog => blog.status === "pending" && blog.author_id._id === userId)).length;
+  const studentPendingBlogs = blogList.filter(
+    (blog) => blog.status === "pending" && blog.author_id._id === userId
+  ).length;
 
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
       return;
     }
+    const fetchMeetings = async () => {
+      try {
+        const response = await axios.get("/meetings", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        console.log("ObjectId:", objectId);
+        console.log("Meetings:", response.data);
+
+        const meetingLength = response.data.meetings.filter((meeting) =>
+          meeting.participant_ids.some((p) => p._id === objectId)
+        ).length;
+        setMeetingLenth(meetingLength);
+        const meetingLengthTutor = response.data.meetings.filter(
+          (meeting) => meeting.organizer_id._id === objectId
+        ).length;
+        setMeetingLenthTutor(meetingLengthTutor);
+
+        console.log("Meeting lenth tutor:", meetingLengthTutor);
+        console.log("Meeting lenth:", meetingLength);
+      } catch (error) {
+        console.error("Error fetching meetings:", error);
+      }
+    };
 
     const fetchUserInfo = async () => {
       try {
@@ -102,6 +132,7 @@ export const Dashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setBlogList(response.data);
+
         setPendingBlogs(
           response.data.filter((blog) => blog.status === "pending").length
         );
@@ -109,12 +140,45 @@ export const Dashboard = () => {
         console.error("Error fetching pending blogs:", error);
       }
     };
+    const fetchPendingUserBlogs = async () => {
+      try {
+        const response = await axios.get("/blogs/", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setBlogList(response.data);
+        console.log("Blog List:", response.data);
+        setPendingUserBlogs(
+          response.data.filter(
+            (blog) => blog.status === "pending" && blog.author_id._id === userId
+          ).length
+        );
+      } catch (error) {
+        console.error("Error fetching pending blogs:", error);
+      }
+    };
 
+    const fetchDocumentListLength = async () => {
+      try {
+        const response = await axios.get("/documents/", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        console.log("Document List:", response.data);
+        setDocumentListCount(
+          response.data.filter((doc) => doc.owner_id === objectId).length
+        );
+        console.log("Document List count:", documentListCount);
+        // setDocumentList(response.data);
+        // console.log("Document List:", response.data);
+      } catch (error) {
+        console.error("Error fetching pending documents:", error);
+      }
+    };
     const fetchDocumentList = async () => {
       try {
         const response = await axios.get("/documents/", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
+        console.log("Document List:", response.data);
         setDocumentListCount(response.data.length);
         setDocumentList(response.data);
         console.log("Document List:", response.data);
@@ -127,7 +191,10 @@ export const Dashboard = () => {
       fetchUserInfo();
       fetchUsersWithRoles();
       fetchPendingBlogs();
+      fetchMeetings();
+      fetchPendingUserBlogs();
       fetchDocumentList();
+      fetchDocumentListLength();
       fetchUnassignedUsers();
       fetchMessages();
     }
@@ -289,63 +356,6 @@ export const Dashboard = () => {
     );
   }
 
-
-  // STUDENT
-  // Dummy data
-  const dashboardData = {
-    advisor: "TS. Trần Văn B",
-    meetings: {
-      completed: 4,
-      upcoming: 2,
-    },
-    documents: {
-      submitted: 5,
-      pending: 1,
-    },
-    lastInteraction: "3 ngày trước",
-    messages: [
-      {
-        id: 1,
-        sender: "GVHD",
-        content: "Đã nhận báo cáo tuần 3",
-        date: "2024-03-10",
-      },
-      {
-        id: 2,
-        sender: "Hệ thống",
-        content: "Nhắc nhở họp định kỳ",
-        date: "2024-03-12",
-      },
-    ],
-    appointments: [
-      {
-        title: "Họp định kỳ",
-        start: new Date(2024, 2, 15, 14),
-        end: new Date(2024, 2, 15, 15),
-      },
-      {
-        title: "Phản biện đề cương",
-        start: new Date(2024, 2, 20, 9),
-        end: new Date(2024, 2, 20, 10),
-      },
-    ],
-    interactionStats: [
-      { name: "Tháng 1", meetings: 2, documents: 3 },
-      { name: "Tháng 2", meetings: 4, documents: 5 },
-      { name: "Tháng 3", meetings: 1, documents: 2 },
-    ],
-    documentList: [
-      { name: "Báo cáo tuần 1", status: "Đã phê duyệt", date: "2024-02-01" },
-      {
-        name: "Đề cương nghiên cứu",
-        status: "Chờ phản hồi",
-        date: "2024-03-10",
-      },
-    ],
-  };
-
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-
   return (
     <>
       {role === "STUDENT" && (
@@ -360,34 +370,26 @@ export const Dashboard = () => {
 
               {/* Overview Cards */}
               <Row className="mb-4">
-                <Col md={3}>
+                <Col md={4} sm={6}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>{studentCount}</Card.Title>
-                      <Card.Text>Student</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col md={3}>
-                  <Card className="text-center">
-                    <Card.Body>
-                      <Card.Title>5</Card.Title>
+                      <Card.Title>{meetingLength}</Card.Title>
                       <Card.Text>Appointment</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={4} sm={6}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>3</Card.Title>
-                      <Card.Text>Documents sent</Card.Text>
+                      <Card.Title>{documentListCount}</Card.Title>
+                      <Card.Text>Assignment submited</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={4} sm={6}>
                   <Card className="text-center">
                     <Card.Body>
-                      <Card.Title>{studentPendingBlogs}</Card.Title>
+                      <Card.Title>{pendingUserBlogs}</Card.Title>
                       <Card.Text>Blog Waiting for Response</Card.Text>
                     </Card.Body>
                   </Card>
@@ -405,45 +407,30 @@ export const Dashboard = () => {
               <Row className="mb-4">
                 <Col>
                   <h2>Welcome {userInfo.username} </h2>
-                  <p className="text-muted">
-                    Instructor: {dashboardData.advisor}
-                  </p>
                 </Col>
               </Row>
 
               <Row className="mb-4">
-                <Col md={3}>
+                <Col md={4}>
                   <Card className="text-center h-100">
                     <Card.Body>
-                      <Card.Title>
-                        {dashboardData.meetings.completed}
-                      </Card.Title>
-                      <Card.Text>The meeting is over.</Card.Text>
+                      <Card.Title>{meetingLengthTutor}</Card.Title>
+                      <Card.Text>Appointment</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={4}>
                   <Card className="text-center h-100">
                     <Card.Body>
-                      <Card.Title>{dashboardData.meetings.upcoming}</Card.Title>
-                      <Card.Text>Upcoming meeting</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col md={3}>
-                  <Card className="text-center h-100">
-                    <Card.Body>
-                      <Card.Title>
-                        {dashboardData.documents.submitted}
-                      </Card.Title>
+                      <Card.Title>{documentListCount}</Card.Title>
                       <Card.Text>Documents submitted</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={4}>
                   <Card className="text-center h-100">
                     <Card.Body>
-                      <Card.Title>{dashboardData.documents.pending}</Card.Title>
+                      <Card.Title>{pendingUserBlogs}</Card.Title>
                       <Card.Text>Blog awaiting response</Card.Text>
                     </Card.Body>
                   </Card>

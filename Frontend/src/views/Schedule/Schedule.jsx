@@ -209,7 +209,7 @@ export const Schedule = () => {
     [openTooltip]
   );
   const handleCellDoubleClick = useCallback((args) => {
-    if (role == "STAFF") {
+    if (role === "STAFF") {
       setArgDoubleClick(args);
       setModelShowNewEvent(true);
     }
@@ -378,7 +378,6 @@ export const Schedule = () => {
                 </>
               )}
             </div>
-
           </div>
         </div>
       </Popup>
