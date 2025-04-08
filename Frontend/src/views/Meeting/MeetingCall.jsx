@@ -66,17 +66,18 @@ export const MeetingCall = () => {
           myVideoRef.current.srcObject = stream;
         }
 
-        peerInstance.current = new Peer(undefined, {
-          path: "/peerjs",
-          host: "/",
-          port: window.location.protocol === "https:" ? 443 : 80, 
-          config: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:global.stun.twilio.com:3478' }
-            ]
-          }
-        });
+     peerInstance.current = new Peer(undefined, {
+        host: '0.peerjs.com', // Public PeerServer
+        port: 443,
+        path: '/',
+        secure: true,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+          ]
+        }
+      });
 
         peerInstance.current.on('open', (id) => {
           socketRef.current.emit('join-room', roomId, id);
