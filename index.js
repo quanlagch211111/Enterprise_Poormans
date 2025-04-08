@@ -62,6 +62,7 @@ const MeetingRouter = require('./src/routes/meetingRoute');
 const blogRouter = require('./src/routes/blogRoute');
 const notificationRouter = require('./src/routes/notificationRoute');
 const attendanceRouter = require('./src/routes/attendanceRoute');
+const commentRouter = require('./src/routes/commentRoute');
 
 
 app.use(cors(
@@ -84,6 +85,7 @@ app.use('/api/meetings', MeetingRouter);
 app.use('/api/blogs', blogRouter);
 app.use('/api/notifications', notificationRouter );
 app.use('/api/attendances', attendanceRouter);
+app.use('/api/comments', commentRouter);
 
 // Thay app.listen bằng server.listen
 server.listen(port, () => {

@@ -20,3 +20,7 @@ exports.updateCommentById = async (id, data) => {
 exports.deleteCommentById = async (id) => {
     return await Comment.findByIdAndDelete(id);
 };
+
+exports.getCommentsByDocumentId = async (documentId) => {
+    return await Comment.find({ document_id: documentId }).populate('author_id', 'username email');
+};

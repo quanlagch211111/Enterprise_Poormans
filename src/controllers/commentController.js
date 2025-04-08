@@ -30,6 +30,8 @@ exports.getCommentById = async (req, res) => {
     }
 };
 
+
+
 exports.updateCommentById = async (req, res) => {
     try {
         const comment = await commentService.updateCommentById(req.params.id, req.body);
@@ -49,6 +51,15 @@ exports.deleteCommentById = async (req, res) => {
             return res.status(404).json({ message: 'Cannot find comment' });
         }
         res.json({ message: 'Deleted Comment' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getCommentsByDocumentId = async (req, res) => {
+    try {
+        const comments = await commentService.getCommentsByDocumentId(req.params.documentId);
+        res.json(comments);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
