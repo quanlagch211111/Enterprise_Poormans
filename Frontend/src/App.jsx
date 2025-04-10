@@ -20,6 +20,7 @@ import Attendance from "./views/Attendance/Attendance";
 import TakingAttendance from "./views/Attendance/TakingAttendance";
 import AttendanceDetail from "./views/Attendance/AttendanceDetail";
 import ViewAttendance from "./views/Attendance/ViewAttendance";
+import NotFound from "./components/NotFound";
 
 function App() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function App() {
     "/otp-confirm",
     "/forgot-password",
     "/reset-password",
+    "*",
   ];
 
   // Check if the current route is in the list of routes to hide the navbar
@@ -74,6 +76,7 @@ function App() {
               element={<TakingAttendance />}
             />
             <Route path="/view-attendance/:date" element={<ViewAttendance />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </div>
