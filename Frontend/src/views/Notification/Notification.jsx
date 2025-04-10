@@ -28,33 +28,33 @@ const NotificationPage = () => {
   }, [userId]);
 
   // Handle real-time notifications via WebSocket
-// Kiểm tra socket khi mới kết nối
-useEffect(() => {
-  if (!socket) {
-    console.log("❌ Socket chưa được khởi tạo.");
-    return;
-  }
+  // Kiểm tra socket khi mới kết nối
+  useEffect(() => {
+    if (!socket) {
+      console.log("❌ Socket chưa được khởi tạo.");
+      return;
+    }
 
-  console.log("✅ Socket đã kết nối:", socket);
+    console.log("✅ Socket đã kết nối:", socket);
 
-  socket.on("notification-receive", (message) => {
-    console.log("📩 New Notification received:", message);
+    socket.on("notification-receive", (message) => {
+      console.log("📩 New Notification received:", message);
 
-    setNotifications((prev) => {
-      // Check for duplicates based on _id
-      const isDuplicate = prev.some((notif) => notif._id === message._id);
-      if (!isDuplicate) {
-        return [message, ...prev];
-      }
-      return prev;
+      setNotifications((prev) => {
+        // Check for duplicates based on _id
+        const isDuplicate = prev.some((notif) => notif._id === message._id);
+        if (!isDuplicate) {
+          return [message, ...prev];
+        }
+        return prev;
+      });
     });
-  });
 
-  return () => {
-    socket.off("notification-receive");
-    console.log("🔌 Socket listener removed.");
-  };
-}, [socket]);
+    return () => {
+      socket.off("notification-receive");
+      console.log("🔌 Socket listener removed.");
+    };
+  }, [socket]);
 
   // Function to format timestamp
   const formatTime = (timestamp) => {
