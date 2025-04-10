@@ -27,14 +27,14 @@ import axios from "../../services/AxiosCustom";
 export const Profile = () => {
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("accessToken");
-  const userId = localStorage.getItem("userId")
-  const role = localStorage.getItem("role")
+  const userId = localStorage.getItem("userId");
+  const role = localStorage.getItem("role");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalEditUser, setModalEditUser] = useState(false);
   const [modalEditPass, setModalEditPass] = useState(false);
-     
+
   useEffect(() => {
     if (!accessToken) {
       navigate("/login"); // Redirect to login if no accessToken
@@ -52,11 +52,11 @@ export const Profile = () => {
         });
         setTimeout(() => {
           setUser(response.data.data);
-          console.log(response)
+          console.log(response);
           setLoading(false);
         }, 1000);
       } catch (err) {
-        setError("Không thể tải thông tin người dùng. Vui lòng thử lại sau.");
+        setError("Unable to load user information. Please try again later.");
         setLoading(false);
       }
     };
@@ -68,9 +68,9 @@ export const Profile = () => {
     return (
       <Container className="mt-5 text-center">
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Đang tải...</span>
+          <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-2">Đang tải thông tin người dùng...</p>
+        <p className="mt-2">Loading user information...</p>
       </Container>
     );
   }
@@ -79,7 +79,7 @@ export const Profile = () => {
     return (
       <Container className="mt-5">
         <Alert variant="danger">
-          <Alert.Heading>Đã xảy ra lỗi!</Alert.Heading>
+          <Alert.Heading>An error occurred!</Alert.Heading>
           <p>{error}</p>
         </Alert>
       </Container>
@@ -96,7 +96,7 @@ export const Profile = () => {
           <Card>
             <Card.Body className="text-center">
               <img
-                src={user.avatar}
+                src="https://cdn-icons-png.flaticon.com/512/219/219988.png"
                 alt="Avatar"
                 className="rounded-circle img-thumbnail mb-3"
                 style={{ width: "150px", height: "150px", objectFit: "cover" }}
@@ -106,9 +106,7 @@ export const Profile = () => {
                 bg={user.isVerified === true ? "success" : "secondary"}
                 className="mb-3"
               >
-                {user.isVerified === true
-                  ? "Verified"
-                  : "Not Verified"}
+                {user.isVerified === true ? "Verified" : "Not Verified"}
               </Badge>
               <div className="d-grid gap-2 mt-3">
                 <Button
@@ -132,7 +130,7 @@ export const Profile = () => {
         <Col lg={8} md={7}>
           <Card className="mb-4">
             <Card.Header>
-              <h5 className="mb-0">Chi tiết tài khoản</h5>
+              <h5 className="mb-0">Account details</h5>
             </Card.Header>
             <Card.Body>
               <Row className="mb-3">
@@ -169,10 +167,7 @@ export const Profile = () => {
                   <Badge
                     bg={user.isVerified === true ? "success" : "secondary"}
                   >
-                    {user.isVerified === true
-                      ? "Verified"
-                      : "Not Verified"}
-                    
+                    {user.isVerified === true ? "Verified" : "Not Verified"}
                   </Badge>
                 </Col>
               </Row>

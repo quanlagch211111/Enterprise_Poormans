@@ -15,28 +15,50 @@ import { Profile } from "./views/User/Profile";
 import Account from "./views/Account/Account";
 import ForgotPassword from "./views/ForgotPassword/ForgotPassword";
 import ResetPassword from "./views/ForgotPassword/ResetPassword";
-import { SocketProvider } from "./services/Socket";
 import NotificationPage from "./views/Notification/Notification";
-import { Container } from "react-bootstrap";
 import Attendance from "./views/Attendance/Attendance";
 import TakingAttendance from "./views/Attendance/TakingAttendance";
 import AttendanceDetail from "./views/Attendance/AttendanceDetail";
 import ViewAttendance from "./views/Attendance/ViewAttendance";
+import NotFound from "./components/NotFound";
 
 function App() {
   const location = useLocation();
   const hideNavRoutes = [
-    "/meeting/:room_id", // Routes where navbar should be hidden
+    "/meeting",
     "/login",
     "/otp-confirm",
     "/forgot-password",
     "/reset-password",
   ];
+  const is404 = ![
+    "/",
+    "/message",
+    "/blog",
+    "/document",
+    "/assignment",
+    "/login",
+    "/meeting",
+    "/otp-confirm",
+    "/schedule",
+    "/profile",
+    "/account",
+    "/forgot-password",
+    "/reset-password",
+    "/notification",
+    "/classes",
+    "/check-attendance",
+    "/view-attendance",
+  ].some(
+    (path) =>
+      location.pathname === path ||
+      (location.pathname.startsWith(path + "/") && path !== "/")
+  );
 
   // Check if the current route is in the list of routes to hide the navbar
-  const shouldShowNav = !hideNavRoutes.some((route) =>
-    location.pathname.startsWith(route.replace(":room_id", ""))
-  );
+  const shouldShowNav =
+    !hideNavRoutes.some((route) => location.pathname.startsWith(route)) &&
+    !is404;
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
 
   useEffect(() => {
@@ -76,6 +98,7 @@ function App() {
               element={<TakingAttendance />}
             />
             <Route path="/view-attendance/:date" element={<ViewAttendance />} />
+            <Route path="/*" element={<NotFound />} />
           </Routes>
         </div>
       </div>

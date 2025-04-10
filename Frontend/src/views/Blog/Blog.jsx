@@ -100,7 +100,6 @@ export const Blog = () => {
     }
   };
 
-
   // const handleUpdateBlog = (updatedBlog) => {
   //   setMyBlogs((prev) =>
   //     prev.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
@@ -120,8 +119,8 @@ export const Blog = () => {
               {isAllBlogs
                 ? "All Blogs"
                 : isPendingBlogs
-                  ? "Pending Blogs"
-                  : "My Blog"}
+                ? "Pending Blogs"
+                : "My Blog"}
             </h3>
             <div className="action d-flex">
               {!isAllBlogs && !isPendingBlogs && (
@@ -172,7 +171,10 @@ export const Blog = () => {
               (blog) => (
                 <article key={blog._id} className="blog-card">
                   <div className="blog-image">
-                    <img src="https://via.placeholder.com/150" alt="" />
+                    <img
+                      src="https://greenwich.edu.vn/wp-content/uploads/2022/10/Welcome-1-1024x576.jpg"
+                      alt=""
+                    />
                   </div>
                   <div className="blog-content">
                     <div className="blog-tags">

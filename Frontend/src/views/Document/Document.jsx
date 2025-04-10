@@ -119,7 +119,6 @@ export const Document = () => {
     }
   };
 
-
   const fetchDocuments = async (folderId) => {
     try {
       const response = await axios.get(`/documents/folder/${folderId}`, {
@@ -180,8 +179,6 @@ export const Document = () => {
     }
   };
 
-
-
   const renderAssignments = () => (
     <>
       <h3>Classes</h3>
@@ -189,8 +186,9 @@ export const Document = () => {
         assignments.map((assignment) => (
           <span
             key={assignment._id}
-            className={`class-name ${selectedAssignment?._id === assignment._id ? "active" : ""
-              }`}
+            className={`class-name ${
+              selectedAssignment?._id === assignment._id ? "active" : ""
+            }`}
             onClick={() => {
               setSelectedAssignment(assignment);
               setSelectedFolder(null);
@@ -206,7 +204,6 @@ export const Document = () => {
       )}
     </>
   );
-
   const renderDocuments = () => {
     const tutorDocuments = documents?.tutorDocuments || []; // Gán giá trị mặc định là []
 
@@ -217,8 +214,7 @@ export const Document = () => {
     return (
       <div className="document-list d-flex flex-wrap gap-3">
         {tutorDocuments.map((doc) => (
-          <div key={doc._id}
-            className="document-card p-3 border rounded">
+          <div key={doc._id} className="document-card p-3 border rounded">
             <div className="d-flex align-items-center gap-2">
               {doc.types.toLowerCase() === "pdf" ? (
                 <i className="fas fa-file-pdf text-danger fa-2x"></i>
@@ -313,7 +309,6 @@ export const Document = () => {
       )}
     </>
   );
-
   const renderFolderDetails = () => {
     if (!selectedFolder) return null;
 
@@ -406,7 +401,7 @@ export const Document = () => {
                             </div>
                           </div>
                           <div className="action-assignment mb-2 d-flex flex-row align-items-center gap-2">
-                          <MDBBtn
+                            <MDBBtn
                               size="sm"
                               color="info"
                               onClick={() => {
@@ -417,7 +412,7 @@ export const Document = () => {
                             >
                               Read Comment
                             </MDBBtn>
-                             | 
+                            |
                             <i
                               className="fa-solid fa-trash assignment-delete ml-3"
                               onClick={() => {
@@ -454,7 +449,7 @@ export const Document = () => {
                         <div
                           key={doc._id}
                           className="assignment-container d-flex flex-row align-items-center justify-content-between"
-                        // onclick Modal comment
+                          // onclick Modal comment
                         >
                           <div
                             className="assignment-card  d-flex flex-row align-items-center gap-2"
@@ -564,7 +559,7 @@ export const Document = () => {
       <ReadComment
         show={modalReadComment}
         onClose={() => setModalReadComment(false)}
-        assignment={selectedComment }
+        assignment={selectedComment}
         accessToken={accessToken}
       />
     </>

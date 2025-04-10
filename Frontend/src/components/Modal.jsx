@@ -85,7 +85,6 @@ export const NewAssignment = (props) => {
     tutor_id: "",
     assigned_by: userId,
   });
-
   const [isLoading, setLoading] = useState(false);
 
   const handleClose = () => {
@@ -110,6 +109,23 @@ export const NewAssignment = (props) => {
 
   const handleAddAssignment = async () => {
     try {
+      const { title, student_id, tutor_id } = newAssignment;
+
+      if (!title.trim()) {
+        toast.error("Please enter a title.");
+        return;
+      }
+
+      if (student_id.length === 0) {
+        toast.error("Please select at least one student.");
+        return;
+      }
+
+      if (!tutor_id) {
+        toast.error("Please select a tutor.");
+        return;
+      }
+
       setLoading(true);
       const response = await axios.post("/assignments", newAssignment, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -1494,30 +1510,32 @@ export const UpdateEvent = (props) => {
         prevEvents.map((event) =>
           event.id === updatedEventData._id
             ? {
-              id: updatedEventData._id,
-              title: updatedEventData.title || "Event",
-              start: new Date(
-                `${updatedEventData.date.split("T")[0]}T${updatedEventData.start_time
-                }`
-              ),
-              end: new Date(
-                `${updatedEventData.date.split("T")[0]}T${updatedEventData.end_time
-                }`
-              ),
-              note: updatedEventData.note,
-              type: updatedEventData.type,
-              organizer_id: updatedEventData.organizer_id._id,
-              organizer_username:
-                updatedEventData.organizer_id.user_id.username,
-              participant_ids: updatedEventData.participant_ids.map(
-                (participant) => participant._id
-              ),
-              participant_usernames: updatedEventData.participant_ids.map(
-                (participant) => participant.user_id.username
-              ),
-              room_id: updatedEventData.room_id,
-              status: updatedEventData.status,
-            }
+                id: updatedEventData._id,
+                title: updatedEventData.title || "Event",
+                start: new Date(
+                  `${updatedEventData.date.split("T")[0]}T${
+                    updatedEventData.start_time
+                  }`
+                ),
+                end: new Date(
+                  `${updatedEventData.date.split("T")[0]}T${
+                    updatedEventData.end_time
+                  }`
+                ),
+                note: updatedEventData.note,
+                type: updatedEventData.type,
+                organizer_id: updatedEventData.organizer_id._id,
+                organizer_username:
+                  updatedEventData.organizer_id.user_id.username,
+                participant_ids: updatedEventData.participant_ids.map(
+                  (participant) => participant._id
+                ),
+                participant_usernames: updatedEventData.participant_ids.map(
+                  (participant) => participant.user_id.username
+                ),
+                room_id: updatedEventData.room_id,
+                status: updatedEventData.status,
+              }
             : event
         )
       );
@@ -2270,15 +2288,11 @@ export const AddComment = (props) => {
         author_id: userId,
         content: newComment.comment,
       };
-      const response = await axios.post(
-        "comments/",
-        body,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const response = await axios.post("comments/", body, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       toast.success("Comment added successfully.");
       handleClose();
       setLoading(false);
@@ -2287,7 +2301,6 @@ export const AddComment = (props) => {
       setLoading(false);
     }
   };
-
 
   return (
     <MDBModal tabIndex="-1" open={props.show} onClose={handleClose}>
@@ -2351,10 +2364,10 @@ export const ReadComment = (props) => {
                 Created at:{" "}
                 {assignment?.[0]?.created_at
                   ? new Date(assignment[0].created_at).toLocaleString("vi-VN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
                   : "Unknown"}
               </div>
               <label htmlFor="Feedback"></label>
@@ -2362,8 +2375,7 @@ export const ReadComment = (props) => {
                 label="Feedback"
                 id="textAreaExample"
                 rows="4"
-                value={assignment?.[0]?.content
-                  || "No feedback available"}
+                value={assignment?.[0]?.content || "No feedback available"}
                 disabled={true}
               />
             </div>

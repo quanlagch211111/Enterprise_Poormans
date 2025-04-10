@@ -1,6 +1,7 @@
 body {
   display: flex;
   height: 100%;
+  font-size: 14px;
   background: var(--light);
   font-family: Roboto, Helvetica, Arial, sans-serif;
 }
@@ -68,4 +69,72 @@ html {
 
 .mds-tooltip-button.mbsc-material {
   font-size: 12px;
+}
+.w-380 {
+  width: 380px !important;
+}
+.w-30 {
+  width: 30px !important;
+}
+.h-30 {
+  height: 30px !important;
+}
+
+.border-bottom {
+  border-bottom: #f0f0f0;
+}
+.avatar {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+}
+.rounded-circle {
+  border-radius: 50% !important;
+}
+.dropdown-toggle::after {
+  display: none !important;
+}
+.dropdown {
+  width: none !important;
+}
+
+.ta-left {
+  text-align: left !important;
+}
+
+#handboy {
+  animation: swing ease-in-out 1.3s infinite alternate;
+  transform-origin: 98% 98%;
+  transform-box: fill-box;
+}
+#girllight {
+  animation: swing ease-in-out 1.3s infinite alternate;
+  transform-origin: 0% 97%;
+  transform-box: fill-box;
+}
+#hairgirl {
+  animation: swinghair ease-in-out 1.3s infinite alternate;
+  transform-origin: 60% 0%;
+  transform-box: fill-box;
+}
+#zero {
+  transform-origin: bottom;
+  transform-box: fill-box;
+}
+
+@keyframes swing {
+  0% {
+    transform: rotate(10deg);
+  }
+  100% {
+    transform: rotate(-10deg);
+  }
+}
+@keyframes swinghair {
+  0% {
+    transform: rotate(6deg);
+  }
+  100% {
+    transform: rotate(-6deg);
+  }
 }

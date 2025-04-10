@@ -283,41 +283,43 @@ export const Schedule = () => {
         >
           <div className="mds-tooltip-header danger-bg d-flex align-items-center justify-content-between">
             <span>{detailTooltip.title}</span>
-            <div className="d-flex justify-content-end">
-              <div className="dropdown-custom">
-                <div className="container-select d-flex justify-content-end">
-                  <div
-                    className="dropdown-select d-flex align-items-center justify-content-center"
-                    onClick={toggleVisibility}
-                  >
-                    <i className="fa-solid fa-ellipsis fs-4"></i>
+            {role === "STAFF" && (
+              <div className="d-flex justify-content-end">
+                <div className="dropdown-custom">
+                  <div className="container-select d-flex justify-content-end">
+                    <div
+                      className="dropdown-select d-flex align-items-center justify-content-center"
+                      onClick={toggleVisibility}
+                    >
+                      <i className="fa-solid fa-ellipsis fs-4"></i>
+                    </div>
                   </div>
+                  <ul
+                    className={
+                      "dropdown-list d-flex gap-2 flex-column " +
+                      (isVisibility ? "active" : "")
+                    }
+                  >
+                    <li
+                      className="dropdown-item"
+                      onClick={() => {
+                        setModalDeleteEvent(true);
+                      }}
+                    >
+                      Delete
+                    </li>
+                    <li
+                      className="dropdown-item"
+                      onClick={() => {
+                        setModalUpdateEvent(true);
+                      }}
+                    >
+                      Update
+                    </li>
+                  </ul>
                 </div>
-                <ul
-                  className={
-                    "dropdown-list d-flex gap-2 flex-column " +
-                    (isVisibility ? "active" : "")
-                  }
-                >
-                  <li
-                    className="dropdown-item"
-                    onClick={() => {
-                      setModalDeleteEvent(true);
-                    }}
-                  >
-                    Delete
-                  </li>
-                  <li
-                    className="dropdown-item"
-                    onClick={() => {
-                      setModalUpdateEvent(true);
-                    }}
-                  >
-                    Update
-                  </li>
-                </ul>
               </div>
-            </div>
+            )}
           </div>
           <div className="mbsc-padding">
             <div className="mds-tooltip-label mbsc-margin">

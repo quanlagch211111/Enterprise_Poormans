@@ -3,14 +3,19 @@
   --primary-opacity: #4362ee7d;
   --secondary: #3f37c9;
   --accent: #4895ef;
+  --text-primary: #465874;
   --danger: #e05170;
   --light: #e6ebee;
   --dark: #2b2d42;
   --light-green: #45bf38;
   --border-radius: 15px;
+  --purple: #4c3575;
+
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
-
+.purple-bg {
+  background-color: var(--purple) !important;
+}
 .accent-bg {
   background-color: var(--accent);
 }
