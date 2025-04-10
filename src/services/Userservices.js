@@ -260,42 +260,41 @@ const detailUser = (id) => {
    });
 };
 
-const updateUserByEmail  = (email, datauser) => {
-  return new Promise( async (resolve, reject) => {
+const updateUserByEmail = (email, datauser) => {
+  return new Promise(async (resolve, reject) => {
     try {
+      const checkUser = await User.findOne({ email: email });
 
-       const checkUser = await User.findById(id);
-       if (!checkUser) {
-         resolve({
-           status: 'Failure',
-           message: 'There was no user with that id'
-         });
-       }
+      if (!checkUser) {
+        return resolve({
+          status: 'Failure',
+          message: 'There was no user with that email',
+        });
+      }
+      if (datauser.password) {
+        const salt = await bcrypt.genSalt(10);
+        datauser.password = await bcrypt.hash(datauser.password, salt);
+      }
+      Object.assign(checkUser, datauser);
+      checkUser.updated_at = new Date();
 
-       if (datauser.password) {
-         const salt = await bcrypt.genSalt(10);
-         datauser.password = await bcrypt.hash(datauser.password, salt);
-       }
- 
-       datauser.updated_at = new Date();
+      const updatedUser = await checkUser.save();
+      console.log('Updated user:', updatedUser);
 
-       const updatedUser = await User.findByIdAndUpdate(id, datauser, {new : true});
-       console.log('Updated user' + updatedUser);
- 
-       resolve({
-         status: 'Success',
-         message: 'User updated successfully',
-         data: updatedUser
-       });
- 
-     } catch (err) {
-       reject({
-         status: 'Error',
-         message: err.message
-       });
-     }
-   });
+      resolve({
+        status: 'Success',
+        message: 'User updated successfully',
+        data: updatedUser,
+      });
+    } catch (err) {
+      reject({
+        status: 'Error',
+        message: err.message,
+      });
+    }
+  });
 };
+
 
 const resetPassword = async (email, newPassword) => {
   try {
@@ -337,5 +336,5 @@ const resetPassword = async (email, newPassword) => {
 
 
 module.exports = {
-  createUser, signinUser, updateUser, deleteUser, getallUser,detailUser, resetPassword
+  createUser, signinUser, updateUser, deleteUser, getallUser,detailUser, resetPassword, updateUserByEmail 
 };

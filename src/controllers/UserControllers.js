@@ -247,9 +247,8 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-
-   const userId = otpRecord.userId;
-   await UserService.updateUser(userId, { isVerified: true });
+  //  const userId = otpRecord.userId;
+   await UserService.updateUserByEmail(email, { isVerified: true });
    await UserOTPVerification.deleteOne({ email });
 
     return res.status(200).json({ message: "Email verified successfully" });
