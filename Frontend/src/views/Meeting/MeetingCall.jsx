@@ -26,6 +26,8 @@ export const MeetingCall = () => {
   const [roomId, setRoomId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const accessToken = localStorage.getItem("accessToken");
+
 
   const myVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -45,6 +47,12 @@ export const MeetingCall = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  useEffect(() =>
+    { 
+      if(!accessToken) {
+      navigate('/login');
+      return;
+      }}, [accessToken]   );
   // Initialize meeting
   useEffect(() => {
     const path = window.location.pathname.split('/');
@@ -66,17 +74,18 @@ export const MeetingCall = () => {
           myVideoRef.current.srcObject = stream;
         }
 
-        peerInstance.current = new Peer(undefined, {
-          host: process.env.REACT_APP_PEER_HOST || 'localhost',
-          port: process.env.REACT_APP_PEER_PORT || 3030,
-          path: '/peerjs',
-          config: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:global.stun.twilio.com:3478' }
-            ]
-          }
-        });
+     peerInstance.current = new Peer(undefined, {
+        host: '0.peerjs.com', // Public PeerServer
+        port: 443,
+        path: '/',
+        secure: true,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+          ]
+        }
+      });
 
         peerInstance.current.on('open', (id) => {
           socketRef.current.emit('join-room', roomId, id);
