@@ -92,7 +92,8 @@ exports.signinUser = async (req, res) => {
 
     res.cookie('refreshtoken', refreshtoken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None',
+      secure: true,
     });
 
 
